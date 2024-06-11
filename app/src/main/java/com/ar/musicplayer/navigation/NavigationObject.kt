@@ -7,6 +7,16 @@ import kotlinx.serialization.Serializable
 object HomeScreenObj
 
 @Serializable
+object SearchScreenObj
+
+@Serializable
+object ProfileScreenObj
+
+@Serializable
+object LibraryScreenObj
+
+
+@Serializable
 data class InfoScreenObj(  //
     val serialized : String
 )

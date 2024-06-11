@@ -120,7 +120,7 @@ fun HomeScreen(navController: NavHostController, homeViewModel: HomeViewModel) {
 
                 LazyColumn(modifier = Modifier){
                     items(homeDataList) { (key, dataList) ->
-                        dataList?.let { LazyRowItem(modifier = Modifier.padding(bottom = 10.dp, top = 10.dp), heading = key , songItems = it, onMoreButtonClick = {},navController= navController) }
+                        dataList?.let { LazyRowItem(modifier = Modifier.padding(bottom = 30.dp), heading = key , songItems = it, onMoreButtonClick = {},navController= navController) }
                     }
 
 
@@ -200,7 +200,7 @@ fun LazyRowItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, end = 16.dp),
+                .padding(end = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
