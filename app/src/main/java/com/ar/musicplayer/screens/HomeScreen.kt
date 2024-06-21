@@ -8,13 +8,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,37 +25,26 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -77,6 +66,7 @@ fun HomeScreen(navController: NavHostController, homeViewModel: HomeViewModel) {
     val homeData by homeViewModel.homeData.observeAsState(null)
     val viewModel: NetworkViewModel = viewModel()
     val isConnected by viewModel.isConnected.observeAsState(initial = false)
+
 
 
     LaunchedEffect(isConnected) {
@@ -116,76 +106,20 @@ fun HomeScreen(navController: NavHostController, homeViewModel: HomeViewModel) {
             Column(modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()) {
-                SearchBar(modifier = Modifier.padding(16.dp))
 
                 LazyColumn(modifier = Modifier){
                     items(homeDataList) { (key, dataList) ->
                         dataList?.let { LazyRowItem(modifier = Modifier.padding(bottom = 30.dp), heading = key , songItems = it, onMoreButtonClick = {},navController= navController) }
                     }
-
-
+                    item{
+                        Spacer(modifier = Modifier.height(80.dp))
+                    }
                 }
-
-//                if (!isConnected) {
-//                    LazyColumn {
-//                        items(5){
-//                            LazyRowDummyItem(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp))
-//                        }
-//                    }
-//                }
             }
         }
     )
 }
 
-
-
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchBar(modifier: Modifier) {
-    var searchText by rememberSaveable { mutableStateOf("") }
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            modifier = Modifier
-                .weight(1f)
-                .height(50.dp)
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(percent = 50)
-                ),
-            placeholder = { Text(text = "Search")},
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search"
-                )
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search)
-        )
-
-        Image(
-            imageVector = Icons.Filled.AccountCircle,
-            contentDescription = "Profile",
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .size(35.dp),
-            colorFilter = ColorFilter.tint(Color.White)
-        )
-    }
-}
 
 @Composable
 @SuppressLint("RememberReturnType")
@@ -214,7 +148,7 @@ fun LazyRowItem(
             )
             TextButton(onClick = onMoreButtonClick) {
                 Text(text = "View All", color = Color.LightGray, fontSize = 14.sp)
-                Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "more", tint = Color.LightGray)
+                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "more", tint = Color.LightGray)
             }
         }
         LazyRow(
@@ -236,12 +170,18 @@ fun SongItemView(
     var allArtist = homeListItem.subtitle
 
     if (artistMap != null && artistMap.artists?.isNotEmpty() == true) {
-        val artists = artistMap.artists!!.mapNotNull { it.name }
+        val artists = artistMap.artists.mapNotNull { it.name }
         allArtist = artists.joinToString(", ").takeIf { it.isNotBlank() } ?: "Unknown Artist"
     }
-
+    val perfectImg = if(homeListItem.image?.contains("150x150") == true){
+        homeListItem.image!!.replace("150x150","350x350")
+    }else{
+        homeListItem.image
+    }
+    homeListItem.image = perfectImg
     val serialized = remember { Json.encodeToString(HomeListItem.serializer(), homeListItem) }
     val showShimmer = remember { mutableStateOf(true) }
+
 
     Box(
         modifier = Modifier
@@ -251,12 +191,13 @@ fun SongItemView(
         contentAlignment = Alignment.BottomCenter
     ) {
         Column {
+
             AsyncImage(
-                model = homeListItem.image,
+                model = perfectImg,
                 contentDescription = "image",
                 modifier = Modifier
                     .size(150.dp)
-                    .background(brush = ShimmerEffect(showShimmer.value)),
+                    .background(brush = shimmerEffectfun(showShimmer.value)),
                 onSuccess = { showShimmer.value = false },
                 contentScale = ContentScale.Crop,
                 alignment = Alignment.Center
@@ -294,7 +235,7 @@ fun LazyRowDummyItem(
                 .fillMaxWidth()
                 .padding(top = 8.dp, end = 16.dp, start = 16.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(brush = ShimmerEffect(showShimmer.value)),
+                .background(brush = shimmerEffectfun(showShimmer.value)),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -325,7 +266,7 @@ fun LazyRowDummyItem(
                             contentDescription = "image",
                             modifier = Modifier
                                 .size(150.dp)
-                                .background(brush = ShimmerEffect(showShimmer.value))
+                                .background(brush = shimmerEffectfun(showShimmer.value))
                                 .clip(RoundedCornerShape(40.dp)),
                             onSuccess = { showShimmer.value = false },
                             contentScale = ContentScale.Crop,
@@ -341,7 +282,7 @@ fun LazyRowDummyItem(
                                 .padding(top = 8.dp, bottom = 8.dp)
                                 .width(70.dp)
                                 .clip(RoundedCornerShape(5.dp))
-                                .background(brush = ShimmerEffect(true)),
+                                .background(brush = shimmerEffectfun(true)),
 
                         )
                         Text(
@@ -353,7 +294,7 @@ fun LazyRowDummyItem(
                             modifier = Modifier
                                 .width(100.dp)
                                 .clip(RoundedCornerShape(5.dp))
-                                .background(brush = ShimmerEffect(true))
+                                .background(brush = shimmerEffectfun(true))
                         )
                     }
                 }
@@ -366,7 +307,7 @@ fun LazyRowDummyItem(
 
 
 @Composable
-fun ShimmerEffect(showShimmer: Boolean = true, targetValue: Float = 1000f): Brush {
+fun shimmerEffectfun(showShimmer: Boolean = true, targetValue: Float = 1000f): Brush {
     return if (showShimmer) {
         // Colors for the shimmer effect
         val shimmerColors = listOf(

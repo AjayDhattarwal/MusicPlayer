@@ -1,9 +1,9 @@
 package com.ar.musicplayer.screens
 
 
-import android.annotation.SuppressLint
+import MusicPlayer
+import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -40,43 +40,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.ar.musicplayer.R
-import com.ar.musicplayer.api.createApiUrl
-import com.ar.musicplayer.models.Artist
-import com.ar.musicplayer.models.ArtistMap
-import com.ar.musicplayer.models.MoreInfoHomeList
 import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.ApiCallViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import androidx.compose.foundation.lazy.items
-import androidx.lifecycle.viewModelScope
-import com.ar.musicplayer.api.ApiService
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.setValue
+import com.ar.musicplayer.components.AnimatedPlayPauseButton
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.navigation.PlayerScreenObj
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 
-@SuppressLint("UnrememberedMutableState")
 @Composable
-fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
+fun InfoScreen(
+    navController: NavHostController,
+    homeListItem: HomeListItem,
+    playerViewModel: PlayerViewModel,
+    colorViewModel: ImageColorGradient,
+    context: Context,
+    musicPlayer: MusicPlayer
+) {
 
-    val context = LocalContext.current
-    val viewModel: ImageColorGradient = viewModel()
+    val isPlaying by playerViewModel.isPlaying.collectAsState()
+    val playlistId by playerViewModel.playlistId.collectAsState()
 
     val apiCallViewModel: ApiCallViewModel = viewModel()
-
+    val imgColorViewModel: ImageColorGradient = viewModel()
     LaunchedEffect(homeListItem.image) {
-        if (homeListItem.image != null) {
-            viewModel.loadImage(homeListItem.image, context)
+        val perfectImg =
+            if(homeListItem.image?.contains("350x350") == true) {
+                homeListItem.image!!.replace("350x350", "150x150")
+            } else homeListItem.image
+
+        if (perfectImg != null) {
+            colorViewModel.loadImage(perfectImg, context)
         }
         apiCallViewModel.getApiData(
             homeListItem.permaUrl?.substringAfterLast('/') ?: "",
@@ -87,11 +89,13 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
         )
 
     }
+    var isAllreadyPlaying by remember {
+        mutableStateOf(false)
+    }
     val apiData by apiCallViewModel.apiLiveData.observeAsState()
 
-    val bitmapState = viewModel.bitmapState.observeAsState()
-    val imageColorState = viewModel.imageColor.observeAsState()
-
+    val bitmapState = colorViewModel.bitmapState.collectAsState()
+    val imageColorState by colorViewModel.colorForBackGround.collectAsState()
 
 
     val blackToGrayGradient = remember {
@@ -104,14 +108,15 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
         )
     }
 
-    LaunchedEffect(bitmapState.value, imageColorState.value) {
-        if (bitmapState.value != null && imageColorState.value != null) {
+    LaunchedEffect(bitmapState.value, imageColorState) {
+        if (bitmapState.value != null && imageColorState != null) {
             blackToGrayGradient.value = Brush.verticalGradient(
-                colors = listOf(Color(0xFF000000), Color(0xFF1F1E1E), imageColorState.value!!),
+                colors = listOf(Color(0xFF000000), Color(0xFF1F1E1E), imageColorState!!),
                 startY = Float.POSITIVE_INFINITY,
                 endY = 0f
             )
         }
+        Log.d("color", "${imageColorState}")
     }
 
 
@@ -129,7 +134,7 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
         ) {
             homeListItem.image?.let {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    IconButton(onClick = { navController.popBackStack() },
+                    IconButton(onClick = { navController.navigateUp() },
                         modifier = Modifier
                     ) {
                         Icon(
@@ -139,7 +144,6 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
                             tint = Color.White
                         )
                     }
-
                     AsyncImage(
                         model = homeListItem.image,
                         contentDescription = "image",
@@ -147,7 +151,7 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
                             .size(250.dp)
                             .padding(top = 20.dp, start = 30.dp, end = 30.dp)
                             .weight(1f)
-                            .background(brush = ShimmerEffect(showShimmer.value))
+                            .background(brush = shimmerEffectfun(showShimmer.value))
                             .clip(RoundedCornerShape(10.dp)),
                         onSuccess = { showShimmer.value = false },
                         contentScale = ContentScale.Crop,
@@ -216,26 +220,33 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
                         )
                     }
                     Row(modifier = Modifier) {
-                        IconButton(
-                            onClick = { navController.popBackStack() },
-                            modifier = Modifier.weight(1f)
+
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(
-                                    onClick = { /* Handle share button click */ }) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.ic_play_circle_filled_24),
-                                        contentDescription = "play",
-                                        modifier = Modifier.size(300.dp)
-                                    )
+
+                            AnimatedPlayPauseButton(
+                                isPlaying = if(playlistId == apiData?.id){isPlaying}else false,
+                            ){
+                                if (!isAllreadyPlaying) {
+                                    apiData?.list?.let { it1 -> playerViewModel.playPlaylist(it1,apiData?.id ?: "") }
+                                    isAllreadyPlaying = true
+                                    playerViewModel.play()
+                                }
+                                if(playlistId == apiData?.id){
+                                    if (isPlaying) {
+                                        playerViewModel.pause()
+                                    } else {
+                                        playerViewModel.play()
+                                    }
                                 }
                             }
+
                         }
+
                         IconButton(onClick = { /* Handle share button click */ }) {
                             Icon(
                                 Icons.Default.FavoriteBorder,
@@ -270,83 +281,103 @@ fun InfoScreen(navController: NavHostController, homeListItem: HomeListItem) {
 
             LazyColumn {
                 items(apiData?.list ?: emptyList()) { apiData ->
-                    val showShimmer = remember { mutableStateOf(true) }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 5.dp, top = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AsyncImage(
-                            model = apiData.image,
-                            contentDescription = "image",
-                            modifier = Modifier
-                                .size(50.dp)
-                                .padding(4.dp)
-                                .background(brush = ShimmerEffect(showShimmer.value))
-                                .clip(RoundedCornerShape(3.dp)),
-                            onSuccess = { showShimmer.value = false },
-                            contentScale = ContentScale.Crop,
-                            alignment = Alignment.Center
-                        )
-                        val senderData = Json.encodeToString(SongResponse.serializer(),apiData)
-                        Column(
-                            modifier = Modifier
-                                .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
-                                .weight(1f)
-                                .clickable {
-                                    navController.navigate(
-                                        PlayerScreenObj(senderData)
-                                    )
-                                }
-                        ) {
-                            Text(
-                                text = apiData.title ?: "null",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = Color.White,
-                                modifier = Modifier.padding(bottom = 2.dp),
-                                maxLines = 1,
-                                softWrap = true,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = apiData.subtitle ?: "unknown",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray,
-                                maxLines = 1,
-                                softWrap = true,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        IconButton(onClick = { /* Handle download button click */ }) {
-                            Icon(
-                                Icons.Default.FileDownload,
-                                contentDescription = "Download",
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(onClick = { /* Handle share button click */ }) {
-                            Icon(
-                                Icons.Default.FavoriteBorder,
-                                contentDescription = "Like",
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(onClick = { /* Handle menu button click */ }) {
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = "Menu",
-                                tint = Color.White
-                            )
-                        }
-                    }
+                    InfoSongRepresent(apiData,playerViewModel)
+                }
+                item {
+                    Spacer(modifier = Modifier.height(125.dp))
                 }
             }
         }
     }
 }
 
+
+@Composable
+fun InfoSongRepresent(
+    apiData: SongResponse,
+    playerViewModel: PlayerViewModel,)
+{
+    val context = LocalContext.current
+    val showShimmer = remember { mutableStateOf(true) }
+    val imageColorViewModel = viewModel<ImageColorGradient>()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp, end = 5.dp, top = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = apiData.image,
+            contentDescription = "image",
+            modifier = Modifier
+                .size(50.dp)
+                .padding(4.dp)
+                .background(brush = shimmerEffectfun(showShimmer.value))
+                .clip(RoundedCornerShape(3.dp)),
+            onSuccess = { showShimmer.value = false },
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.Center
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
+                .weight(1f)
+                .clickable {
+                    apiData.image?.let {
+                        imageColorViewModel.loadImage(
+                            it,
+                            context
+                        )
+                    }
+                    playerViewModel.updateCurrentSong(
+                        apiData
+                    )
+                }
+        ) {
+            Text(
+                text = apiData.title ?: "null",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 2.dp),
+                maxLines = 1,
+                softWrap = true,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = apiData.subtitle ?: "unknown",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                maxLines = 1,
+                softWrap = true,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        IconButton(onClick = { /* Handle download button click */ }) {
+            Icon(
+                Icons.Default.FileDownload,
+                contentDescription = "Download",
+                tint = Color.White
+            )
+        }
+        IconButton(onClick = { /* Handle share button click */ }) {
+            Icon(
+                Icons.Default.FavoriteBorder,
+                contentDescription = "Like",
+                tint = Color.White
+            )
+        }
+        IconButton(onClick = { /* Handle menu button click */ }) {
+            Icon(
+                Icons.Default.MoreVert,
+                contentDescription = "Menu",
+                tint = Color.White
+            )
+        }
+    }
+}
 
 
 

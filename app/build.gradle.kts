@@ -62,6 +62,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,25 +74,24 @@ dependencies {
 
     implementation(libs.navigation.compose)
 
-    implementation ("androidx.compose.material:material:1.6.7")
+    implementation (libs.androidx.material)
 
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.7")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+    implementation (libs.androidx.runtime.livedata)
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
 
 
-    implementation(platform("io.coil-kt:coil-bom:2.4.0"))
-    implementation("io.coil-kt:coil-compose")
-    implementation("io.coil-kt:coil-svg")
-    implementation("io.coil-kt:coil-gif")
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
+    implementation(libs.coil.gif)
 
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation ("com.google.code.gson:gson:2.10.1")
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.gson)
 
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.10.0")
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation (libs.logging.interceptor)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.okhttp)
 
 
     // Dagger hilt
@@ -106,15 +107,28 @@ dependencies {
     kspTest (libs.hilt.compiler)
 
     // Extended Icons
-    implementation ("androidx.compose.material:material-icons-extended: 1.5.1")
+    implementation (libs.androidx.material.icons.extended)
 
     // Navigation
     implementation(libs.kotlinx.serialization.json)
-    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation(libs.androidx.hilt.navigation.compose)
 
     //image color
-    implementation ("androidx.palette:palette-ktx:1.0.0")
+    implementation (libs.androidx.palette.ktx)
 
+    //music player
+    implementation (libs.accompanist.systemuicontroller)
+    implementation (libs.androidx.media3.exoplayer)
+    implementation (libs.exoplayer.core)
+    // ExoPlayer UI module (contains PlayerNotificationManager)
+    implementation (libs.exoplayer.ui)
+    implementation (libs.androidx.media)
+
+    implementation (libs.glide)
+
+    //room database
+//    implementation(libs.androidx.room.ktx)
+//    ksp(libs.androidx.room.compiler)
 
 
 }

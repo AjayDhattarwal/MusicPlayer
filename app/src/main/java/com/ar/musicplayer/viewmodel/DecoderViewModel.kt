@@ -13,15 +13,14 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.DESKeySpec
 
 class DecoderViewModel : ViewModel() {
-    private val _decodedOutput = MutableStateFlow("")
-    val decodedOutput: StateFlow<String> = _decodedOutput
+    val decodedOutput = MutableStateFlow<String?>(null)
 
     fun decode(input: String) {
         viewModelScope.launch {
             try {
-                _decodedOutput.value = decodeDES(input)
+                decodedOutput.value = decodeDES(input)
             } catch (e: Exception) {
-                _decodedOutput.value = "Error: ${e.message}"
+                decodedOutput.value = "Error: ${e.message}"
             }
         }
     }

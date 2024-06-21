@@ -1,7 +1,10 @@
 package com.ar.musicplayer.api
 
+import com.ar.musicplayer.models.BasicSongInfo
 import com.ar.musicplayer.models.HomeData
 import com.ar.musicplayer.models.PlaylistResponse
+import com.ar.musicplayer.models.SearchResults
+import com.ar.musicplayer.models.TopSearchResults
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.GET
@@ -26,12 +29,29 @@ interface ApiService {
     ): Call<PlaylistResponse>
 
 
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getTopSearch(
+        @Query("n") totalSong: String = "15",
+        @Query("__call") call: String = "content.getTopSearches"
+    ): Call<List<BasicSongInfo>>
+
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getSearchResults(
+        @Query("__call") call: String = "search.getResults",
+        @Query("q") query: String,
+        @Query("n") totalSong: String = "5",
+        @Query("p") page: String = "5",
+
+    ): Call<SearchResults>
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getTopSearchType(
+        @Query("cc") cc: String = "in",
+        @Query("__call") call: String = "autocomplete.get",
+        @Query("query") query: String = "",
+        @Query("includeMetaTags") includeMetaTags: String = "1",
+    ):Call<TopSearchResults>
+
+
 }
-
-
-
-//    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0&__call=content.getTopSearches")
-//    suspend fun getTopSearches(@QueryMap params: Map<String, String>): TopSearches
-//
-//    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0&__call=webapi.get")
-//    suspend fun getFromToken(@QueryMap params: Map<String, String>): FromToken

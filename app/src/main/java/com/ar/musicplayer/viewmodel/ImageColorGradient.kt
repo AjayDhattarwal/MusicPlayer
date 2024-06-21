@@ -11,23 +11,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.ar.musicplayer.utils.loadImageBitmapFromUrl
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class ImageColorGradient  : ViewModel() {
 
 
-    private val _bitmapState = MutableLiveData<Bitmap?>()
-    val bitmapState: LiveData<Bitmap?> = _bitmapState
+    val bitmapState = MutableStateFlow<Bitmap?>(null)
 
-    private val _imageColor = MutableLiveData<Color?>()
-    val imageColor: LiveData<Color?> = _imageColor
+    val colorForBackGround = MutableStateFlow<Color?>(null)
 
     fun loadImage(url: String,context: Context) {
         viewModelScope.launch {
             val bitmap = loadImageBitmapFromUrl(url, context)
-            _bitmapState.value = bitmap
+            bitmapState.value = bitmap
             if (bitmap != null) {
-                _imageColor.value = getDominantColor(bitmap)
+                colorForBackGround.value = getDominantColor(bitmap)
             }
         }
     }
@@ -40,7 +39,7 @@ class ImageColorGradient  : ViewModel() {
         val palette = Palette.from(compatibleBitmap).generate()
 
         // Retrieve the dominant color
-        val dominantSwatch = palette.dominantSwatch ?: palette.vibrantSwatch ?: palette.mutedSwatch
+        val dominantSwatch =  palette.darkMutedSwatch ?: palette.dominantSwatch
 
         // Check if dominantSwatch is null
         return if (dominantSwatch != null) {
