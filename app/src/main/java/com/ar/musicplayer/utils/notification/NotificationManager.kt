@@ -1,12 +1,10 @@
 package com.ar.musicplayer.utils.notification
 
-import MusicPlayer
+
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -20,26 +18,26 @@ import androidx.media.app.NotificationCompat.MediaStyle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
-import androidx.media3.ui.PlayerNotificationManager
 import com.ar.musicplayer.R
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.ui.theme.MusicPlayerTheme
-import com.ar.musicplayer.utils.MusicPlayerSingleton
-import okhttp3.internal.notify
-@UnstableApi
-class NotificationManager(
+import com.ar.musicplayer.utils.MusicPlayer
+import com.ar.musicplayer.viewmodel.PlayerViewModel
+import javax.inject.Inject
+
+class NotificationManager @Inject constructor(
     private val context: Context,
-    private val musicPlayer: MusicPlayer,
     private val exoPlayer: ExoPlayer,
-    private val notificationId: Int = 1
+    private val viewModel: PlayerViewModel,
+    private val musicPlayer: MusicPlayer
 ) {
-    private val viewModel = musicPlayer.getViewModel()
+
+    private val notificationId: Int = 1
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     private val mediaSession = MediaSessionCompat(context, "MusicPlayerSession")
-    private val playerListener = @UnstableApi
+
+    private val playerListener =
+    @UnstableApi
     object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             updatePlaybackState()

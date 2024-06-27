@@ -1,7 +1,6 @@
 package com.ar.musicplayer.screens
 
 
-import MusicPlayer
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
@@ -49,13 +48,21 @@ import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.ApiCallViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
+import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.components.AnimatedPlayPauseButton
+import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
+import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.viewmodel.PlayerViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 
+@UnstableApi
 @Composable
 fun InfoScreen(
     navController: NavHostController,
@@ -63,7 +70,8 @@ fun InfoScreen(
     playerViewModel: PlayerViewModel,
     colorViewModel: ImageColorGradient,
     context: Context,
-    musicPlayer: MusicPlayer
+    musicPlayer: MusicPlayer,
+    favViewModel: FavoriteViewModel
 ) {
 
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -167,8 +175,6 @@ fun InfoScreen(
                         )
                     }
                 }
-
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -234,7 +240,9 @@ fun InfoScreen(
                                 if (!isAllreadyPlaying) {
                                     apiData?.list?.let { it1 -> playerViewModel.playPlaylist(it1,apiData?.id ?: "") }
                                     isAllreadyPlaying = true
+                                    playerViewModel.starter.value = false
                                     playerViewModel.play()
+                                    playerViewModel.isPlayingHistory.value = false
                                 }
                                 if(playlistId == apiData?.id){
                                     if (isPlaying) {
@@ -281,7 +289,7 @@ fun InfoScreen(
 
             LazyColumn {
                 items(apiData?.list ?: emptyList()) { apiData ->
-                    InfoSongRepresent(apiData,playerViewModel)
+                    InfoSongRepresent(apiData,playerViewModel,favViewModel)
                 }
                 item {
                     Spacer(modifier = Modifier.height(125.dp))
@@ -295,11 +303,32 @@ fun InfoScreen(
 @Composable
 fun InfoSongRepresent(
     apiData: SongResponse,
-    playerViewModel: PlayerViewModel,)
+    playerViewModel: PlayerViewModel,
+    favViewModel: FavoriteViewModel,
+)
 {
     val context = LocalContext.current
     val showShimmer = remember { mutableStateOf(true) }
     val imageColorViewModel = viewModel<ImageColorGradient>()
+    val favButtonClick  = remember {
+        mutableStateOf(false)
+    }
+    val isFavourite = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = Unit, key2 = favButtonClick) {
+        var isFavVar : Flow<Boolean>? = null
+        val flow = favViewModel.onEvent(
+            FavoriteSongEvent.isFavoriteSong(apiData.id.toString()) { isFav ->
+                isFavVar = isFav
+            }
+        )
+
+        launch { // Launch a coroutine to collect the Flow
+            isFavVar?.collect { isFav ->
+                isFavourite.value = isFav // Update the state in the composable
+            }
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -307,6 +336,7 @@ fun InfoSongRepresent(
             .padding(start = 10.dp, end = 5.dp, top = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+
         AsyncImage(
             model = apiData.image,
             contentDescription = "image",
@@ -325,6 +355,7 @@ fun InfoSongRepresent(
                 .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
                 .weight(1f)
                 .clickable {
+                    playerViewModel.starter.value = false
                     apiData.image?.let {
                         imageColorViewModel.loadImage(
                             it,
@@ -334,6 +365,7 @@ fun InfoSongRepresent(
                     playerViewModel.updateCurrentSong(
                         apiData
                     )
+                    playerViewModel.isPlayingHistory.value = false
                 }
         ) {
             Text(
@@ -362,11 +394,15 @@ fun InfoSongRepresent(
                 tint = Color.White
             )
         }
-        IconButton(onClick = { /* Handle share button click */ }) {
+
+        IconButton(onClick = {
+            favViewModel.onEvent(FavoriteSongEvent.toggleFavSong(apiData))
+            favButtonClick.value = !favButtonClick.value
+        }) {
             Icon(
-                Icons.Default.FavoriteBorder,
+                imageVector = if(isFavourite.value) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 contentDescription = "Like",
-                tint = Color.White
+                tint = if(isFavourite.value) Color.Red else Color.White
             )
         }
         IconButton(onClick = { /* Handle menu button click */ }) {

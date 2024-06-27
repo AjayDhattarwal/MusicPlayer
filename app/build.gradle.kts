@@ -97,14 +97,15 @@ dependencies {
     // Dagger hilt
     implementation (libs.hilt.android)
     ksp (libs.hilt.compiler)
-
+    testImplementation (libs.hilt.android.testing)
     // For instrumentation tests
     androidTestImplementation  (libs.hilt.android.testing)
     kspAndroidTest (libs.hilt.compiler)
 
-    // For local unit tests
-    testImplementation (libs.hilt.android.testing)
-    kspTest (libs.hilt.compiler)
+//    implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
+    ksp ("androidx.hilt:hilt-compiler:1.2.0")
+//    implementation ("com.google.devtools.ksp:symbol-processing-api:1.9.20-1.0.14")
+//    ksp ("com.google.devtools.ksp:symbol-processing:1.9.0-1.0.13")
 
     // Extended Icons
     implementation (libs.androidx.material.icons.extended)
@@ -127,8 +128,8 @@ dependencies {
     implementation (libs.glide)
 
     //room database
-//    implementation(libs.androidx.room.ktx)
-//    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
 
 }

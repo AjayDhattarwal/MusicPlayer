@@ -1,32 +1,25 @@
+package com.ar.musicplayer.utils
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.ar.musicplayer.R
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.utils.notification.MusicPlayerService
 import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.regex.Pattern
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.DESKeySpec
-@UnstableApi
-class MusicPlayer
-    (
+import javax.inject.Inject
+
+class MusicPlayer @Inject constructor(
     private val context: Context,
     private val viewModel: PlayerViewModel,
     private val exoPlayer: ExoPlayer
@@ -34,10 +27,8 @@ class MusicPlayer
     private var playlist = listOf<SongResponse>()
     private var currentIndex = 0
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
-    private var musicNotificationManager: NotificationManager
-
+    @Inject lateinit var notificationManager: NotificationManager
     init {
-        musicNotificationManager = NotificationManager(context,this, exoPlayer)
         coroutineScope.launch {
             viewModel.isPlaying.collect { isPlaying ->
                 if (isPlaying) {
@@ -51,7 +42,7 @@ class MusicPlayer
         coroutineScope.launch {
             viewModel.playlist.collect { newPlaylist ->
                 playlist = newPlaylist
-                currentIndex = 0
+                currentIndex = if(viewModel.isPlayingHistory.value == true) newPlaylist.size - 1 else 0
                 playCurrentSong()
             }
         }
@@ -71,7 +62,7 @@ class MusicPlayer
             coroutineScope.launch {
                 Log.d("bitmap",bitmap?.height.toString())
                 bitmap.let {
-                    currentSong?.let { it1 -> musicNotificationManager.showNotification(it1, exoPlayer.isPlaying, it) }
+                    currentSong?.let { it1 -> notificationManager.showNotification(it1, exoPlayer.isPlaying, it) }
                 }
             }
         }
@@ -82,6 +73,7 @@ class MusicPlayer
     var onSongChanged: ((SongResponse) -> Unit)? = null
 
     fun decodeDES(input: String): String {
+        Log.d("input","$input")
         val key = "38346591"
         val algorithm = "DES/ECB/PKCS5Padding"
 
@@ -92,7 +84,7 @@ class MusicPlayer
         val cipher = Cipher.getInstance(algorithm)
         cipher.init(Cipher.DECRYPT_MODE, secretKey)
 
-        val encryptedBytes = Base64.getDecoder().decode(input)
+        val encryptedBytes = Base64.getDecoder().decode(input.replace("\\",""))
         val decryptedBytes = cipher.doFinal(encryptedBytes)
         var decoded = String(decryptedBytes, StandardCharsets.UTF_8)
 
@@ -117,24 +109,25 @@ class MusicPlayer
         currentIndex = playlist.indexOf(song)
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
-        exoPlayer.play()
+        if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
         onSongChanged?.invoke(song)
 
 
     }
     fun playPlaylist(songs: List<SongResponse>) {
         playlist = songs
-        currentIndex = 0
+        currentIndex = if(viewModel.isPlayingHistory.value == true) playlist.size - 1 else 0
         playCurrentSong()
     }
 
     private fun playCurrentSong() {
         if (playlist.isNotEmpty()) {
             val song = playlist[currentIndex]
-            val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
+            val encodedUrl = song.moreInfo?.encryptedMediaUrl ?: " "
+            val decodedUrl = decodeDES(encodedUrl)
             exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
             exoPlayer.prepare()
-            exoPlayer.play()
+            currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.size - 1 else 0
             onSongChanged?.invoke(song)
         }
     }
@@ -145,8 +138,9 @@ class MusicPlayer
             val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
             exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
             exoPlayer.prepare()
-            exoPlayer.play()
+            if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
             onSongChanged?.invoke(song)
+            viewModel.starter.value = false
         }
     }
 
@@ -157,8 +151,9 @@ class MusicPlayer
             val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
             exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
             exoPlayer.prepare()
-            exoPlayer.play()
+            if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
             onSongChanged?.invoke(song)
+            viewModel.starter.value = false
         }
     }
     fun getViewModel() = viewModel
@@ -168,6 +163,9 @@ class MusicPlayer
         exoPlayer.release()
     }
 
+    fun addListener(notificationManager: NotificationManager) {
+        this.notificationManager = notificationManager
+    }
 
 
 }

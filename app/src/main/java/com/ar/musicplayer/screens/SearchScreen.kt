@@ -158,6 +158,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                                 .clickable {
                                     if(item.type == "song"){
                                         playerViewModel.updateCurrentSong(songResponse)
+                                        playerViewModel.isPlayingHistory.value = false
                                     }
 
                                 }
@@ -528,6 +529,7 @@ fun SearchResultDisplay(searchResults: SearchResults?, navController: NavHostCon
                         .weight(1f)
                         .clickable {
                             playerViewModel.updateCurrentSong(item)
+                            playerViewModel.isPlayingHistory.value = false
                         }
                 ) {
                     (if(item.type == "artist")item.name else item.title)?.let {

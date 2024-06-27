@@ -25,3 +25,9 @@ data class InfoScreenObj(  //
 data class PlayerScreenObj(
     val songResponse: String
 )
+
+@Serializable
+object FavoriteScreenObj
+
+@Serializable
+object ListeningHisScreenObj

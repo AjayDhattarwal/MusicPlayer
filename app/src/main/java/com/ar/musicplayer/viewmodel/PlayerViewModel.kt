@@ -22,15 +22,14 @@ class PlayerViewModel @Inject constructor() : ViewModel()  {
     val playlist = MutableStateFlow<List<SongResponse>>(emptyList())
     val isPlaying = MutableStateFlow(false)
     val playlistId = MutableStateFlow<String>("")
-
+    val isPlayingHistory = MutableStateFlow<Boolean?>(true)
     val bitmapImg = MutableStateFlow<Bitmap?>( null)
     val isBottomNavVisible = MutableStateFlow<Boolean?>( true)
-
+    val starter = MutableStateFlow<Boolean?>(true)
 
     // Function to update the current song
     fun updateCurrentSong(song: SongResponse) {
         currentSong.value = song
-
     }
     fun bitmapload (bitmap: Bitmap){
         bitmapImg.value = bitmap
@@ -45,7 +44,12 @@ class PlayerViewModel @Inject constructor() : ViewModel()  {
     }
 
     fun play() {
-        isPlaying.value = true
+        if(starter.value == true && isPlayingHistory.value == true){
+            isPlaying.value = false
+        }
+        else{
+            isPlaying.value = true
+        }
     }
 
     fun pause() {

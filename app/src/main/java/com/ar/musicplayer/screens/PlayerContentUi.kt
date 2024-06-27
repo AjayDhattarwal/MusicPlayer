@@ -1,8 +1,6 @@
 package com.ar.musicplayer.screens
 
-import MusicPlayer
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -26,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
@@ -44,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,14 +57,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
 import com.ar.musicplayer.components.ControlButton
 import com.ar.musicplayer.components.TrackSlider
 import com.ar.musicplayer.components.convertToText
+import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
+import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
+import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 @UnstableApi
 @SuppressLint("UnrememberedMutableState")
@@ -77,7 +81,9 @@ fun PlayerContentUi(
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
     bottomSheetState: BottomSheetScaffoldState,
-    musicPlayer: MusicPlayer
+    musicPlayer: MusicPlayer,
+    lastSessionViewModel: LastSessionViewModel,
+    favViewModel: FavoriteViewModel
 ) {
     val context = LocalContext.current
     val player = musicPlayer.getPlayer()
@@ -85,6 +91,26 @@ fun PlayerContentUi(
     val imageColorGradientViewModel: ImageColorGradient = viewModel()
     val playlist by playerViewModel.playlist.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
+    val favButtonClick  = remember {
+        mutableStateOf(false)
+    }
+    val isFavourite = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = currentSong?.id, key2 = favButtonClick) {
+        var isFavVar : Flow<Boolean>? = null
+        val flow = favViewModel.onEvent(
+            FavoriteSongEvent.isFavoriteSong(currentSong?.id.toString()) { isFav ->
+                isFavVar = isFav
+            }
+        )
+
+        launch { // Launch a coroutine to collect the Flow
+            isFavVar?.collect { isFav ->
+                isFavourite.value = isFav // Update the state in the composable
+            }
+        }
+    }
+
 
     val bitmap by imageColorGradientViewModel.bitmapState.collectAsState()
     bitmap?.let { playerViewModel.bitmapload(it) }
@@ -109,6 +135,10 @@ fun PlayerContentUi(
     }
     LaunchedEffect(currentSong){
         currentSong?.image?.let { imageColorGradientViewModel.loadImage(it,context) }
+        if(currentSong != null && playerViewModel.isPlaying.value ){
+                Log.d("lastSession","songInserted")
+                lastSessionViewModel.onEvent(LastSessionEvent.InsertLastPlayedData(currentSong!!))
+        }
     }
 
     val verticalGradient = remember { mutableStateOf(
@@ -224,13 +254,22 @@ fun PlayerContentUi(
                             }
                         }
                         IconButton(
-                            onClick = { /*TODO*/ },
+                            onClick = {
+                                currentSong?.let {
+                                    FavoriteSongEvent.toggleFavSong(
+                                        it
+                                    )
+                                }?.let { favViewModel.onEvent(it) }
+
+                                favButtonClick.value = !favButtonClick.value
+
+                            },
                             modifier = Modifier.padding(end = 5.dp)
                         ) {
                             Icon(
-                                Icons.Default.FavoriteBorder,
-                                contentDescription = "Play/Pause",
-                                tint = Color.White
+                                imageVector = if(isFavourite.value) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = if(isFavourite.value) Color.Red else Color.White
                             )
                         }
                         IconButton(
@@ -238,6 +277,7 @@ fun PlayerContentUi(
                                 if (isPlaying) {
                                     playerViewModel.pause()
                                 } else {
+                                    playerViewModel.starter.value = false
                                     playerViewModel.play()
                                 }
                             },
@@ -306,118 +346,96 @@ fun PlayerContentUi(
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
 
-                        AsyncImage(
-                            model = qualityImgUrl,
-                            contentDescription = "image",
-                            modifier = Modifier
-                                .padding(start = 50.dp, end = 50.dp)
-                                .width(250.dp)
-                                .height(250.dp)
-                                .background(brush = shimmerEffectfun(showShimmer.value))
-                                .clip(RoundedCornerShape(10.dp)),
-                            onSuccess = { showShimmer.value = false },
-                            contentScale = ContentScale.Crop,
-                            alignment = Alignment.Center
-                        )
+                            AsyncImage(
+                                model = qualityImgUrl,
+                                contentDescription = "image",
+                                modifier = Modifier
+                                    .padding(start = 50.dp, end = 50.dp)
+                                    .width(250.dp)
+                                    .height(250.dp)
+                                    .background(brush = shimmerEffectfun(showShimmer.value))
+                                    .clip(RoundedCornerShape(10.dp)),
+                                onSuccess = { showShimmer.value = false },
+                                contentScale = ContentScale.Crop,
+                                alignment = Alignment.Center
+                            )
 
-                    }
-
-                }
-                TrackSlider(
-                    value = sliderPosition.longValue.toFloat(),
-                    onValueChange = {
-                        sliderPosition.longValue = it.toLong()
-                    },
-                    onValueChangeFinished = {
-                        currentPosition.longValue = sliderPosition.longValue
-                        player.seekTo(sliderPosition.longValue)
-                    },
-                    songDuration = totalDuration.longValue.toFloat()
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-
-                    Text(
-                        text = (currentPosition.longValue).convertToText(),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp),
-                        color = Color.White,
-                        style = TextStyle(fontWeight = FontWeight.Bold)
-                    )
-
-                    val remainTime = totalDuration.longValue - currentPosition.longValue
-                    Text(
-                        text = if (remainTime >= 0) remainTime.convertToText() else "",
-                        modifier = Modifier
-                            .padding(8.dp),
-                        color = Color.White,
-                        style = TextStyle(fontWeight = FontWeight.Bold)
-                    )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    ControlButton(icon = Icons.Default.SkipPrevious, size = 40.dp, onClick = {
-                        musicPlayer.skipToPrevious()
-                    })
-                    Spacer(modifier = Modifier.width(20.dp))
-                    ControlButton(
-                        icon = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        size = 100.dp,
-                        onClick = {
-                            if (isPlaying) {
-                                playerViewModel.pause()
-                            } else {
-                                playerViewModel.play()
-                            }
-                        })
-                    Spacer(modifier = Modifier.width(20.dp))
-                    ControlButton(
-                        icon = Icons.Default.SkipNext,
-                        size = 40.dp,
-                        onClick = {
-                            musicPlayer.skipToNext()
                         }
-                    )
+                        TrackSlider(
+                            value = sliderPosition.longValue.toFloat(),
+                            onValueChange = {
+                                sliderPosition.longValue = it.toLong()
+                            },
+                            onValueChangeFinished = {
+                                currentPosition.longValue = sliderPosition.longValue
+                                player.seekTo(sliderPosition.longValue)
+                            },
+                            songDuration = totalDuration.longValue.toFloat()
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+
+                            Text(
+                                text = (currentPosition.longValue).convertToText(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(8.dp),
+                                color = Color.White,
+                                style = TextStyle(fontWeight = FontWeight.Bold)
+                            )
+
+                            val remainTime = totalDuration.longValue - currentPosition.longValue
+                            Text(
+                                text = if (remainTime >= 0) remainTime.convertToText() else "",
+                                modifier = Modifier
+                                    .padding(8.dp),
+                                color = Color.White,
+                                style = TextStyle(fontWeight = FontWeight.Bold)
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ControlButton(icon = Icons.Default.SkipPrevious, size = 40.dp, onClick = {
+                                musicPlayer.skipToPrevious()
+                            })
+                            Spacer(modifier = Modifier.width(20.dp))
+                            ControlButton(
+                                icon = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                size = 100.dp,
+                                onClick = {
+                                    if (isPlaying) {
+                                        playerViewModel.pause()
+                                    } else {
+                                        playerViewModel.starter.value = false
+                                        playerViewModel.play()
+                                    }
+                                })
+                            Spacer(modifier = Modifier.width(20.dp))
+                            ControlButton(
+                                icon = Icons.Default.SkipNext,
+                                size = 40.dp,
+                                onClick = {
+                                    musicPlayer.skipToNext()
+                                }
+                            )
+                        }
+                    }
                 }
+
             }
         }
-    }
-}
-
-
-
-@Composable
-fun Player(player: ExoPlayer, isPlaying: Boolean,onClick: (Boolean) -> Unit) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ControlButton(icon = Icons.Default.SkipPrevious, size = 40.dp, onClick = {
-            player.seekToPreviousMediaItem()
-        })
-        Spacer(modifier = Modifier.width(20.dp))
-        ControlButton(
-            icon = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-            size = 100.dp,
-            onClick = {
-                onClick(player.isPlaying)
-            })
-        Spacer(modifier = Modifier.width(20.dp))
-        ControlButton(icon = Icons.Default.SkipNext, size = 40.dp, onClick = {
-            player.seekToNextMediaItem()
-        })
     }
 }
 

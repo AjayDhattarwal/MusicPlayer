@@ -1,6 +1,7 @@
 package com.ar.musicplayer.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,11 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Album
+import androidx.compose.material.icons.twotone.Favorite
 import androidx.compose.material.icons.twotone.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,12 +25,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.ar.musicplayer.navigation.FavoriteScreenObj
+import com.ar.musicplayer.navigation.ListeningHisScreenObj
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 @Composable
@@ -56,16 +63,16 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
                 }
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 30.dp).clickable { navController.navigate(FavoriteScreenObj) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.TwoTone.MusicNote,
+                    imageVector = Icons.Default.Favorite,
                     contentDescription = "Liked",
                     tint = Color.White
                 )
                 Text(
-                    text = "Liked Songs",
+                    text = "Favorite Songs",
                     fontSize = 16.sp,
                     color = Color.White,
                     modifier = Modifier.padding(start = 30.dp)
@@ -88,7 +95,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 30.dp).clickable { navController.navigate(ListeningHisScreenObj) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -97,7 +104,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
                     tint = Color.White
                 )
                 Text(
-                    text = "Last Session",
+                    text = "Listening History",
                     fontSize = 16.sp,
                     color = Color.White,
                     modifier = Modifier.padding(start = 30.dp)
@@ -159,5 +166,11 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
 @Preview
 @Composable
 fun LibraryScreenPreview(){
-//    LibraryScreen()
+    val blackToGrayGradient =
+        Brush.verticalGradient(
+            colors = listOf(Color(0xFF000000),Color(0xFF161616)),
+            startY = Float.POSITIVE_INFINITY,
+            endY = 0f
+        )
+    LibraryScreen(rememberNavController(),blackToGrayGradient, PlayerViewModel())
 }

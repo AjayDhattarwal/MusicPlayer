@@ -50,7 +50,8 @@ data class MoreInfoHomeList(
     @SerializedName("follower_count") val followerCount: String? = " ",
     @SerializedName("firstname") val firstname: String? = " ",
     @SerializedName("last_updated") val lastUpdate: String? = " " ,
-    @SerializedName("uid") val uid: String? = " "
+    @SerializedName("uid") val uid: String? = " ",
+    @SerializedName("query") val query: String? = "",
 ): Parcelable
 
 
@@ -398,3 +399,40 @@ data class ShowMoreInfo(
     @SerializedName("season_number") val seasonNumber: String? = "0"
 ) : Parcelable
 
+
+//   -------------- Station Id ---------------
+@Serializable
+@Parcelize
+data class StationResponse(
+    @SerializedName("stationid") val stationId: String
+) : Parcelable
+
+
+@Serializable
+data class RadioSongs(
+    @SerializedName("0") val song0: RadiosongItem,
+    @SerializedName("1") val song1: RadiosongItem,
+    @SerializedName("2") val song2: RadiosongItem,
+    @SerializedName("3") val song3: RadiosongItem,
+    @SerializedName("4") val song4: RadiosongItem,
+    @SerializedName("5") val song5: RadiosongItem,
+    @SerializedName("6") val song6: RadiosongItem,
+    @SerializedName("7") val song7: RadiosongItem,
+    @SerializedName("8") val song8: RadiosongItem,
+    @SerializedName("9") val song9: RadiosongItem,
+    @SerializedName("10") val song10: RadiosongItem,
+    @SerializedName("11") val song11: RadiosongItem,
+    @SerializedName("12") val song12: RadiosongItem,
+    @SerializedName("13") val song13: RadiosongItem,
+    @SerializedName("14") val song14: RadiosongItem,
+    @SerializedName("15") val song15: RadiosongItem,
+    @SerializedName("16") val song16: RadiosongItem,
+    @SerializedName("17") val song17: RadiosongItem,
+    @SerializedName("18") val song18: RadiosongItem,
+    @SerializedName("19") val song19: RadiosongItem,
+)
+
+@Serializable
+data class RadiosongItem(
+    @SerializedName("song") val song: SongResponse,
+)

@@ -13,8 +13,10 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.api.ApiService
 import com.ar.musicplayer.models.HomeData
+import com.ar.musicplayer.models.SongResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,8 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(private val apiService: ApiService, application: Application) : AndroidViewModel(application) {
 
-    private val _homeData = MutableLiveData<HomeData?>()
-    val homeData: LiveData<HomeData?> = _homeData
+    val homeData =  MutableStateFlow<HomeData?>(null)
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -40,7 +41,7 @@ class HomeViewModel @Inject constructor(private val apiService: ApiService, appl
             try {
                 val response = apiService.getHomeData()
                 if (response.isSuccessful) {
-                    _homeData.value = response.body()
+                    homeData.value = response.body()
                 } else {
                     _errorMessage.value = "Error loading data: ${response.message()}"
                 }

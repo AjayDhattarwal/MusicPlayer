@@ -3,7 +3,10 @@ package com.ar.musicplayer.api
 import com.ar.musicplayer.models.BasicSongInfo
 import com.ar.musicplayer.models.HomeData
 import com.ar.musicplayer.models.PlaylistResponse
+import com.ar.musicplayer.models.RadioSongs
 import com.ar.musicplayer.models.SearchResults
+import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.models.StationResponse
 import com.ar.musicplayer.models.TopSearchResults
 import retrofit2.Call
 import retrofit2.Response
@@ -52,6 +55,24 @@ interface ApiService {
         @Query("query") query: String = "",
         @Query("includeMetaTags") includeMetaTags: String = "1",
     ):Call<TopSearchResults>
+
+
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getArtistStationId(
+        @Query("__call") call: String = "webradio.createArtistStation",
+        @Query("name") name: String = "",
+        @Query("query") query: String = "",
+    ):Call<StationResponse>
+
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getRadioSongs(
+        @Query("k") k: String = "20",
+        @Query("__call") call: String = "webradio.getSong",
+        @Query("next") next: String = "1",
+        @Query("stationid") stationid: String = "",
+    ): Call <RadioSongs>
 
 
 }

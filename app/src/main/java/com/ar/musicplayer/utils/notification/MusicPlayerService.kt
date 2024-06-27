@@ -1,25 +1,26 @@
 package com.ar.musicplayer.utils.notification
 
-import MusicPlayer
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.utils.MusicPlayerSingleton
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 @UnstableApi
-class MusicPlayerService : Service() {
+class MusicPlayerService @Inject constructor(
 
-    private lateinit var exoPlayer: ExoPlayer
-    private lateinit var notificationManager: NotificationManager
-    var musicPlayer = MusicPlayerSingleton.getInstance()
+)  : Service() {
+
+    @Inject lateinit var notificationManager: NotificationManager
+    @Inject lateinit var exoPlayer: ExoPlayer
 
     override fun onCreate() {
         super.onCreate()
-
-        exoPlayer = musicPlayer.getPlayer()
-        notificationManager = NotificationManager(this, musicPlayer, exoPlayer)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
