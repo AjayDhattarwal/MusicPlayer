@@ -31,6 +31,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -78,11 +79,9 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
 
     val searchViewModel: SearchResultViewModel = viewModel()
     LaunchedEffect(Unit) {
-
         searchViewModel.getTopSearchResult(
             call = "content.getTopSearches",
         )
-        
     }
     val searchResults by searchViewModel.searchSongLiveData.observeAsState()
     val searchAlbumsResults by searchViewModel.searchAlbumsLiveData.observeAsState()
@@ -110,7 +109,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
         .background(blackToGrayGradient)){
         val isSearching = SearchBar(modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),viewModel = searchViewModel)
+            .padding(16.dp),viewModel = searchViewModel,selectedType = selectedType)
 
         if(!isSearching){
             Text(
@@ -578,8 +577,30 @@ fun capitalizeFirstLetter(text: String): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(modifier: Modifier,viewModel: SearchResultViewModel):Boolean {
+fun SearchBar(
+    modifier: Modifier,
+    viewModel: SearchResultViewModel,
+    selectedType: MutableState<String>
+):Boolean {
     var searchText by rememberSaveable { mutableStateOf("") }
+
+    when(selectedType.value){
+        "Songs" -> {
+            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getResults", searchText, "1", "20")
+        }
+        "Artists" -> {
+            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getArtistResults", searchText,"1","15")
+        }
+        "Playlists" -> {
+            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getPlaylistResults", searchText,"1","15")
+        }
+        "Albums" -> {
+            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getAlbumResults",searchText,"1","15")
+        }
+        else -> {
+            if(searchText.isNotEmpty()) viewModel.getTopDataResult("autocomplete.get", searchText, "in", "1")
+        }
+    }
 
     Row(
         modifier = modifier.padding(top = 24.dp),
@@ -587,16 +608,7 @@ fun SearchBar(modifier: Modifier,viewModel: SearchResultViewModel):Boolean {
     ) {
         TextField(
             value = searchText,
-            onValueChange = {
-                            searchText = it
-                            if(searchText.isNotEmpty()){
-                                viewModel.getSearchResult("search.getResults", searchText, "1", "20")
-                                viewModel.getSearchResult("search.getAlbumResults",searchText,"1","15")
-                                viewModel.getSearchResult("search.getArtistResults", searchText,"1","15")
-                                viewModel.getSearchResult("search.getPlaylistResults", searchText,"1","15")
-                                viewModel.getTopDataResult("autocomplete.get", searchText, "in", "1")
-                            }
-            },
+            onValueChange = { searchText = it },
             modifier = Modifier
                 .fillMaxWidth()
                 .background(

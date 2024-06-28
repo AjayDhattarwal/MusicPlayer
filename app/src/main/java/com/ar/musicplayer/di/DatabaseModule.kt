@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavDao
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteDatabase
+import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataDao
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDatabase
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionDao
@@ -58,9 +59,15 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideFavouriteDao(database: FavoriteDatabase): FavDao {
+    fun provideFavoriteDao(database: FavoriteDatabase): FavDao {
         return database.dao
     }
+
+    @Provides
+    @Singleton
+    fun provideFavoriteViewModel(
+        database: FavoriteDatabase
+    ) = FavoriteViewModel(database.dao)
 
 
 }

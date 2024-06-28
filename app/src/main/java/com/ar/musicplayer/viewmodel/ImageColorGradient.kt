@@ -2,15 +2,11 @@ package com.ar.musicplayer.viewmodel
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
-import com.ar.musicplayer.utils.loadImageBitmapFromUrl
+import com.ar.musicplayer.utils.helper.loadImageBitmapFromUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 

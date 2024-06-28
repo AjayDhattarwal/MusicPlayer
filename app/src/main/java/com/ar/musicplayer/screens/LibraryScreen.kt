@@ -35,6 +35,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ar.musicplayer.navigation.FavoriteScreenObj
 import com.ar.musicplayer.navigation.ListeningHisScreenObj
+import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 @Composable

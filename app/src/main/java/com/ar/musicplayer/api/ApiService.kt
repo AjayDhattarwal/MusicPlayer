@@ -5,6 +5,7 @@ import com.ar.musicplayer.models.HomeData
 import com.ar.musicplayer.models.PlaylistResponse
 import com.ar.musicplayer.models.RadioSongs
 import com.ar.musicplayer.models.SearchResults
+import com.ar.musicplayer.models.SongDetails
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.models.StationResponse
 import com.ar.musicplayer.models.TopSearchResults
@@ -74,5 +75,11 @@ interface ApiService {
         @Query("stationid") stationid: String = "",
     ): Call <RadioSongs>
 
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getSongDetails(
+        @Query("pids") pids: String = "",
+        @Query("__call") call: String = "song.getDetails"
+    ):Call<SongDetails>
 
 }

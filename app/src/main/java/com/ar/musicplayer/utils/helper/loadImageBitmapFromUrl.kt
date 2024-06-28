@@ -1,4 +1,4 @@
-package com.ar.musicplayer.utils
+package com.ar.musicplayer.utils.helper
 
 import android.content.Context
 import android.graphics.Bitmap

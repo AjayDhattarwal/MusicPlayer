@@ -1,8 +1,11 @@
-package com.ar.musicplayer.utils
+package com.ar.musicplayer.utils.playerHelper
 
 import android.content.Context
 import androidx.media3.exoplayer.ExoPlayer
+import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.utils.notification.NotificationManager
+import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import dagger.Module
 import dagger.Provides
@@ -21,6 +24,9 @@ object MusicPlayerSingleton {
     fun provideExoPlayer(@ApplicationContext context: Context): ExoPlayer {
         return ExoPlayer.Builder(context).build()
     }
+    @Provides
+    @Singleton
+    fun provideDetailsViewModel() = DetailsViewModel()
 
     @Provides
     @Singleton
@@ -32,9 +38,10 @@ object MusicPlayerSingleton {
     fun provideMusicPlayer(
         @ApplicationContext context: Context,
         viewModel: PlayerViewModel,
-        exoPlayer: ExoPlayer
+        exoPlayer: ExoPlayer,
+        detailsViewModel: DetailsViewModel
     ): MusicPlayer {
-        return MusicPlayer(context, viewModel, exoPlayer )
+        return MusicPlayer(context, viewModel, exoPlayer,detailsViewModel )
     }
 
     @Provides
@@ -43,10 +50,11 @@ object MusicPlayerSingleton {
         @ApplicationContext context: Context,
         exoPlayer: ExoPlayer,
         playerViewModel: PlayerViewModel,
-        musicPlayer: MusicPlayer // Inject MusicPlayer
+        musicPlayer: MusicPlayer, // Inject MusicPlayer
+        favoriteViewModel: FavoriteViewModel
     ): NotificationManager {
-        val notificationManager = NotificationManager(context, exoPlayer, playerViewModel,musicPlayer)
-        musicPlayer.addListener(notificationManager) // Set NotificationManager as a listener
+        val notificationManager = NotificationManager(context, exoPlayer, playerViewModel,musicPlayer, favoriteViewModel = favoriteViewModel)
+        musicPlayer.addListener(notificationManager)
         return notificationManager
     }
 

@@ -66,6 +66,7 @@ import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
 import com.ar.musicplayer.utils.MusicPlayer
+import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
@@ -83,7 +84,7 @@ fun PlayerContentUi(
     bottomSheetState: BottomSheetScaffoldState,
     musicPlayer: MusicPlayer,
     lastSessionViewModel: LastSessionViewModel,
-    favViewModel: FavoriteViewModel
+    favViewModel: FavoriteViewModel,
 ) {
     val context = LocalContext.current
     val player = musicPlayer.getPlayer()
@@ -110,7 +111,9 @@ fun PlayerContentUi(
             }
         }
     }
-
+    LaunchedEffect(isFavourite.value) {
+        playerViewModel.isFavorite(isFavourite.value)
+    }
 
     val bitmap by imageColorGradientViewModel.bitmapState.collectAsState()
     bitmap?.let { playerViewModel.bitmapload(it) }

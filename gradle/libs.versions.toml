@@ -4,6 +4,7 @@ agp = "8.5.0"
 coilBom = "2.6.0"
 converterGson = "2.9.0"
 exoplayerUi = "2.19.1"
+ffmpegKitFull = "4.5"
 glide = "4.16.0"
 gson = "2.10.1"
 hiltAndroid = "2.51.1"
@@ -24,6 +25,7 @@ material = "1.6.8"
 materialIconsExtended = " 1.6.8"
 media = "1.7.0"
 media3Exoplayer = "1.3.1"
+mp3agicVersion = "0.9.1"
 okhttp = "4.11.0"
 paletteKtx = "1.0.0"
 retrofit = "2.9.0"
@@ -52,6 +54,7 @@ coil-svg = { module = "io.coil-kt:coil-svg", version = "2.6.0" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 exoplayer-core = { module = "com.google.android.exoplayer:exoplayer-core", version.ref = "exoplayerUi" }
 exoplayer-ui = { module = "com.google.android.exoplayer:exoplayer-ui", version.ref = "exoplayerUi" }
+ffmpeg-kit-full = { module = "com.arthenica:ffmpeg-kit-full", version.ref = "ffmpegKitFull" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
@@ -74,6 +77,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version
 androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
+mpatric-mp3agic = { module = "com.mpatric:mp3agic", version.ref = "mp3agicVersion" }
 navigation-compose={module = "androidx.navigation:navigation-compose", version.ref="composeNavigation"}
 kotlinx-serialization-json={module = "org.jetbrains.kotlinx:kotlinx-serialization-json",version.ref="serialization"}
 androidx-media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3Session" }

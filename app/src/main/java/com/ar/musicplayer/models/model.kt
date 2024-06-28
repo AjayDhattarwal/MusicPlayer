@@ -436,3 +436,9 @@ data class RadioSongs(
 data class RadiosongItem(
     @SerializedName("song") val song: SongResponse,
 )
+
+@Serializable
+@Parcelize
+data class SongDetails(
+    @SerializedName("songs") val songs: List<SongResponse>? = emptyList()
+) : Parcelable

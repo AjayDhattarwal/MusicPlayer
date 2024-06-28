@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.ar.musicplayer"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.ar.musicplayer"
@@ -102,10 +102,7 @@ dependencies {
     androidTestImplementation  (libs.hilt.android.testing)
     kspAndroidTest (libs.hilt.compiler)
 
-//    implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
     ksp ("androidx.hilt:hilt-compiler:1.2.0")
-//    implementation ("com.google.devtools.ksp:symbol-processing-api:1.9.20-1.0.14")
-//    ksp ("com.google.devtools.ksp:symbol-processing:1.9.0-1.0.13")
 
     // Extended Icons
     implementation (libs.androidx.material.icons.extended)
@@ -130,6 +127,12 @@ dependencies {
     //room database
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    //ffmpeg
+    implementation (libs.ffmpeg.kit.full)
+
+    // mp3 create
+    implementation (libs.mpatric.mp3agic)
 
 
 }

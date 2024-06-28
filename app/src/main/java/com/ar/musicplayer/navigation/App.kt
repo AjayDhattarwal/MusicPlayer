@@ -69,6 +69,7 @@ import com.ar.musicplayer.screens.libraryScreens.FavoriteScreen
 import com.ar.musicplayer.screens.libraryScreens.ListeningHistoryScreen
 import com.ar.musicplayer.ui.theme.MusicPlayerTheme
 import com.ar.musicplayer.utils.MusicPlayer
+import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.PlayerViewModel
@@ -121,7 +122,7 @@ fun App(
                 homeRoomViewModel = homeRoomViewModel,
                 lastSessionViewModel = lastSessionViewModel,
                 radioStationViewModel = radioStationViewModel,
-                favViewModel = favViewModel
+                favViewModel = favViewModel,
             )
         }
     }
@@ -140,7 +141,7 @@ fun PlayerScreenWithBottomNav(
     homeRoomViewModel: HomeRoomViewModel,
     lastSessionViewModel: LastSessionViewModel,
     favViewModel: FavoriteViewModel,
-    radioStationViewModel: RadioStationViewModel
+    radioStationViewModel: RadioStationViewModel,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetState = rememberBottomSheetScaffoldState(
@@ -197,7 +198,7 @@ fun PlayerScreenWithBottomNav(
                 bottomSheetState = bottomSheetState,
                 musicPlayer = musicPlayer,
                 lastSessionViewModel = lastSessionViewModel,
-                favViewModel = favViewModel
+                favViewModel = favViewModel,
             )
         },
         sheetBackgroundColor = Color.Transparent

@@ -23,7 +23,6 @@ import javax.inject.Inject
 @HiltViewModel
 class FavoriteViewModel @Inject constructor(
     private val favDao: FavDao
-
 ): ViewModel() {
 
     val favSongList: LiveData<List<SongResponse>> =

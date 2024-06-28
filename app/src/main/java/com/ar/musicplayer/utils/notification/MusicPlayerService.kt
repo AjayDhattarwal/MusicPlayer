@@ -5,8 +5,6 @@ import android.content.Intent
 import android.os.IBinder
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.ar.musicplayer.utils.MusicPlayer
-import com.ar.musicplayer.utils.MusicPlayerSingleton
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

@@ -9,6 +9,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.ViewModel
 import com.ar.musicplayer.models.Playlist
 import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.utils.events.DetailsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class PlayerViewModel @Inject constructor() : ViewModel()  {
+class PlayerViewModel @Inject constructor(
+) : ViewModel()  {
 
     val currentSong = MutableStateFlow<SongResponse?>(null)
     val playlist = MutableStateFlow<List<SongResponse>>(emptyList())
@@ -26,6 +28,9 @@ class PlayerViewModel @Inject constructor() : ViewModel()  {
     val bitmapImg = MutableStateFlow<Bitmap?>( null)
     val isBottomNavVisible = MutableStateFlow<Boolean?>( true)
     val starter = MutableStateFlow<Boolean?>(true)
+    val isFavorite = MutableStateFlow<Boolean?>(false)
+
+
 
     // Function to update the current song
     fun updateCurrentSong(song: SongResponse) {
@@ -54,6 +59,9 @@ class PlayerViewModel @Inject constructor() : ViewModel()  {
 
     fun pause() {
         isPlaying.value = false
+    }
+    fun isFavorite(isIt:Boolean){
+        isFavorite.value = isIt
     }
 
 }

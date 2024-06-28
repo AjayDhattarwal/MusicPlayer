@@ -57,6 +57,7 @@ import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.utils.MusicPlayer
+import com.ar.musicplayer.utils.playerHelper.handleMp4ToMp3Conversion
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -387,7 +388,7 @@ fun InfoSongRepresent(
             )
         }
 
-        IconButton(onClick = { /* Handle download button click */ }) {
+        IconButton(onClick = { handleMp4ToMp3Conversion(context,apiData) }) {
             Icon(
                 Icons.Default.FileDownload,
                 contentDescription = "Download",

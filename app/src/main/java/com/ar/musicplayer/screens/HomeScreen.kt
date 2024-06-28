@@ -55,13 +55,12 @@ import coil.compose.AsyncImage
 import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.NetworkViewModel
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataEvent
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.navigation.InfoScreenObj
-import com.ar.musicplayer.utils.RadioStationEvent
+import com.ar.musicplayer.utils.events.RadioStationEvent
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
@@ -97,7 +96,7 @@ fun HomeScreen(
     }
     LaunchedEffect(isConnected) {
         if (isConnected) {
-            Log.d("internet", "internt connection ${isConnected}")
+            Log.d("internet", "internet connection ${isConnected}")
             homeViewModel.refresh()
         }else{
             homeRoomViewModel.onEvent(HomeDataEvent.LoadHomeData)

@@ -1,4 +1,4 @@
-package com.ar.musicplayer.utils
+package com.ar.musicplayer.utils.events
 
 sealed interface RadioStationEvent {
     data class LoadRadioStationData(

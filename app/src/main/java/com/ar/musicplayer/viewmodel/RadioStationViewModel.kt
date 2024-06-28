@@ -8,9 +8,7 @@ import com.ar.musicplayer.models.RadioSongs
 import com.ar.musicplayer.models.RadiosongItem
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.models.StationResponse
-import com.ar.musicplayer.utils.MusicPlayer
-import com.ar.musicplayer.utils.RadioStationEvent
-import okhttp3.ResponseBody.Companion.toResponseBody
+import com.ar.musicplayer.utils.events.RadioStationEvent
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

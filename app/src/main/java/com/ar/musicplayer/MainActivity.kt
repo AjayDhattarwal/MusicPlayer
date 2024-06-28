@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 
 import androidx.core.view.WindowCompat
 import androidx.media3.common.util.UnstableApi
@@ -43,8 +44,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-
-
         setContent {
             val navController = rememberNavController()
 
@@ -71,40 +70,3 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
-
-//composable<ScreenC>(typeMap = mapOf(typeOf<SongItem>() to SongType )) {
-//    val args = it.toRoute<ScreenC>()
-//    val songItem = args.songItem
-//    Column(modifier = Modifier.fillMaxSize(),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        songItem.title?.let { it1 -> Text(text = it1) }
-//    }
-//}
-
-//@Serializable
-//data class ScreenC(
-//    val songItem: SongItem
-//)
-
-//val SongType = object : NavType<SongItem>(
-//    isNullableAllowed = false
-//) {
-//    override fun get(bundle: Bundle, key: String): SongItem? =
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//            bundle.getParcelable(key, SongItem::class.java)
-//        } else {
-//            @Suppress("DEPRECATION") // for backwards compatibility
-//            bundle.getParcelable(key)
-//        }
-//
-//    override fun put(bundle: Bundle, key: String, value: SongItem) =
-//        bundle.putParcelable(key, value)
-//
-//    override fun parseValue(value: String): SongItem = Json.decodeFromString(value)
-//
-//    override fun serializeAsValue(value: SongItem): String = Json.encodeToString(value)
-//    override val name: String = "SongItem"
-//}
