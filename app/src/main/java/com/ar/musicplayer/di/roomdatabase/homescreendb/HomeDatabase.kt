@@ -6,7 +6,8 @@ import com.ar.musicplayer.di.roomdatabase.dbmodels.HomeDataEntity
 
 @Database(
     entities = [HomeDataEntity::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 
 abstract class HomeDatabase: RoomDatabase() {

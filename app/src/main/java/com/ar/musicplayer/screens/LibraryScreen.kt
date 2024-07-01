@@ -44,7 +44,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 20.dp, top = 40.dp, )
+                .padding( start = 10.dp, top = 40.dp, end = 10.dp )
         ){
             Row(modifier = Modifier
                 .fillMaxWidth()
@@ -64,99 +64,113 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
                 }
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp).clickable { navController.navigate(FavoriteScreenObj) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .clickable {
+                        navController.navigate(FavoriteScreenObj)
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Liked",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.padding(10.dp)
                 )
                 Text(
                     text = "Favorite Songs",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 30.dp)
+                    modifier = Modifier.padding(start = 20.dp).weight(1f)
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Album,
                     contentDescription = "Albums",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.padding(10.dp)
                 )
                 Text(
                     text = "Albums",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 30.dp)
+                    modifier = Modifier.padding(start = 20.dp).weight(1f)
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp).clickable { navController.navigate(ListeningHisScreenObj) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .clickable { navController.navigate(ListeningHisScreenObj) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.History,
                     contentDescription = "Last Session",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.padding(10.dp)
                 )
                 Text(
                     text = "Listening History",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 30.dp)
+                    modifier = Modifier.padding(start = 20.dp).weight(1f)
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Folder,
                     contentDescription = "My Music",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.padding(10.dp)
                 )
                 Text(
                     text = "My Music",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 30.dp)
+                    modifier = Modifier.padding(start = 20.dp).weight(1f)
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.DownloadDone,
                     contentDescription = "Downloads",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.padding(10.dp)
                 )
                 Text(
                     text = "Downloads",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 30.dp)
+                    modifier = Modifier.padding(start = 20.dp).weight(1f)
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.PlaylistPlay,
                     contentDescription = "Playlists",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.padding(10.dp)
                 )
                 Text(
                     text = "Playlists",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 30.dp)
+                    modifier = Modifier.padding(start = 20.dp).weight(1f)
                 )
             }
 

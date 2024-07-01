@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,10 +24,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -55,13 +61,20 @@ import coil.compose.AsyncImage
 import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.NetworkViewModel
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import com.ar.musicplayer.components.TopProfileBar
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataEvent
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
+import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
+import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.navigation.InfoScreenObj
+import com.ar.musicplayer.navigation.SettingsScreenObj
 import com.ar.musicplayer.utils.events.RadioStationEvent
 import com.ar.musicplayer.viewmodel.HomeViewModel
+import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import kotlinx.serialization.json.Json
@@ -74,12 +87,15 @@ fun HomeScreen(
     homeViewModel: HomeViewModel,
     homeRoomViewModel: HomeRoomViewModel,
     radioStationViewModel: RadioStationViewModel,
-    playerViewModel: PlayerViewModel
+    playerViewModel: PlayerViewModel,
+    lastSessionViewModel: LastSessionViewModel,
+    imageColorViewModel: ImageColorGradient
 ) {
     val homeData by homeViewModel.homeData.collectAsState(initial = null)
     val viewModel: NetworkViewModel = viewModel()
     val isConnected by viewModel.isConnected.observeAsState(initial = false)
     val homeDataByRoom by homeRoomViewModel.homeData.collectAsState()
+    val  lastSession by lastSessionViewModel.lastSession.observeAsState()
 
     if(isConnected){
         if(homeData != null){
@@ -87,20 +103,24 @@ fun HomeScreen(
             homeRoomViewModel.onEvent(HomeDataEvent.InsertHomeData(homeData!!))
         }
     }
-    else{
-        homeDataByRoom?.let {
-            if(homeData == null){
-                homeViewModel.homeData.value =  it
-            }
+    homeDataByRoom?.let {
+        if(homeData == null){
+            Log.d("room","homeData set from database")
+            homeViewModel.homeData.value =  it
         }
     }
+
     LaunchedEffect(isConnected) {
         if (isConnected) {
-            Log.d("internet", "internet connection ${isConnected}")
+            Log.d("room", "home data refreshed ")
             homeViewModel.refresh()
-        }else{
-            homeRoomViewModel.onEvent(HomeDataEvent.LoadHomeData)
         }
+    }
+
+    LaunchedEffect(Unit) {
+        Log.d("room","homeData database data load")
+        homeRoomViewModel.onEvent(HomeDataEvent.LoadHomeData)
+        lastSessionViewModel.onEvent(LastSessionEvent.LoadLastSessionData)
     }
 
     val blackToGrayGradient =
@@ -135,7 +155,30 @@ fun HomeScreen(
                 .padding(padding)
                 .fillMaxSize()) {
 
-                LazyColumn(modifier = Modifier){
+                LazyColumn(
+                    modifier = Modifier
+                ){
+                    item{
+                        TopProfileBar(
+                            modifier = Modifier.padding(16.dp),
+                            onClick = {
+                                navController.navigate(SettingsScreenObj)
+                            }
+                        )
+                    }
+
+                    if(lastSession?.size != 0){
+                        item{
+                            lastSession?.let {
+                                LastSessionGridLayout(
+                                    modifier = Modifier.padding(bottom = 30.dp),
+                                    playerViewModel = playerViewModel,
+                                    imageColorViewModel = imageColorViewModel,
+                                    lastSessionList = it.reversed()
+                                )
+                            }
+                        }
+                    }
                     items(homeDataList) { (key, dataList) ->
                         dataList?.let {
                             LazyRowItem(
@@ -157,6 +200,111 @@ fun HomeScreen(
         }
     )
 }
+
+@Composable
+fun LastSessionGridLayout(
+    modifier: Modifier = Modifier,
+    imageColorViewModel: ImageColorGradient,
+    playerViewModel: PlayerViewModel,
+    lastSessionList: List<SongResponse>
+) {
+    val context = LocalContext.current
+    val showShimmer = remember { mutableStateOf(true) }
+    val gridHeight = if (lastSessionList.size < 2) 100.dp else if (lastSessionList.size <= 4 && lastSessionList.size >= 2) 220.dp else 300.dp
+    val gridCells = if (lastSessionList.size < 2) 1 else if (lastSessionList.size <= 4 && lastSessionList.size >= 2) 2 else 4
+
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Last Session",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+        }
+
+        LazyHorizontalGrid(
+            rows = GridCells.Fixed(gridCells),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(8.dp),
+            modifier = Modifier.height(gridHeight)
+        ) {
+
+            items(lastSessionList) { songResponse ->
+                Card(
+                    modifier = Modifier.height(80.dp).width(250.dp),
+                    colors = CardColors(
+                        containerColor = Color(0xBC383838),
+                        contentColor = Color.Transparent,
+                        disabledContentColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        AsyncImage(
+                            model = songResponse.image,
+                            contentDescription = "image",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .background(brush = shimmerEffectfun(showShimmer.value)),
+                            onSuccess = { showShimmer.value = false },
+                            contentScale = ContentScale.Crop,
+                            alignment = Alignment.Center
+                        )
+                        Column(
+                            modifier = Modifier
+                                .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
+                                .weight(1f)
+                                .clickable {
+                                    playerViewModel.starter.value = false
+                                    songResponse.image?.let {
+                                        imageColorViewModel.loadImage(
+                                            it,
+                                            context
+                                        )
+                                    }
+                                    playerViewModel.updateCurrentSong(
+                                        songResponse
+                                    )
+                                    playerViewModel.isPlayingHistory.value = false
+                                }
+                        ) {
+                            Text(
+                                text = songResponse.title ?: "null",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White,
+                                modifier = Modifier.padding(bottom = 2.dp),
+                                maxLines = 1,
+                                softWrap = true,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = songResponse.subtitle ?: "unknown",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray,
+                                maxLines = 1,
+                                softWrap = true,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 
 @Composable

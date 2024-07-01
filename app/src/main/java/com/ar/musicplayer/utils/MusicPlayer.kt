@@ -12,10 +12,7 @@ import com.ar.musicplayer.utils.helper.loadImageBitmapFromUrl
 import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.regex.Pattern
@@ -50,6 +47,7 @@ class MusicPlayer @Inject constructor(
             viewModel.playlist.collect { newPlaylist ->
                 playlist = newPlaylist
                 currentIndex = if(viewModel.isPlayingHistory.value == true) newPlaylist.size - 1 else 0
+                viewModel.setCurrentSongIndex(currentIndex)
                 playCurrentSong()
             }
         }
@@ -58,8 +56,6 @@ class MusicPlayer @Inject constructor(
                 updateNotification()
             }
         })
-
-
     }
 
     private fun updateNotification() {
@@ -82,8 +78,6 @@ class MusicPlayer @Inject constructor(
             }
         }
     }
-
-
 
     var onSongChanged: ((SongResponse) -> Unit)? = null
 
@@ -128,6 +122,7 @@ class MusicPlayer @Inject constructor(
                         playlist = playlist + it
                     }
                     currentIndex = playlist.indexOf(it)
+                    viewModel.setCurrentSongIndex(currentIndex)
                     exoPlayer.setMediaItem(mediaItem)
                     exoPlayer.prepare()
                     if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
@@ -144,6 +139,7 @@ class MusicPlayer @Inject constructor(
                 playlist = playlist + song
             }
             currentIndex = playlist.indexOf(song)
+            viewModel.setCurrentSongIndex(currentIndex)
             exoPlayer.setMediaItem(mediaItem)
             exoPlayer.prepare()
             if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
@@ -154,6 +150,7 @@ class MusicPlayer @Inject constructor(
     fun playPlaylist(songs: List<SongResponse>) {
         playlist = songs
         currentIndex = if(viewModel.isPlayingHistory.value == true) playlist.size - 1 else 0
+        viewModel.setCurrentSongIndex(currentIndex)
     }
 
     private fun playCurrentSong() {
@@ -164,12 +161,14 @@ class MusicPlayer @Inject constructor(
             exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
             exoPlayer.prepare()
             currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.size - 1 else 0
+            viewModel.setCurrentSongIndex(currentIndex)
             onSongChanged?.invoke(song)
         }
     }
     fun skipToNext() {
         if (currentIndex < playlist.size - 1) {
             currentIndex++
+            viewModel.setCurrentSongIndex(currentIndex)
             val song = playlist[currentIndex]
             val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
             exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
@@ -183,6 +182,7 @@ class MusicPlayer @Inject constructor(
     fun skipToPrevious() {
         if (currentIndex > 0) {
             currentIndex--
+            viewModel.setCurrentSongIndex(currentIndex)
             val song = playlist[currentIndex]
             val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
             exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
@@ -204,4 +204,3 @@ class MusicPlayer @Inject constructor(
     }
 
 }
-

@@ -29,6 +29,7 @@ class PlayerViewModel @Inject constructor(
     val isBottomNavVisible = MutableStateFlow<Boolean?>( true)
     val starter = MutableStateFlow<Boolean?>(true)
     val isFavorite = MutableStateFlow<Boolean?>(false)
+    val currentIndex = MutableStateFlow<Int>(0)
 
 
 
@@ -62,6 +63,9 @@ class PlayerViewModel @Inject constructor(
     }
     fun isFavorite(isIt:Boolean){
         isFavorite.value = isIt
+    }
+    fun setCurrentSongIndex(int: Int){
+        currentIndex.value = int
     }
 
 }

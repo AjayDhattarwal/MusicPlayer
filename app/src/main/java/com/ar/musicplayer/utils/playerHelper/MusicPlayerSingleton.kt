@@ -58,4 +58,13 @@ object MusicPlayerSingleton {
         return notificationManager
     }
 
+
+    @Provides
+    @Singleton
+    fun provideMusicDownloaderRepository(@ApplicationContext context: Context) = MusicDownloadRepository(context)
+
+    @Provides
+    @Singleton
+    fun provideDownloaderViewModel(musicDownloadRepository: MusicDownloadRepository) = DownloaderViewModel(musicDownloadRepository)
+
 }

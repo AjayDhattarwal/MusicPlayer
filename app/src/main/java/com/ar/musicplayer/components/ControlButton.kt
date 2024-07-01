@@ -17,9 +17,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 
 @Composable
-fun ControlButton(icon: ImageVector, size: Dp, onClick: () -> Unit) {
+fun ControlButton(icon: ImageVector, size: Dp, onClick: () -> Unit, modifier: Modifier = Modifier,tint : Color = Color.White) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(size)
             .clip(CircleShape)
             .clickable(indication = null, interactionSource = remember {
@@ -31,7 +31,7 @@ fun ControlButton(icon: ImageVector, size: Dp, onClick: () -> Unit) {
         Icon(
             imageVector = icon,
             modifier = Modifier.size(size / 1.5f),
-            tint = Color.White,
+            tint = tint,
             contentDescription = null
         )
     }

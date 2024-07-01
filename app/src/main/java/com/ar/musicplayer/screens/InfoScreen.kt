@@ -48,16 +48,24 @@ import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.ApiCallViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.offline.DownloadProgress
 import com.ar.musicplayer.components.AnimatedPlayPauseButton
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.utils.MusicPlayer
-import com.ar.musicplayer.utils.playerHelper.handleMp4ToMp3Conversion
+import com.ar.musicplayer.utils.playerHelper.DownloadEvent
+import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -71,8 +79,8 @@ fun InfoScreen(
     playerViewModel: PlayerViewModel,
     colorViewModel: ImageColorGradient,
     context: Context,
-    musicPlayer: MusicPlayer,
-    favViewModel: FavoriteViewModel
+    favViewModel: FavoriteViewModel,
+    downloaderViewModel: DownloaderViewModel
 ) {
 
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -290,7 +298,7 @@ fun InfoScreen(
 
             LazyColumn {
                 items(apiData?.list ?: emptyList()) { apiData ->
-                    InfoSongRepresent(apiData,playerViewModel,favViewModel)
+                    InfoSongRepresent(apiData,playerViewModel,favViewModel, downloaderViewModel)
                 }
                 item {
                     Spacer(modifier = Modifier.height(125.dp))
@@ -306,6 +314,7 @@ fun InfoSongRepresent(
     apiData: SongResponse,
     playerViewModel: PlayerViewModel,
     favViewModel: FavoriteViewModel,
+    downloaderViewModel: DownloaderViewModel,
 )
 {
     val context = LocalContext.current
@@ -315,6 +324,33 @@ fun InfoSongRepresent(
         mutableStateOf(false)
     }
     val isFavourite = remember { mutableStateOf(false) }
+
+    val isDownloaded = remember { mutableStateOf(false) }
+    val isDownloading = remember { mutableStateOf(false) }
+    val downloadProgress by downloaderViewModel.songProgress.observeAsState()
+    val currentDownloading by downloaderViewModel.currentDownloading.observeAsState()
+
+
+    Log.d("daw",isDownloading.value.toString())
+    LaunchedEffect(currentDownloading) {
+        if(currentDownloading == apiData){
+            isDownloading.value =  true
+            isDownloaded.value = true
+        }
+        if(currentDownloading == null && downloadProgress == 0 ){
+            isDownloading.value = false
+        }
+        else if(currentDownloading != apiData  ){
+            isDownloading.value = false
+        }
+
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        downloaderViewModel.isAllReadyDownloaded(apiData) { it ->
+            isDownloaded.value = it
+        }
+    }
 
     LaunchedEffect(key1 = Unit, key2 = favButtonClick) {
         var isFavVar : Flow<Boolean>? = null
@@ -388,12 +424,28 @@ fun InfoSongRepresent(
             )
         }
 
-        IconButton(onClick = { handleMp4ToMp3Conversion(context,apiData) }) {
-            Icon(
-                Icons.Default.FileDownload,
-                contentDescription = "Download",
-                tint = Color.White
-            )
+        IconButton(
+            onClick = {
+                if(!isDownloaded.value){
+                    downloaderViewModel.onEvent(DownloadEvent.downloadSong(apiData))
+                }
+        }) {
+            if(isDownloading.value){
+                CircularProgressIndicator(
+                    modifier = Modifier,
+                    progress = downloadProgress?.div(100.toFloat()) ?: 0f,
+                    color = Color.LightGray
+                )
+                Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
+            }
+            else{
+                Icon(
+                    modifier = Modifier.weight(1f),
+                    imageVector = if(isDownloaded.value) Icons.Default.Check else Icons.Default.FileDownload,
+                    contentDescription = "Download",
+                    tint = Color.White
+                )
+            }
         }
 
         IconButton(onClick = {

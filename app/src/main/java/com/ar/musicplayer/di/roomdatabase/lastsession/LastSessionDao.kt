@@ -32,7 +32,7 @@ interface LastSessionDao {
     @Delete
     suspend fun delete(lastSessionDataEntity: LastSessionDataEntity)
 
-    @Query("SELECT * FROM lastSessionDataEntity ORDER BY id DESC LIMIT 10")
+    @Query("SELECT * FROM lastSessionDataEntity ORDER BY id DESC LIMIT 25")
     fun getLastSession(): List<LastSessionDataEntity>
 
     @Query("SELECT * FROM lastSessionDataEntity ORDER BY id DESC")

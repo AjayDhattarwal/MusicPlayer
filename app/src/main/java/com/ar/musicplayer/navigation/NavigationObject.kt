@@ -1,6 +1,5 @@
 package com.ar.musicplayer.navigation
 
-import com.ar.musicplayer.models.SongResponse
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +9,7 @@ object HomeScreenObj
 object SearchScreenObj
 
 @Serializable
-object ProfileScreenObj
+object SettingsScreenObj
 
 @Serializable
 object LibraryScreenObj

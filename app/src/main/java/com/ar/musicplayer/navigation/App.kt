@@ -21,7 +21,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
@@ -63,13 +62,14 @@ import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
 import com.ar.musicplayer.screens.HomeScreen
 import com.ar.musicplayer.screens.InfoScreen
 import com.ar.musicplayer.screens.LibraryScreen
-import com.ar.musicplayer.screens.PlayerContentUi
+import com.ar.musicplayer.screens.PlayerScreen
+import com.ar.musicplayer.screens.SettingsScreen
 import com.ar.musicplayer.screens.SearchScreen
 import com.ar.musicplayer.screens.libraryScreens.FavoriteScreen
 import com.ar.musicplayer.screens.libraryScreens.ListeningHistoryScreen
 import com.ar.musicplayer.ui.theme.MusicPlayerTheme
 import com.ar.musicplayer.utils.MusicPlayer
-import com.ar.musicplayer.utils.notification.NotificationManager
+import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.PlayerViewModel
@@ -90,7 +90,8 @@ fun App(
     lastSessionViewModel: LastSessionViewModel,
     musicPlayer: MusicPlayer,
     favViewModel: FavoriteViewModel,
-    radioStationViewModel: RadioStationViewModel
+    radioStationViewModel: RadioStationViewModel,
+    downloaderViewModel: DownloaderViewModel
 ) {
     val blackToGrayGradient =
         Brush.verticalGradient(
@@ -122,6 +123,7 @@ fun App(
                 homeRoomViewModel = homeRoomViewModel,
                 lastSessionViewModel = lastSessionViewModel,
                 radioStationViewModel = radioStationViewModel,
+                downloaderViewModel = downloaderViewModel,
                 favViewModel = favViewModel,
             )
         }
@@ -142,7 +144,11 @@ fun PlayerScreenWithBottomNav(
     lastSessionViewModel: LastSessionViewModel,
     favViewModel: FavoriteViewModel,
     radioStationViewModel: RadioStationViewModel,
+    downloaderViewModel: DownloaderViewModel,
 ) {
+
+    val imageColorGradient = viewModel<ImageColorGradient>()
+
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed)
@@ -183,7 +189,7 @@ fun PlayerScreenWithBottomNav(
         sheetPeekHeight = 125.dp,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetContent = {
-            PlayerContentUi(
+            PlayerScreen(
                 playerViewModel = playerViewModel,
                 onExpand = {
                     coroutineScope.launch {
@@ -199,6 +205,7 @@ fun PlayerScreenWithBottomNav(
                 musicPlayer = musicPlayer,
                 lastSessionViewModel = lastSessionViewModel,
                 favViewModel = favViewModel,
+                downloaderViewModel  = downloaderViewModel
             )
         },
         sheetBackgroundColor = Color.Transparent
@@ -225,7 +232,15 @@ fun PlayerScreenWithBottomNav(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    HomeScreen(navController, homeViewModel,homeRoomViewModel,radioStationViewModel,playerViewModel)
+                    HomeScreen(
+                        navController = navController,
+                        homeViewModel = homeViewModel,
+                        homeRoomViewModel = homeRoomViewModel,
+                        radioStationViewModel =  radioStationViewModel,
+                        playerViewModel = playerViewModel,
+                        lastSessionViewModel = lastSessionViewModel,
+                        imageColorViewModel = imageColorGradient
+                    )
                 }
 
             }
@@ -251,30 +266,24 @@ fun PlayerScreenWithBottomNav(
                     )
                 }
             }
-            composable<ProfileScreenObj> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Profile Screen")
-                }
+            composable<SettingsScreenObj> {
+                SettingsScreen()
             }
 
             composable<InfoScreenObj> {
                 val args = it.toRoute<InfoScreenObj>()
                 val deSerialized =
                     Json.decodeFromString(HomeListItem.serializer(), args.serialized)
-                val colorViewModel = viewModel<ImageColorGradient>()
+
 
                 InfoScreen(
                     navController = navController,
                     homeListItem = deSerialized,
                     playerViewModel = playerViewModel,
-                    colorViewModel = colorViewModel,
+                    colorViewModel = imageColorGradient,
                     context = LocalContext.current,
                     favViewModel = favViewModel,
-                    musicPlayer = musicPlayer
+                    downloaderViewModel = downloaderViewModel
                 )
 
             }
@@ -306,7 +315,7 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Home,
         BottomNavItem.Search,
         BottomNavItem.Library,
-        BottomNavItem.Profile
+//        BottomNavItem.Profile
     )
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -356,7 +365,7 @@ sealed class BottomNavItem<T>(val obj: T, val icon: ImageVector, val label: Stri
     object Home : BottomNavItem<HomeScreenObj>(HomeScreenObj, Icons.Default.Home, "Home")
     object Search : BottomNavItem<SearchScreenObj>(SearchScreenObj, Icons.Default.Search, "Search")
     object Library: BottomNavItem<LibraryScreenObj>(LibraryScreenObj,Icons.Default.LibraryMusic, "Library")
-    object Profile : BottomNavItem<ProfileScreenObj>(ProfileScreenObj, Icons.Default.Person, "Profile")
+//    object Profile : BottomNavItem<ProfileScreenObj>(ProfileScreenObj, Icons.Default.Person, "Profile")
 }
 
 @Preview
