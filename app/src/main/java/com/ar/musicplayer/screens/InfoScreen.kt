@@ -49,17 +49,12 @@ import com.ar.musicplayer.viewmodel.ApiCallViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.offline.DownloadProgress
 import com.ar.musicplayer.components.AnimatedPlayPauseButton
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
@@ -77,17 +72,18 @@ fun InfoScreen(
     navController: NavHostController,
     homeListItem: HomeListItem,
     playerViewModel: PlayerViewModel,
-    colorViewModel: ImageColorGradient,
     context: Context,
     favViewModel: FavoriteViewModel,
-    downloaderViewModel: DownloaderViewModel
+    downloaderViewModel: DownloaderViewModel,
+    imageColorViewModel: ImageColorGradient
 ) {
 
     val isPlaying by playerViewModel.isPlaying.collectAsState()
     val playlistId by playerViewModel.playlistId.collectAsState()
 
     val apiCallViewModel: ApiCallViewModel = viewModel()
-    val imgColorViewModel: ImageColorGradient = viewModel()
+    val colorViewModel: ImageColorGradient = viewModel()
+
     LaunchedEffect(homeListItem.image) {
         val perfectImg =
             if(homeListItem.image?.contains("350x350") == true) {
@@ -298,7 +294,7 @@ fun InfoScreen(
 
             LazyColumn {
                 items(apiData?.list ?: emptyList()) { apiData ->
-                    InfoSongRepresent(apiData,playerViewModel,favViewModel, downloaderViewModel)
+                    InfoSongRepresent(apiData,playerViewModel,favViewModel, downloaderViewModel, imageColorViewModel)
                 }
                 item {
                     Spacer(modifier = Modifier.height(125.dp))
@@ -315,11 +311,11 @@ fun InfoSongRepresent(
     playerViewModel: PlayerViewModel,
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
+    imageColorViewModel: ImageColorGradient
 )
 {
     val context = LocalContext.current
     val showShimmer = remember { mutableStateOf(true) }
-    val imageColorViewModel = viewModel<ImageColorGradient>()
     val favButtonClick  = remember {
         mutableStateOf(false)
     }

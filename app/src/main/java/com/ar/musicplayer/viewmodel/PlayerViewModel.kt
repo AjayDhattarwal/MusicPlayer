@@ -13,6 +13,7 @@ import com.ar.musicplayer.utils.events.DetailsEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 
@@ -44,6 +45,7 @@ class PlayerViewModel @Inject constructor(
         playlist.value = list
         playlistId.value = id
     }
+
 
     fun setBottomNavVisibility(boolean: Boolean) {
         isBottomNavVisible.value = boolean

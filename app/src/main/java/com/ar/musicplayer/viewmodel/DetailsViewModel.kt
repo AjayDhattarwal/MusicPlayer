@@ -2,9 +2,7 @@ package com.ar.musicplayer.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.ar.musicplayer.di.ApiConfig
-import com.ar.musicplayer.models.PlaylistResponse
+import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.models.SongDetails
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.utils.events.DetailsEvent

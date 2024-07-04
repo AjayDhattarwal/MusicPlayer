@@ -5,6 +5,8 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,20 +14,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.api.ApiService
+import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.models.HomeData
-import com.ar.musicplayer.models.SongResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val apiService: ApiService, application: Application) : AndroidViewModel(application) {
+class HomeViewModel @Inject constructor(
+    private val apiService: ApiService,
+    application: Application,
+) : AndroidViewModel(application) {
 
-    val homeData =  MutableStateFlow<HomeData?>(null)
+    val _homeData = MutableLiveData<HomeData?>()
+    val homeData: LiveData<HomeData?> = _homeData
+
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -37,11 +43,12 @@ class HomeViewModel @Inject constructor(private val apiService: ApiService, appl
         loadHomeData()
     }
     private fun loadHomeData() {
+
         viewModelScope.launch {
             try {
                 val response = apiService.getHomeData()
                 if (response.isSuccessful) {
-                    homeData.value = response.body()
+                    _homeData.value = response.body()
                 } else {
                     _errorMessage.value = "Error loading data: ${response.message()}"
                 }

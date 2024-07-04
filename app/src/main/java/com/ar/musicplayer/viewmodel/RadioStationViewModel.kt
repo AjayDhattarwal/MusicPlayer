@@ -3,7 +3,7 @@ package com.ar.musicplayer.viewmodel
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.ar.musicplayer.di.ApiConfig
+import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.models.RadioSongs
 import com.ar.musicplayer.models.RadiosongItem
 import com.ar.musicplayer.models.SongResponse

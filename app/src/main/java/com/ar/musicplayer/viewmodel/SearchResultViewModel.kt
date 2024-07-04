@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.ar.musicplayer.di.ApiConfig
+import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.models.BasicSongInfo
 import com.ar.musicplayer.models.SearchResults
 import com.ar.musicplayer.models.TopSearchResults

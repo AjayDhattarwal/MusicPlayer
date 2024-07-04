@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ar.musicplayer"
-        minSdk = 29
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -49,6 +49,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
@@ -133,6 +134,7 @@ dependencies {
 
     // mp3 create
     implementation (libs.mpatric.mp3agic)
+
 
 
 }

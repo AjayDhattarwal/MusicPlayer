@@ -132,8 +132,6 @@ data class SongResponse(
     @SerializedName("entity") val entity: String? = "",
     @SerializedName("role") val role: String? = "",
     @SerializedName("is_followed") val isFollowed: Boolean? = false,
-    val downloadStatus: DownloadStatus = DownloadStatus.NOT_DOWNLOADED,
-    val progress: Int = 0
 ) : Parcelable
 
 

@@ -7,6 +7,7 @@ import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
+import com.ar.musicplayer.viewmodel.RecommendationViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,13 +36,20 @@ object MusicPlayerSingleton {
 
     @Provides
     @Singleton
+    fun provideRecommendationViewModel() = RecommendationViewModel()
+
+
+
+    @Provides
+    @Singleton
     fun provideMusicPlayer(
         @ApplicationContext context: Context,
         viewModel: PlayerViewModel,
         exoPlayer: ExoPlayer,
-        detailsViewModel: DetailsViewModel
+        detailsViewModel: DetailsViewModel,
+        recommendationViewModel: RecommendationViewModel
     ): MusicPlayer {
-        return MusicPlayer(context, viewModel, exoPlayer,detailsViewModel )
+        return MusicPlayer(context, viewModel, exoPlayer,detailsViewModel,recommendationViewModel )
     }
 
     @Provides

@@ -46,7 +46,6 @@ interface ApiService {
         @Query("q") query: String,
         @Query("n") totalSong: String = "5",
         @Query("p") page: String = "5",
-
     ): Call<SearchResults>
 
     @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")

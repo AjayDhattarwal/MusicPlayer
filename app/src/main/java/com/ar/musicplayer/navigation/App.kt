@@ -4,10 +4,9 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.BottomSheetValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -76,8 +76,10 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import androidx.compose.material.BottomSheetValue.Collapsed
+import androidx.compose.material.BottomSheetValue.Expanded
 
-
+@OptIn(ExperimentalMaterialApi::class)
 @UnstableApi
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -100,14 +102,17 @@ fun App(
             endY = 0f
         )
     val isBottomNavVisible by playerViewModel.isBottomNavVisible.collectAsState()
+    val bottomSheetState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed, animationSpec = tween(durationMillis = 600))
+    )
 
     MusicPlayerTheme() {
         Scaffold(
             bottomBar = {
                     AnimatedVisibility(
-                        visible =  isBottomNavVisible ?: true,
-                        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                        visible = bottomSheetState.currentFraction < 0.05 ,
+                        enter = fadeIn( animationSpec = tween(durationMillis = 400)),
+                        exit =  fadeOut(animationSpec = tween(durationMillis = 400))
                     ) {
                         BottomNavigationBar(navController = navController)
                     }
@@ -125,6 +130,7 @@ fun App(
                 radioStationViewModel = radioStationViewModel,
                 downloaderViewModel = downloaderViewModel,
                 favViewModel = favViewModel,
+                bottomSheetState = bottomSheetState
             )
         }
     }
@@ -145,14 +151,13 @@ fun PlayerScreenWithBottomNav(
     favViewModel: FavoriteViewModel,
     radioStationViewModel: RadioStationViewModel,
     downloaderViewModel: DownloaderViewModel,
+    bottomSheetState: BottomSheetScaffoldState,
 ) {
 
     val imageColorGradient = viewModel<ImageColorGradient>()
 
     val coroutineScope = rememberCoroutineScope()
-    val bottomSheetState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed)
-    )
+
     val lastSession by lastSessionViewModel.lastSession.observeAsState()
 
     val songResponse by playerViewModel.currentSong.collectAsState()
@@ -208,8 +213,10 @@ fun PlayerScreenWithBottomNav(
                 downloaderViewModel  = downloaderViewModel
             )
         },
-        sheetBackgroundColor = Color.Transparent
+        sheetBackgroundColor = Color.Transparent,
+
     ){
+
         if (bottomSheetState.bottomSheetState.isExpanded) {
             BackHandler {
                 coroutineScope.launch {
@@ -280,10 +287,10 @@ fun PlayerScreenWithBottomNav(
                     navController = navController,
                     homeListItem = deSerialized,
                     playerViewModel = playerViewModel,
-                    colorViewModel = imageColorGradient,
                     context = LocalContext.current,
                     favViewModel = favViewModel,
-                    downloaderViewModel = downloaderViewModel
+                    downloaderViewModel = downloaderViewModel,
+                    imageColorViewModel =  imageColorGradient,
                 )
 
             }
@@ -367,6 +374,22 @@ sealed class BottomNavItem<T>(val obj: T, val icon: ImageVector, val label: Stri
     object Library: BottomNavItem<LibraryScreenObj>(LibraryScreenObj,Icons.Default.LibraryMusic, "Library")
 //    object Profile : BottomNavItem<ProfileScreenObj>(ProfileScreenObj, Icons.Default.Person, "Profile")
 }
+
+
+@OptIn(ExperimentalMaterialApi::class)
+val BottomSheetScaffoldState.currentFraction: Float
+    get() {
+        val fraction = bottomSheetState.progress
+        val targetValue = bottomSheetState.targetValue
+        val currentValue = bottomSheetState.currentValue
+        return when {
+            fraction != 1f && currentValue == Collapsed-> fraction
+            currentValue == Collapsed && targetValue == Collapsed -> 0f
+            currentValue == Expanded && targetValue == Expanded -> 1f
+            currentValue == Collapsed && targetValue == Expanded -> fraction
+            else -> 1f - fraction
+        }
+    }
 
 @Preview
 @Composable

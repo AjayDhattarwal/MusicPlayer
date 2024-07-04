@@ -61,14 +61,15 @@ import coil.compose.AsyncImage
 import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.NetworkViewModel
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ar.musicplayer.components.TopProfileBar
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataEvent
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.models.HomeData
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.navigation.InfoScreenObj
 import com.ar.musicplayer.navigation.SettingsScreenObj
@@ -79,8 +80,6 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import kotlinx.serialization.json.Json
 
-@UnstableApi
-@SuppressLint("UnrememberedMutableState")
 @Composable
 fun HomeScreen(
     navController: NavHostController,
@@ -89,13 +88,14 @@ fun HomeScreen(
     radioStationViewModel: RadioStationViewModel,
     playerViewModel: PlayerViewModel,
     lastSessionViewModel: LastSessionViewModel,
-    imageColorViewModel: ImageColorGradient
+    imageColorViewModel: ImageColorGradient,
 ) {
-    val homeData by homeViewModel.homeData.collectAsState(initial = null)
+    val homeData by homeViewModel.homeData.observeAsState()
     val viewModel: NetworkViewModel = viewModel()
     val isConnected by viewModel.isConnected.observeAsState(initial = false)
     val homeDataByRoom by homeRoomViewModel.homeData.collectAsState()
     val  lastSession by lastSessionViewModel.lastSession.observeAsState()
+
 
     if(isConnected){
         if(homeData != null){
@@ -106,21 +106,25 @@ fun HomeScreen(
     homeDataByRoom?.let {
         if(homeData == null){
             Log.d("room","homeData set from database")
-            homeViewModel.homeData.value =  it
+            homeViewModel._homeData.value =  it
         }
     }
+
 
     LaunchedEffect(isConnected) {
         if (isConnected) {
             Log.d("room", "home data refreshed ")
             homeViewModel.refresh()
         }
+
     }
 
     LaunchedEffect(Unit) {
+
         Log.d("room","homeData database data load")
         homeRoomViewModel.onEvent(HomeDataEvent.LoadHomeData)
         lastSessionViewModel.onEvent(LastSessionEvent.LoadLastSessionData)
+
     }
 
     val blackToGrayGradient =
@@ -151,12 +155,14 @@ fun HomeScreen(
             .background(blackToGrayGradient),
         containerColor = Color.Transparent,
         content = { padding ->
-            Column(modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+            ) {
 
                 LazyColumn(
-                    modifier = Modifier
+                    modifier = Modifier,
                 ){
                     item{
                         TopProfileBar(
@@ -192,6 +198,7 @@ fun HomeScreen(
                             )
                         }
                     }
+
                     item{
                         Spacer(modifier = Modifier.height(80.dp))
                     }
@@ -210,8 +217,8 @@ fun LastSessionGridLayout(
 ) {
     val context = LocalContext.current
     val showShimmer = remember { mutableStateOf(true) }
-    val gridHeight = if (lastSessionList.size < 2) 100.dp else if (lastSessionList.size <= 4 && lastSessionList.size >= 2) 220.dp else 300.dp
-    val gridCells = if (lastSessionList.size < 2) 1 else if (lastSessionList.size <= 4 && lastSessionList.size >= 2) 2 else 4
+    val gridHeight = if (lastSessionList.size < 2) 100.dp else if (lastSessionList.size in 2..4) 220.dp else 300.dp
+    val gridCells = if (lastSessionList.size < 2) 1 else if (lastSessionList.size in 2..4) 2 else 4
 
     Column(modifier = modifier) {
         Row(

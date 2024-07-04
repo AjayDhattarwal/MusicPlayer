@@ -1,5 +1,6 @@
 package com.ar.musicplayer.di.roomdatabase.lastsession
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -15,15 +16,15 @@ interface LastSessionDao {
 
     @Transaction
     suspend fun insertLastSession(lastSessionDataEntity: LastSessionDataEntity) {
-        val lastTenEntries = getLastSession()
+        val lastSessionEntries = getLastSession()
 
-        val existingEntry = lastTenEntries.find { it.lastSession == lastSessionDataEntity.lastSession }
-
+        val existingEntry = lastSessionEntries.find { it.lastSession == lastSessionDataEntity.lastSession }
+        Log.d("exist", "${existingEntry}")
         if (existingEntry != null) {
             delete(existingEntry)
+        }else{
+            insert(lastSessionDataEntity)
         }
-
-        insert(lastSessionDataEntity)
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
