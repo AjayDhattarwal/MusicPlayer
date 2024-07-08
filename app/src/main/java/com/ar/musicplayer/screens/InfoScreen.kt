@@ -3,8 +3,24 @@ package com.ar.musicplayer.screens
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.ArcMode
+import androidx.compose.animation.core.ExperimentalAnimationSpecApi
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +69,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.components.AnimatedPlayPauseButton
@@ -66,23 +83,34 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 
-@UnstableApi
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalAnimationSpecApi::class)
 @Composable
 fun InfoScreen(
+    heading: String,
     navController: NavHostController,
     homeListItem: HomeListItem,
     playerViewModel: PlayerViewModel,
     context: Context,
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
-    imageColorViewModel: ImageColorGradient
+    imageColorViewModel: ImageColorGradient,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
 
     val isPlaying by playerViewModel.isPlaying.collectAsState()
     val playlistId by playerViewModel.playlistId.collectAsState()
-
     val apiCallViewModel: ApiCallViewModel = viewModel()
     val colorViewModel: ImageColorGradient = viewModel()
+
+    val moreInfo = homeListItem.moreInfoHomeList
+    val artistMap = moreInfo?.artistMap
+    var allArtist = homeListItem.subtitle
+    if (artistMap != null && artistMap.artists?.isNotEmpty() == true) {
+        val artists = artistMap.artists.mapNotNull { it.name }
+        allArtist = "Artists: " + artists.joinToString(", ").takeIf { it.isNotBlank() }
+    }
+
 
     LaunchedEffect(homeListItem.image) {
         val perfectImg =
@@ -121,6 +149,7 @@ fun InfoScreen(
         )
     }
 
+
     LaunchedEffect(bitmapState.value, imageColorState) {
         if (bitmapState.value != null && imageColorState != null) {
             blackToGrayGradient.value = Brush.verticalGradient(
@@ -132,86 +161,124 @@ fun InfoScreen(
         Log.d("color", "${imageColorState}")
     }
 
+    val boundsTransform = BoundsTransform { initialBounds, targetBounds ->
+        keyframes {
+            durationMillis = 2000
+            initialBounds at 0 using ArcMode.ArcBelow using FastOutSlowInEasing
+            targetBounds at 2000
+        }
+    }
+
+    val textBoundsTransform = { _: Rect, _: Rect -> tween<Rect>(1000) }
 
     val showShimmer = remember { mutableStateOf(true) }
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(blackToGrayGradient.value),
-        containerColor = Color.Transparent,
-    ) { padding ->
-        Column(
+    with(sharedTransitionScope) {
+        Box(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
-        ) {
-            homeListItem.image?.let {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    IconButton(onClick = { navController.navigateUp() },
+                .background(Color.Black)
+
+        ){
+            Column(
+                modifier = Modifier
+                    .background(blackToGrayGradient.value)
+                    .fillMaxSize()
+                    .padding(top = 10.dp)
+            ) {
+                homeListItem.image?.let {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        IconButton(
+                            onClick = { navController.navigateUp() },
+                            modifier = Modifier
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                modifier = Modifier,
+                                tint = Color.White
+                            )
+                        }
+                        AsyncImage(
+                            model = homeListItem.image,
+                            contentDescription = "image",
+                            modifier = Modifier
+                                .size(250.dp)
+                                .padding(top = 20.dp, start = 30.dp, end = 30.dp)
+                                .weight(1f)
+                                .background(brush = shimmerEffectfun(showShimmer.value))
+                                .clip(RoundedCornerShape(10.dp))
+                                .sharedElement(
+                                    sharedTransitionScope.rememberSharedContentState(key = "image-${heading}-${homeListItem.id}"),
+                                    animatedVisibilityScope = animatedContentScope,
+//                                    boundsTransform = boundsTransform
+                                ),
+                            onSuccess = { showShimmer.value = false },
+                            contentScale = ContentScale.Crop,
+                            alignment = Alignment.Center
+                        )
+
+                        IconButton(onClick = { /* Handle menu button click */ }) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "Menu",
+                                modifier = Modifier,
+                                tint = Color.White
+                            )
+                        }
+                    }
+                    Column(
                         modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, top = 40.dp, end = 20.dp)
                     ) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            modifier = Modifier,
-                            tint = Color.White
-                        )
-                    }
-                    AsyncImage(
-                        model = homeListItem.image,
-                        contentDescription = "image",
-                        modifier = Modifier
-                            .size(250.dp)
-                            .padding(top = 20.dp, start = 30.dp, end = 30.dp)
-                            .weight(1f)
-                            .background(brush = shimmerEffectfun(showShimmer.value))
-                            .clip(RoundedCornerShape(10.dp)),
-                        onSuccess = { showShimmer.value = false },
-                        contentScale = ContentScale.Crop,
-                        alignment = Alignment.Center
-                    )
+                        homeListItem.title?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.White,
+                                maxLines = 2,
+                                softWrap = true,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .padding(bottom = 10.dp)
+                                    .fillMaxWidth()
+                                        .sharedElement(
+                                            sharedTransitionScope.rememberSharedContentState(key = "title-${heading}-${homeListItem.id}"),
+                                            animatedVisibilityScope = animatedContentScope,
+                                            boundsTransform = textBoundsTransform
+                                        ),
+                            )
+                        }
 
-                    IconButton(onClick = { /* Handle menu button click */ }) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "Menu",
-                            modifier = Modifier,
-                            tint = Color.White
-                        )
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, top = 40.dp, end = 20.dp)
-                ) {
-                    homeListItem.title?.let {
                         Text(
-                            text = it,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
-                            modifier = Modifier.padding(bottom = 10.dp),
-                            maxLines = 2,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    if(homeListItem.type != "playlist"){
-                        Text(
-                            text = "Artists: ${homeListItem.moreInfoHomeList?.artistMap?.artists?.joinToString { it.name ?: "" }}",
+                            text = allArtist.orEmpty(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.LightGray,
                             maxLines = 1,
                             softWrap = true,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(bottom = 6.dp)
+                                    .sharedElement(
+                                        sharedTransitionScope.rememberSharedContentState(key = "subtitle-${heading}-${homeListItem.id}"),
+                                        animatedVisibilityScope = animatedContentScope,
+                                        boundsTransform =  textBoundsTransform
+                                    ),
                         )
-                    }
-                    Row {
-                        if(homeListItem.type != "album"){
+
+                        Row {
+                            if (homeListItem.type != "album") {
+                                Text(
+                                    text = "${homeListItem.moreInfoHomeList?.songCount} Songs, ",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.LightGray,
+                                    maxLines = 1,
+                                    softWrap = true,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(bottom = 6.dp)
+                                )
+                            }
                             Text(
-                                text = "${homeListItem.moreInfoHomeList?.songCount} Songs, ",
+                                text = "Type: ${homeListItem.type}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.LightGray,
                                 maxLines = 1,
@@ -220,87 +287,92 @@ fun InfoScreen(
                                 modifier = Modifier.padding(bottom = 6.dp)
                             )
                         }
-                        Text(
-                            text = "Type: ${homeListItem.type}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.LightGray,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                    }
-                    Row(modifier = Modifier) {
+                        Row(modifier = Modifier) {
 
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
 
-                            AnimatedPlayPauseButton(
-                                isPlaying = if(playlistId == apiData?.id){isPlaying}else false,
-                            ){
-                                if (!isAllreadyPlaying) {
-                                    apiData?.list?.let { it1 -> playerViewModel.playPlaylist(it1,apiData?.id ?: "") }
-                                    isAllreadyPlaying = true
-                                    playerViewModel.starter.value = false
-                                    playerViewModel.play()
-                                    playerViewModel.isPlayingHistory.value = false
-                                }
-                                if(playlistId == apiData?.id){
-                                    if (isPlaying) {
-                                        playerViewModel.pause()
-                                    } else {
+                                AnimatedPlayPauseButton(
+                                    isPlaying = if (playlistId == apiData?.id) {
+                                        isPlaying
+                                    } else false,
+                                ) {
+                                    if (!isAllreadyPlaying) {
+                                        apiData?.list?.let { it1 ->
+                                            playerViewModel.playPlaylist(
+                                                it1,
+                                                apiData?.id ?: ""
+                                            )
+                                        }
+                                        isAllreadyPlaying = true
+                                        playerViewModel.starter.value = false
                                         playerViewModel.play()
+                                        playerViewModel.isPlayingHistory.value = false
+                                    }
+                                    if (playlistId == apiData?.id) {
+                                        if (isPlaying) {
+                                            playerViewModel.pause()
+                                        } else {
+                                            playerViewModel.play()
+                                        }
                                     }
                                 }
+
                             }
 
-                        }
-
-                        IconButton(onClick = { /* Handle share button click */ }) {
-                            Icon(
-                                Icons.Default.FavoriteBorder,
-                                contentDescription = "Like",
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(onClick = { /* Handle download button click */ }) {
-                            Icon(
-                                Icons.Default.FileDownload,
-                                contentDescription = "Download",
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(onClick = { /* Handle share button click */ }) {
-                            Icon(
-                                Icons.Default.Share,
-                                contentDescription = "Share",
-                                tint = Color.White
-                            )
-                        }
+                            IconButton(onClick = { /* Handle share button click */ }) {
+                                Icon(
+                                    Icons.Default.FavoriteBorder,
+                                    contentDescription = "Like",
+                                    tint = Color.White
+                                )
+                            }
+                            IconButton(onClick = { /* Handle download button click */ }) {
+                                Icon(
+                                    Icons.Default.FileDownload,
+                                    contentDescription = "Download",
+                                    tint = Color.White
+                                )
+                            }
+                            IconButton(onClick = { /* Handle share button click */ }) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = "Share",
+                                    tint = Color.White
+                                )
+                            }
 
 
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Songs", style = MaterialTheme.typography.bodySmall)
-            Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Songs", style = MaterialTheme.typography.labelMedium)
+                Spacer(modifier = Modifier.height(8.dp))
 
-            LazyColumn {
-                items(apiData?.list ?: emptyList()) { apiData ->
-                    InfoSongRepresent(apiData,playerViewModel,favViewModel, downloaderViewModel, imageColorViewModel)
-                }
-                item {
-                    Spacer(modifier = Modifier.height(125.dp))
+                LazyColumn {
+                    items(apiData?.list ?: emptyList()) { apiData ->
+                        InfoSongRepresent(
+                            apiData,
+                            playerViewModel,
+                            favViewModel,
+                            downloaderViewModel,
+                            imageColorViewModel
+                        )
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(125.dp))
+                    }
                 }
             }
         }
+
     }
 }
 

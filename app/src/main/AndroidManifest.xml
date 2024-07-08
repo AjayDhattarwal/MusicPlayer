@@ -22,9 +22,10 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:enableOnBackInvokedCallback="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPlayer"
-        tools:targetApi="31">
+        tools:targetApi="tiramisu">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -36,8 +37,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".utils.notification.MusicPlayerService"
-            android:exported="false"/>
+        <service
+            android:name=".utils.notification.MusicPlayerService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
+
+
 
 
     </application>

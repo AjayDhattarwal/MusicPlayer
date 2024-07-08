@@ -2,6 +2,7 @@ package com.ar.musicplayer.viewmodel
 
 
 import android.util.Log
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,6 +10,8 @@ import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.models.BasicSongInfo
 import com.ar.musicplayer.models.SearchResults
 import com.ar.musicplayer.models.TopSearchResults
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -36,7 +39,6 @@ class SearchResultViewModel() : ViewModel() {
     val trendingSearchResults: MutableLiveData<List<BasicSongInfo>?> get() = _topSearch
 
 
-
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
 
@@ -45,6 +47,8 @@ class SearchResultViewModel() : ViewModel() {
 
     var errorMessage: String = ""
         private set
+
+
 
     fun getSearchResult(  call: String,query: String,page: String, totalSong: String ) {
         _isLoading.value = true

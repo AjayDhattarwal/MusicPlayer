@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.MusicPlayer
-import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RecommendationViewModel
@@ -52,19 +51,20 @@ object MusicPlayerSingleton {
         return MusicPlayer(context, viewModel, exoPlayer,detailsViewModel,recommendationViewModel )
     }
 
-    @Provides
-    @Singleton
-    fun provideNotificationManager(
-        @ApplicationContext context: Context,
-        exoPlayer: ExoPlayer,
-        playerViewModel: PlayerViewModel,
-        musicPlayer: MusicPlayer, // Inject MusicPlayer
-        favoriteViewModel: FavoriteViewModel
-    ): NotificationManager {
-        val notificationManager = NotificationManager(context, exoPlayer, playerViewModel,musicPlayer, favoriteViewModel = favoriteViewModel)
-        musicPlayer.addListener(notificationManager)
-        return notificationManager
-    }
+
+//    @Provides
+//    @Singleton
+//    fun provideNotificationManager(
+//        @ApplicationContext context: Context,
+//        exoPlayer: ExoPlayer,
+//        playerViewModel: PlayerViewModel,
+//        musicPlayer: MusicPlayer,
+//        favoriteViewModel: FavoriteViewModel,
+//        musicPlayerService: MusicPlayerService
+//    ): NotificationManager {
+//        val notificationManager = NotificationManager(context, exoPlayer, playerViewModel,musicPlayer, favoriteViewModel = favoriteViewModel,musicPlayerService)
+//        return notificationManager
+//    }
 
 
     @Provides

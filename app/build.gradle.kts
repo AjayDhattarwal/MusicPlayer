@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ar.musicplayer"
-        minSdk = 31
+        minSdk = 29
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.core.animation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -123,7 +124,8 @@ dependencies {
     implementation (libs.exoplayer.ui)
     implementation (libs.androidx.media)
 
-    implementation (libs.glide)
+
+    implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
 
     //room database
     implementation(libs.androidx.room.ktx)
@@ -134,7 +136,4 @@ dependencies {
 
     // mp3 create
     implementation (libs.mpatric.mp3agic)
-
-
-
 }

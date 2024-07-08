@@ -1,17 +1,14 @@
 package com.ar.musicplayer.utils
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.ar.musicplayer.models.RecommendationsResponse
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.utils.events.DetailsEvent
 import com.ar.musicplayer.utils.events.RecommendationEvent
-import com.ar.musicplayer.utils.helper.loadImageBitmapFromUrl
-import com.ar.musicplayer.utils.notification.NotificationManager
+import com.ar.musicplayer.utils.notification.MusicPlayerService
 import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RecommendationViewModel
@@ -35,17 +32,16 @@ class MusicPlayer @Inject constructor(
     private var playlist = MutableStateFlow<List<SongResponse>>(emptyList())
     private var currentIndex = 0
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
-    @Inject lateinit var notificationManager: NotificationManager
 
     init {
         coroutineScope.launch {
             viewModel.isPlaying.collect { isPlaying ->
                 if (isPlaying) {
-                    exoPlayer.play()
-                } else {
-                    exoPlayer.pause()
+                    val currentSong = viewModel.currentSong.value
+                    currentSong?.let {
+                        MusicPlayerService.startService(context, it)
+                    }
                 }
-                updateNotification()
             }
         }
         coroutineScope.launch {
@@ -60,7 +56,7 @@ class MusicPlayer @Inject constructor(
 
         exoPlayer.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                updateNotification()
+//                updateNotification()
                 if(currentIndex > playlist.value.size - 4) {
                     recommendationViewModel.onEvent(RecommendationEvent.GetRecommendations(viewModel.currentSong.value?.title.toString()))
                 }
@@ -73,26 +69,7 @@ class MusicPlayer @Inject constructor(
         })
     }
 
-    private fun updateNotification() {
-        Log.d("notification","update")
 
-        if (playlist.value.isNotEmpty()) {
-            val currentSong = viewModel.currentSong.value
-            coroutineScope.launch {
-                val bitmap = currentSong?.image?.let {
-                    loadImageBitmapFromUrl(it, context)
-                } ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-                withContext(Dispatchers.Main) {
-                    currentSong?.let {
-                        viewModel.isFavorite.value?.let { it1 ->
-                            notificationManager.showNotification(it,
-                                it1,bitmap)
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     var onSongChanged: ((SongResponse) -> Unit)? = null
 
@@ -163,6 +140,7 @@ class MusicPlayer @Inject constructor(
         if (currentIndex >= playlist.value.size - 3) {
             viewModel.currentSong.value?.let { fetchAndAddRecommendedSongs(it) }
         }
+
     }
     fun playPlaylist(songs: List<SongResponse>) {
         playlist.value = songs
@@ -213,14 +191,13 @@ class MusicPlayer @Inject constructor(
     fun getPlayer() = exoPlayer
 
     fun release() {
+        MusicPlayerService.stopService(context)
         exoPlayer.release()
     }
 
     fun getPlaylist() = playlist
 
-    fun addListener(notificationManager: NotificationManager) {
-        this.notificationManager = notificationManager
-    }
+
 
     private fun fetchAndAddRecommendedSongs(currentSong: SongResponse) {
         coroutineScope.launch {

@@ -503,7 +503,6 @@ fun SearchResultDisplay(searchResults: SearchResults?, navController: NavHostCon
         items(searchResults?.results ?: emptyList()) { item ->
 
             val showShimmer = remember { mutableStateOf(true) }
-            val imageColorGradient: ImageColorGradient = viewModel()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

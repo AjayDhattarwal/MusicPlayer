@@ -17,7 +17,8 @@ object LibraryScreenObj
 
 @Serializable
 data class InfoScreenObj(  //
-    val serialized : String
+    val serialized: String,
+    val heading: String,
 )
 
 @Serializable

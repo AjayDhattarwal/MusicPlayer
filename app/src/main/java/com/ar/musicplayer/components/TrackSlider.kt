@@ -18,9 +18,7 @@ fun TrackSlider(
             onValueChange(it)
         },
         onValueChangeFinished = {
-
             onValueChangeFinished()
-
         },
         valueRange = 0f..songDuration,
         colors = SliderDefaults.colors(
@@ -30,3 +28,6 @@ fun TrackSlider(
         )
     )
 }
+
+
+

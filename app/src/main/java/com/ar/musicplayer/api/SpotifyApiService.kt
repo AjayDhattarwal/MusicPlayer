@@ -1,6 +1,5 @@
 package com.ar.musicplayer.api
 
-import com.ar.musicplayer.models.AccessTokenResponse
 import com.ar.musicplayer.models.RecommendationsResponse
 import com.ar.musicplayer.models.SearchResponseForReco
 import retrofit2.Response

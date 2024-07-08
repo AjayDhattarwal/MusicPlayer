@@ -1,9 +1,11 @@
 package com.ar.musicplayer.utils.playerHelper
 
 import android.content.Context
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ar.musicplayer.models.HomeData
 import com.ar.musicplayer.models.SongResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,8 +18,6 @@ import javax.inject.Inject
 class DownloaderViewModel @Inject constructor(
     private val repository: MusicDownloadRepository,
 ) : ViewModel() {
-    private val _songs = MutableStateFlow<List<String>>(emptyList())
-    val songs: StateFlow<List<String>> get() = _songs
 
     val currentDownloading = MutableLiveData<SongResponse?>(null)
     val songProgress = MutableLiveData<Int>(0)

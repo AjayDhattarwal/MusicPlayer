@@ -10,11 +10,13 @@ import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 
 import androidx.core.view.WindowCompat
@@ -41,7 +43,6 @@ import kotlin.math.absoluteValue
 
 
 @AndroidEntryPoint
-@UnstableApi
 class MainActivity : ComponentActivity() {
 
 
@@ -62,7 +63,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-
             App(
                 navController = navController,
                 homeViewModel = viewModel,
@@ -74,16 +74,15 @@ class MainActivity : ComponentActivity() {
                 downloaderViewModel = downloaderViewModel,
                 musicPlayer = musicPlayer
             )
+
         }
         val intent = Intent(this, MusicPlayerService::class.java)
         startService(intent)
-
     }
     override fun onDestroy() {
         super.onDestroy()
-        val intent = Intent(this, MusicPlayerService::class.java)
-        stopService(intent)
-        musicPlayer.release()
+//        val intent = Intent(this, MusicPlayerService::class.java)
+//        stopService(intent)
     }
 }
 

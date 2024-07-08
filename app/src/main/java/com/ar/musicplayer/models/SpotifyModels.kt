@@ -1,6 +1,8 @@
 package com.ar.musicplayer.models
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.android.parcel.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 

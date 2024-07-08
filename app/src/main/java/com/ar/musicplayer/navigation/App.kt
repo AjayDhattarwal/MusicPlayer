@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +19,8 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.BottomSheetValue.Collapsed
+import androidx.compose.material.BottomSheetValue.Expanded
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -51,20 +55,19 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.screens.HomeScreen
 import com.ar.musicplayer.screens.InfoScreen
 import com.ar.musicplayer.screens.LibraryScreen
 import com.ar.musicplayer.screens.PlayerScreen
-import com.ar.musicplayer.screens.SettingsScreen
 import com.ar.musicplayer.screens.SearchScreen
+import com.ar.musicplayer.screens.SettingsScreen
 import com.ar.musicplayer.screens.libraryScreens.FavoriteScreen
 import com.ar.musicplayer.screens.libraryScreens.ListeningHistoryScreen
 import com.ar.musicplayer.ui.theme.MusicPlayerTheme
@@ -76,11 +79,9 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import androidx.compose.material.BottomSheetValue.Collapsed
-import androidx.compose.material.BottomSheetValue.Expanded
+
 
 @OptIn(ExperimentalMaterialApi::class)
-@UnstableApi
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun App(
@@ -137,8 +138,7 @@ fun App(
 }
 
 
-@UnstableApi
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun PlayerScreenWithBottomNav(
     navController: NavHostController,
@@ -224,89 +224,97 @@ fun PlayerScreenWithBottomNav(
                 }
             }
         }
-        NavHost(
-            navController = navController,
-            startDestination = HomeScreenObj,
-            modifier = Modifier
-                .padding()
-                .fillMaxSize()
-        ) {
+        SharedTransitionLayout{
+            NavHost(
+                navController = navController,
+                startDestination = HomeScreenObj,
+                modifier = Modifier
+                    .padding()
+                    .fillMaxSize(),
+            ) {
 
-            composable<HomeScreenObj> {
+                composable<HomeScreenObj> {
 
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    HomeScreen(
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        HomeScreen(
+                            navController = navController,
+                            homeViewModel = homeViewModel,
+                            homeRoomViewModel = homeRoomViewModel,
+                            radioStationViewModel =  radioStationViewModel,
+                            playerViewModel = playerViewModel,
+                            lastSessionViewModel = lastSessionViewModel,
+                            imageColorViewModel = imageColorGradient,
+                            this@SharedTransitionLayout,
+                            this@composable,
+                        )
+                    }
+
+                }
+                composable<SearchScreenObj> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        SearchScreen(navController,playerViewModel)
+                    }
+                }
+                composable<LibraryScreenObj> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LibraryScreen(
+                            navController = navController,
+                            brush = blackToGrayGradient,
+                            playerViewModel = playerViewModel
+                        )
+                    }
+                }
+                composable<SettingsScreenObj> {
+                    SettingsScreen()
+                }
+
+                composable<InfoScreenObj> {
+                    val args = it.toRoute<InfoScreenObj>()
+                    val deSerialized =
+                        Json.decodeFromString(HomeListItem.serializer(), args.serialized)
+                    val heading = args.heading
+
+
+                    InfoScreen(
                         navController = navController,
-                        homeViewModel = homeViewModel,
-                        homeRoomViewModel = homeRoomViewModel,
-                        radioStationViewModel =  radioStationViewModel,
+                        heading = heading,
+                        homeListItem = deSerialized,
                         playerViewModel = playerViewModel,
-                        lastSessionViewModel = lastSessionViewModel,
-                        imageColorViewModel = imageColorGradient
+                        context = LocalContext.current,
+                        favViewModel = favViewModel,
+                        downloaderViewModel = downloaderViewModel,
+                        imageColorViewModel =  imageColorGradient,
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedContentScope = this@composable
                     )
-                }
 
-            }
-            composable<SearchScreenObj> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    SearchScreen(navController,playerViewModel)
                 }
-            }
-            composable<LibraryScreenObj> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    LibraryScreen(
+                composable<FavoriteScreenObj> {
+                    FavoriteScreen(
                         navController = navController,
-                        brush = blackToGrayGradient,
-                        playerViewModel = playerViewModel
+                        playerViewModel = playerViewModel,
+                        favViewModel = favViewModel,
                     )
                 }
-            }
-            composable<SettingsScreenObj> {
-                SettingsScreen()
-            }
-
-            composable<InfoScreenObj> {
-                val args = it.toRoute<InfoScreenObj>()
-                val deSerialized =
-                    Json.decodeFromString(HomeListItem.serializer(), args.serialized)
-
-
-                InfoScreen(
-                    navController = navController,
-                    homeListItem = deSerialized,
-                    playerViewModel = playerViewModel,
-                    context = LocalContext.current,
-                    favViewModel = favViewModel,
-                    downloaderViewModel = downloaderViewModel,
-                    imageColorViewModel =  imageColorGradient,
-                )
-
-            }
-            composable<FavoriteScreenObj> {
-                FavoriteScreen(
-                    navController = navController,
-                    playerViewModel = playerViewModel,
-                    favViewModel = favViewModel,
-                )
-            }
-            composable<ListeningHisScreenObj> {
-                ListeningHistoryScreen(
-                    playerViewModel = playerViewModel,
-                    favViewModel = favViewModel,
-                    lastSessionViewModel = lastSessionViewModel
-                )
+                composable<ListeningHisScreenObj> {
+                    ListeningHistoryScreen(
+                        playerViewModel = playerViewModel,
+                        favViewModel = favViewModel,
+                        lastSessionViewModel = lastSessionViewModel
+                    )
+                }
             }
         }
     }

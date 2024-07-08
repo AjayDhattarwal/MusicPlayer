@@ -135,11 +135,6 @@ data class SongResponse(
 ) : Parcelable
 
 
-enum class DownloadStatus {
-    NOT_DOWNLOADED,
-    DOWNLOADING,
-    DOWNLOADED
-}
 
 
 @Serializable

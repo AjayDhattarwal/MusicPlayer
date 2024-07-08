@@ -58,6 +58,7 @@ class PlayerViewModel @Inject constructor(
         else{
             isPlaying.value = true
         }
+
     }
 
     fun pause() {
