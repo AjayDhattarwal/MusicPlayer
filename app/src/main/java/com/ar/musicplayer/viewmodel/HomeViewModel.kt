@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.AndroidViewModel
@@ -16,6 +17,8 @@ import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.api.ApiService
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.models.HomeData
+import com.ar.musicplayer.models.HomeListItem
+import com.ar.musicplayer.models.ModulesOfHomeScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
@@ -49,13 +52,19 @@ class HomeViewModel @Inject constructor(
                 val response = apiService.getHomeData()
                 if (response.isSuccessful) {
                     _homeData.value = response.body()
+                    Log.d("Home","${response.body()?.modules}")
                 } else {
                     _errorMessage.value = "Error loading data: ${response.message()}"
+                    Log.d("Home","${response.message()}")
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading data: ${e.message}"
+                Log.d("Home","${e.message}")
+
             }
         }
     }
+
+
 
 }

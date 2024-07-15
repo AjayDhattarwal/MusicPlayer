@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -183,10 +185,9 @@ fun InfoScreen(
                 modifier = Modifier
                     .background(blackToGrayGradient.value)
                     .fillMaxSize()
-                    .padding(top = 10.dp)
             ) {
                 homeListItem.image?.let {
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
                         IconButton(
                             onClick = { navController.navigateUp() },
                             modifier = Modifier
@@ -202,8 +203,9 @@ fun InfoScreen(
                             model = homeListItem.image,
                             contentDescription = "image",
                             modifier = Modifier
-                                .size(250.dp)
-                                .padding(top = 20.dp, start = 30.dp, end = 30.dp)
+                                .height(300.dp)
+                                .width(250.dp)
+                                .padding(top = 10.dp)
                                 .weight(1f)
                                 .background(brush = shimmerEffectfun(showShimmer.value))
                                 .clip(RoundedCornerShape(10.dp))

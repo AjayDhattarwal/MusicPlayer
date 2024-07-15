@@ -32,3 +32,15 @@ data class Track(
 data class RecommendationsResponse(
     val tracks: List<Track>
 )
+
+
+
+
+data class SongRecognitionResponse(
+    val track: TrackInfo? = null
+)
+
+data class TrackInfo(
+    val title: String? = null,
+    val subtitle: String? = null
+)

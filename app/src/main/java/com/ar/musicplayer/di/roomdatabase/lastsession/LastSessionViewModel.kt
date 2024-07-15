@@ -54,7 +54,7 @@ class LastSessionViewModel @Inject constructor(
 
     private fun insertLastSession(songResponse: SongResponse) {
         viewModelScope.launch {
-            val lastSessionDataEntity = LastSessionDataEntity(lastSession = Gson().toJson(songResponse))
+            val lastSessionDataEntity = LastSessionDataEntity(lastSession = Gson().toJson(songResponse), title = songResponse.title.toString())
             lastSessionDao.insertLastSession(lastSessionDataEntity)
         }
     }

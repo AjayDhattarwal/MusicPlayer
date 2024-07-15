@@ -12,7 +12,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -25,6 +27,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
@@ -49,7 +52,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -65,11 +67,13 @@ import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.screens.HomeScreen
 import com.ar.musicplayer.screens.InfoScreen
 import com.ar.musicplayer.screens.LibraryScreen
+import com.ar.musicplayer.screens.MusicRecognizer
 import com.ar.musicplayer.screens.PlayerScreen
 import com.ar.musicplayer.screens.SearchScreen
 import com.ar.musicplayer.screens.SettingsScreen
 import com.ar.musicplayer.screens.libraryScreens.FavoriteScreen
 import com.ar.musicplayer.screens.libraryScreens.ListeningHistoryScreen
+import com.ar.musicplayer.screens.libraryScreens.MyMusicScreen
 import com.ar.musicplayer.ui.theme.MusicPlayerTheme
 import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
@@ -115,11 +119,11 @@ fun App(
                         enter = fadeIn( animationSpec = tween(durationMillis = 400)),
                         exit =  fadeOut(animationSpec = tween(durationMillis = 400))
                     ) {
-                        BottomNavigationBar(navController = navController)
+                        BottomNavigationBar(navController = navController , modifier =  Modifier.systemBarsPadding())
                     }
             },
             modifier = modifier
-        ) {
+        ) { innerPadding ->
             PlayerScreenWithBottomNav(
                 navController = navController,
                 homeViewModel = homeViewModel,
@@ -214,7 +218,7 @@ fun PlayerScreenWithBottomNav(
             )
         },
         sheetBackgroundColor = Color.Transparent,
-
+        modifier = Modifier.navigationBarsPadding()
     ){
 
         if (bottomSheetState.bottomSheetState.isExpanded) {
@@ -310,11 +314,26 @@ fun PlayerScreenWithBottomNav(
                 }
                 composable<ListeningHisScreenObj> {
                     ListeningHistoryScreen(
+                        navController = navController,
                         playerViewModel = playerViewModel,
                         favViewModel = favViewModel,
                         lastSessionViewModel = lastSessionViewModel
                     )
                 }
+                composable<MyMusicScreenObj> {
+                    MyMusicScreen(
+                        navController = navController,
+                        playerViewModel = playerViewModel,
+                        favViewModel = favViewModel
+                    )
+                }
+//                composable<MusicRecognizerObj> {
+//                    MusicRecognizer(
+//                        navController = navController,
+//                        playerViewModel = playerViewModel,
+//                        favViewModel = favViewModel
+//                    )
+//                }
             }
         }
     }
@@ -325,18 +344,19 @@ fun PlayerScreenWithBottomNav(
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun BottomNavigationBar(navController: NavController, modifier: Modifier = Modifier) {
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Search,
+//        BottomNavItem.MusicRecognizer,
         BottomNavItem.Library,
-//        BottomNavItem.Profile
     )
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     BottomNavigation(
         backgroundColor = Color(0xE4000000),
+        modifier =  modifier
     ) {
         items.forEach { screen ->
             val isSelected = currentDestination?.route.toString() == screen.obj.toString().substringBefore("@")
@@ -379,8 +399,9 @@ fun BottomNavigationBar(navController: NavController) {
 sealed class BottomNavItem<T>(val obj: T, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem<HomeScreenObj>(HomeScreenObj, Icons.Default.Home, "Home")
     object Search : BottomNavItem<SearchScreenObj>(SearchScreenObj, Icons.Default.Search, "Search")
+//    object MusicRecognizer : BottomNavItem<MusicRecognizerObj>(MusicRecognizerObj, Icons.Default.Mic, "Recognizer")
     object Library: BottomNavItem<LibraryScreenObj>(LibraryScreenObj,Icons.Default.LibraryMusic, "Library")
-//    object Profile : BottomNavItem<ProfileScreenObj>(ProfileScreenObj, Icons.Default.Person, "Profile")
+
 }
 
 

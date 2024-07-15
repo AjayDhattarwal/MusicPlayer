@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.di.roomdatabase.dbmodels.HomeDataEntity
 import com.ar.musicplayer.models.HomeData
 import com.ar.musicplayer.models.HomeListItem
+import com.ar.musicplayer.models.ModulesOfHomeScreen
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +45,18 @@ class HomeRoomViewModel @Inject constructor(
                 charts = Gson().toJson(homeData.charts),
                 radio = Gson().toJson(homeData.radio),
                 artistRecos = Gson().toJson(homeData.artistRecos),
-                cityMod = Gson().toJson(homeData.cityMod)
+                cityMod = Gson().toJson(homeData.cityMod),
+                tagMixes = Gson().toJson(homeData.tagMixes),
+                data68 = Gson().toJson(homeData.data68),
+                data76 = Gson().toJson(homeData.data76),
+                data185 = Gson().toJson(homeData.data185),
+                data107 = Gson().toJson(homeData.data107),
+                data113 = Gson().toJson(homeData.data113),
+                data114 = Gson().toJson(homeData.data114),
+                data116 = Gson().toJson(homeData.data116),
+                data144 = Gson().toJson(homeData.data144),
+                data211 = Gson().toJson(homeData.data211),
+                modules = Gson().toJson(homeData.modules)
             )
             homeDataDao.upsertHomeData(homeDataEntity)
         }
@@ -66,9 +78,23 @@ class HomeRoomViewModel @Inject constructor(
             charts = parseJsonArray(charts),
             radio = parseJsonArray(radio),
             artistRecos = parseJsonArray(artistRecos),
-            cityMod = parseJsonArray(cityMod)
+            cityMod = parseJsonArray(cityMod),
+            tagMixes = parseJsonArray(tagMixes),
+            data68 = parseJsonArray(data68),
+            data76 = parseJsonArray(data76),
+            data185 = parseJsonArray(data185),
+            data107 = parseJsonArray(data107),
+            data113 = parseJsonArray(data113),
+            data114 = parseJsonArray(data114),
+            data116 = parseJsonArray(data116),
+            data144 = parseJsonArray(data144),
+            data211 = parseJsonArray(data211),
+            modules = Gson().fromJson(modules, ModulesOfHomeScreen::class.java)
+
+
         )
     }
+
 
     private fun parseJsonArray(json: String?): List<HomeListItem> {
         return try {
@@ -81,4 +107,6 @@ class HomeRoomViewModel @Inject constructor(
             emptyList()
         }
     }
+
+
 }

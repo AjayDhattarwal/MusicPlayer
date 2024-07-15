@@ -1,5 +1,7 @@
 package com.ar.musicplayer.screens
 
+import android.annotation.SuppressLint
+import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,12 +18,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,27 +34,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -67,8 +74,23 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.SearchResultViewModel
 import kotlinx.serialization.json.Json
 
+@SuppressLint("ClickableViewAccessibility")
 @Composable
 fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewModel){
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val rootView = LocalView.current
+
+    AndroidView(
+        factory = { context ->
+            FrameLayout(context).apply {
+                setOnTouchListener { _, _ ->
+                    keyboardController?.hide()
+                    false
+                }
+            }
+        }
+    )
+
     val context = LocalContext.current
     val blackToGrayGradient =
         Brush.verticalGradient(
@@ -78,20 +100,18 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
         )
 
     val searchViewModel: SearchResultViewModel = viewModel()
-    LaunchedEffect(Unit) {
-        searchViewModel.getTopSearchResult(
-            call = "content.getTopSearches",
-        )
-    }
-    val searchResults by searchViewModel.searchSongLiveData.observeAsState()
-    val searchAlbumsResults by searchViewModel.searchAlbumsLiveData.observeAsState()
-    val searchArtistResults by searchViewModel.searchArtistsLiveData.observeAsState()
-    val searchPlaylistResults by searchViewModel.searchPlaylistLiveData.observeAsState()
-    val searchTopResults by searchViewModel.searchTopLiveData.observeAsState()
 
-    val isLoading by searchViewModel.isLoading.observeAsState(false)
-    val isError by searchViewModel.isError.observeAsState(false)
-    val trendingSearchResult by searchViewModel.trendingSearchResults.observeAsState()
+    val isError by searchViewModel.isError.collectAsState()
+    val isSearchForResult by searchViewModel.isSearching.collectAsState()
+    val searchText by searchViewModel.searchText.collectAsState()
+    val trendingSearchResult by searchViewModel.trendingSearchResults.collectAsState()
+
+    val topSearchResults by searchViewModel.topSearchResults.collectAsState()
+    val searchResults by searchViewModel.searchSongResults.collectAsState()
+    val searchAlbumsResults by searchViewModel.searchAlbumsResults.collectAsState()
+    val searchArtistResults by searchViewModel.searchArtistResults.collectAsState()
+    val searchPlaylistResults by searchViewModel.searchPlaylistResults.collectAsState()
+
 
     val searchType = listOf(
         "Top",
@@ -107,11 +127,17 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
     Column(modifier = Modifier
         .fillMaxSize()
         .background(blackToGrayGradient)){
-        val isSearching = SearchBar(modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),viewModel = searchViewModel,selectedType = selectedType)
 
-        if(!isSearching){
+        SearchBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            searchResultViewModel = searchViewModel,
+            selectedType = selectedType,
+            keyboardController = keyboardController
+        )
+
+        if(searchText.isBlank()){
             Text(
                 text = "Trending",
                 style = MaterialTheme.typography.titleMedium,
@@ -157,9 +183,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                                 .clickable {
                                     if(item.type == "song"){
                                         playerViewModel.updateCurrentSong(songResponse)
-                                        playerViewModel.isPlayingHistory.value = false
                                     }
-
                                 }
                         ) {
                             Text(
@@ -196,6 +220,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                 }
             }
         } else{
+
             LazyRow (modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 15.dp, end = 15.dp)){
@@ -224,24 +249,59 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                     }
                 }
             }
-            when(selectedType.value){
-                "Songs" -> {
-                    SearchResultDisplay(searchResults = searchResults, navController = navController,playerViewModel = playerViewModel)
-                }
-                "Artists" -> {
-                    SearchResultDisplay(searchResults = searchArtistResults, navController = navController,playerViewModel = playerViewModel)
-                }
-                "Playlists" -> {
-                    SearchResultDisplay(searchResults = searchPlaylistResults, navController = navController,playerViewModel = playerViewModel)
-                }
-                "Albums" -> {
-                    SearchResultDisplay(searchResults = searchAlbumsResults, navController = navController,playerViewModel = playerViewModel)
-                }
-                else -> {
-                    TopSearchDisplay(searchResults = searchTopResults, navController = navController,playerViewModel = playerViewModel)
-                }
 
+            if(isSearchForResult){
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                when (selectedType.value) {
+                    "Songs" -> {
+                        SearchResultDisplay(
+                            searchResults = searchResults,
+                            navController = navController,
+                            playerViewModel = playerViewModel
+                        )
+                    }
+
+                    "Artists" -> {
+                        SearchResultDisplay(
+                            searchResults = searchArtistResults,
+                            navController = navController,
+                            playerViewModel = playerViewModel
+                        )
+                    }
+
+                    "Playlists" -> {
+                        SearchResultDisplay(
+                            searchResults = searchPlaylistResults,
+                            navController = navController,
+                            playerViewModel = playerViewModel
+                        )
+                    }
+
+                    "Albums" -> {
+                        SearchResultDisplay(
+                            searchResults = searchAlbumsResults,
+                            navController = navController,
+                            playerViewModel = playerViewModel
+                        )
+                    }
+
+                    else -> {
+                        TopSearchDisplay(
+                            searchResults = topSearchResults,
+                            navController = navController,
+                            playerViewModel = playerViewModel
+                        )
+                    }
+
+                }
             }
+
         }
     }
 }
@@ -334,15 +394,23 @@ fun TopSearchDisplay(
                     contentScale = ContentScale.Crop,
                     alignment = Alignment.Center
                 )
+                val songResponse = SongResponse(
+                    id = item.id,
+                    title = item.title,
+                    subtitle = item.subtitle,
+                    type = item.type,
+                    image = item.image,
+                    permaUrl = item.permaUrl
+                )
                 val senderData = Json.encodeToString(Song.serializer(), item)
                 Column(
                     modifier = Modifier
                         .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
                         .weight(1f)
                         .clickable {
-                            navController.navigate(
-                                PlayerScreenObj(senderData)
-                            )
+                            if(item.type == "song"){
+                                playerViewModel.updateCurrentSong(song = songResponse)
+                            }
                         }
                 ) {
                     Text(
@@ -528,7 +596,6 @@ fun SearchResultDisplay(searchResults: SearchResults?, navController: NavHostCon
                         .weight(1f)
                         .clickable {
                             playerViewModel.updateCurrentSong(item)
-                            playerViewModel.isPlayingHistory.value = false
                         }
                 ) {
                     (if(item.type == "artist")item.name else item.title)?.let {
@@ -579,28 +646,13 @@ fun capitalizeFirstLetter(text: String): String {
 @Composable
 fun SearchBar(
     modifier: Modifier,
-    viewModel: SearchResultViewModel,
-    selectedType: MutableState<String>
-):Boolean {
-    var searchText by rememberSaveable { mutableStateOf("") }
+    searchResultViewModel: SearchResultViewModel,
+    selectedType: MutableState<String>,
+    keyboardController: SoftwareKeyboardController?,
 
-    when(selectedType.value){
-        "Songs" -> {
-            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getResults", searchText, "1", "20")
-        }
-        "Artists" -> {
-            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getArtistResults", searchText,"1","15")
-        }
-        "Playlists" -> {
-            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getPlaylistResults", searchText,"1","15")
-        }
-        "Albums" -> {
-            if(searchText.isNotEmpty()) viewModel.getSearchResult("search.getAlbumResults",searchText,"1","15")
-        }
-        else -> {
-            if(searchText.isNotEmpty()) viewModel.getTopDataResult("autocomplete.get", searchText, "in", "1")
-        }
-    }
+    ) {
+
+    val searchText by searchResultViewModel.searchText.collectAsState()
 
     Row(
         modifier = modifier.padding(top = 24.dp),
@@ -608,13 +660,18 @@ fun SearchBar(
     ) {
         TextField(
             value = searchText,
-            onValueChange = { searchText = it },
+            onValueChange =  searchResultViewModel::onSearchTextChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     color = Color.White,
                     shape = RoundedCornerShape(percent = 10)
-                ),
+                )
+                .onFocusChanged {
+                    if(!it.isFocused){
+                        keyboardController?.hide()
+                    }
+                },
             placeholder = { Text(text = "Music, Artists, and Podcasts", fontSize = 14.sp, color = Color.Gray)},
             leadingIcon = {
                 Icon(
@@ -627,7 +684,7 @@ fun SearchBar(
                     Icon(
                         imageVector = Icons.Filled.Clear,
                         contentDescription = "clear",
-                        modifier = Modifier.clickable { searchText = "" }
+                        modifier = Modifier.clickable { searchResultViewModel.onSearchTextChange("") }
                     )
                 }
             },
@@ -645,13 +702,18 @@ fun SearchBar(
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Search),
+                imeAction = ImeAction.Search,
+            ),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    keyboardController?.hide()
+                }
+            ),
             singleLine = true,
 
         )
 
     }
-    return searchText.isNotEmpty()
 }
 
 

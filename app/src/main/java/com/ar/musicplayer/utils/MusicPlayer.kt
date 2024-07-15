@@ -1,7 +1,9 @@
 package com.ar.musicplayer.utils
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -22,6 +24,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.DESKeySpec
 import javax.inject.Inject
 
+
 class MusicPlayer @Inject constructor(
     private val context: Context,
     private val viewModel: PlayerViewModel,
@@ -39,7 +42,7 @@ class MusicPlayer @Inject constructor(
                 if (isPlaying) {
                     val currentSong = viewModel.currentSong.value
                     currentSong?.let {
-                        MusicPlayerService.startService(context, it)
+                        MusicPlayerService.startService(context)
                     }
                 }
             }
@@ -68,7 +71,6 @@ class MusicPlayer @Inject constructor(
             }
         })
     }
-
 
 
     var onSongChanged: ((SongResponse) -> Unit)? = null
@@ -101,32 +103,8 @@ class MusicPlayer @Inject constructor(
     }
 
     fun play(song: SongResponse) {
-        var updatedSongResponse = song
-        if(song.moreInfo?.encryptedMediaUrl == "" || song.moreInfo?.encryptedMediaUrl.isNullOrEmpty()){
-            Log.d("invoked","${song.id}")
-            detailsViewModel.onEvent(DetailsEvent.getSongDetails(song.id.toString(),"song.getDetails",callback = {
-                Log.d("invoked","invoked ${it}")
-                if(it != null){
-                    val decodedUrl = decodeDES(it.moreInfo?.encryptedMediaUrl ?: "")
-                    Log.d("url",decodedUrl)
-                    val mediaItem = MediaItem.fromUri(decodedUrl)
-                    if (!playlist.value.contains(it)) {
-                        playlist.value = playlist.value.plus(it)
-                    }
-                    currentIndex = playlist.value.indexOf(it)
-                    viewModel.setCurrentSongIndex(currentIndex)
-                    exoPlayer.setMediaItem(mediaItem)
-                    exoPlayer.prepare()
-                    if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-                    onSongChanged?.invoke(it)
-                }
-            }))
-        }
-        else{
-            Log.d("invoked","else invoked")
-            val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
-            Log.d("url",decodedUrl)
-            val mediaItem = MediaItem.fromUri(decodedUrl)
+        if(song.uri != ""){
+            val mediaItem = MediaItem.fromUri(song.uri.toString())
             if (!playlist.value.contains(song)) {
                 playlist.value += song
             }
@@ -137,11 +115,50 @@ class MusicPlayer @Inject constructor(
             if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
             onSongChanged?.invoke(song)
         }
-        if (currentIndex >= playlist.value.size - 3) {
-            viewModel.currentSong.value?.let { fetchAndAddRecommendedSongs(it) }
+        else{
+            if(song.moreInfo?.encryptedMediaUrl == "" || song.moreInfo?.encryptedMediaUrl.isNullOrEmpty()){
+                Log.d("invoked","${song.id}")
+                detailsViewModel.onEvent(DetailsEvent.getSongDetails(song.id.toString(),"song.getDetails",callback = {
+                    Log.d("invoked","invoked ${it}")
+                    if(it != null){
+                        val decodedUrl = decodeDES(it.moreInfo?.encryptedMediaUrl ?: "")
+                        Log.d("url",decodedUrl)
+                        val mediaItem = MediaItem.fromUri(decodedUrl)
+                        if (!playlist.value.contains(it)) {
+                            playlist.value = playlist.value.plus(it)
+                        }
+                        currentIndex = playlist.value.indexOf(it)
+                        viewModel.setCurrentSongIndex(currentIndex)
+                        exoPlayer.setMediaItem(mediaItem)
+                        exoPlayer.prepare()
+                        if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
+                        onSongChanged?.invoke(it)
+                    }
+                }))
+            }
+            else{
+                Log.d("invoked","else invoked")
+                val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
+                Log.d("url",decodedUrl)
+                val mediaItem = MediaItem.fromUri(decodedUrl)
+                if (!playlist.value.contains(song)) {
+                    playlist.value += song
+                }
+                currentIndex = playlist.value.indexOf(song)
+                viewModel.setCurrentSongIndex(currentIndex)
+                exoPlayer.setMediaItem(mediaItem)
+                exoPlayer.prepare()
+                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
+                onSongChanged?.invoke(song)
+            }
+            if (currentIndex >= playlist.value.size - 3) {
+                viewModel.currentSong.value?.let { fetchAndAddRecommendedSongs(it) }
+            }
         }
 
     }
+
+
     fun playPlaylist(songs: List<SongResponse>) {
         playlist.value = songs
         currentIndex = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
@@ -151,26 +168,44 @@ class MusicPlayer @Inject constructor(
     private fun playCurrentSong() {
         if (playlist.value.isNotEmpty()) {
             val song = playlist.value[currentIndex]
-            val encodedUrl = song.moreInfo?.encryptedMediaUrl ?: " "
-            val decodedUrl = decodeDES(encodedUrl)
-            exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
-            exoPlayer.prepare()
-            currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
-            viewModel.setCurrentSongIndex(currentIndex)
-            onSongChanged?.invoke(song)
+            if(song.uri != ""){
+                exoPlayer.setMediaItem(MediaItem.fromUri(song.uri.toString()))
+                exoPlayer.prepare()
+                currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
+                viewModel.setCurrentSongIndex(currentIndex)
+                onSongChanged?.invoke(song)
+            } else {
+                val encodedUrl = song.moreInfo?.encryptedMediaUrl ?: " "
+                val decodedUrl = decodeDES(encodedUrl)
+                exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
+                exoPlayer.prepare()
+                currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
+                viewModel.setCurrentSongIndex(currentIndex)
+                onSongChanged?.invoke(song)
+            }
         }
     }
+
+
     fun skipToNext() {
         if (currentIndex < playlist.value.size - 1) {
             currentIndex++
             viewModel.setCurrentSongIndex(currentIndex)
             val song = playlist.value[currentIndex]
-            val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
-            exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
-            exoPlayer.prepare()
-            if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-            onSongChanged?.invoke(song)
-            viewModel.starter.value = false
+            if(song.uri != ""){
+                exoPlayer.setMediaItem(MediaItem.fromUri(song.uri.toString()))
+                exoPlayer.prepare()
+                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
+                onSongChanged?.invoke(song)
+                viewModel.starter.value = false
+            } else{
+                val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
+                exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
+                exoPlayer.prepare()
+                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
+                onSongChanged?.invoke(song)
+                viewModel.starter.value = false
+            }
         }
     }
 
@@ -179,12 +214,20 @@ class MusicPlayer @Inject constructor(
             currentIndex--
             viewModel.setCurrentSongIndex(currentIndex)
             val song = playlist.value[currentIndex]
-            val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
-            exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
-            exoPlayer.prepare()
-            if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-            onSongChanged?.invoke(song)
-            viewModel.starter.value = false
+            if(song.uri != ""){
+                exoPlayer.setMediaItem(MediaItem.fromUri(song.uri.toString()))
+                exoPlayer.prepare()
+                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
+                onSongChanged?.invoke(song)
+                viewModel.starter.value = false
+            } else{
+                val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
+                exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
+                exoPlayer.prepare()
+                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
+                onSongChanged?.invoke(song)
+                viewModel.starter.value = false
+            }
         }
     }
 
@@ -192,7 +235,6 @@ class MusicPlayer @Inject constructor(
 
     fun release() {
         MusicPlayerService.stopService(context)
-        exoPlayer.release()
     }
 
     fun getPlaylist() = playlist

@@ -18,7 +18,7 @@ interface LastSessionDao {
     suspend fun insertLastSession(lastSessionDataEntity: LastSessionDataEntity) {
         val lastSessionEntries = getLastSession()
 
-        val existingEntry = lastSessionEntries.find { it.lastSession == lastSessionDataEntity.lastSession }
+        val existingEntry = lastSessionEntries.find { it.lastSession == lastSessionDataEntity.lastSession || it.title == lastSessionDataEntity.title }
         Log.d("exist", "${existingEntry}")
         if (existingEntry != null) {
             delete(existingEntry)

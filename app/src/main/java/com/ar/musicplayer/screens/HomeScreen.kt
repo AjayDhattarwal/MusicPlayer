@@ -95,6 +95,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.DefaultTranslationX
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.tooling.data.position
 import androidx.core.graphics.drawable.toBitmap
 import androidx.navigation.NavHostController
 import androidx.wear.compose.material.placeholder
@@ -108,6 +109,8 @@ import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataEvent
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.models.HomeData
+import com.ar.musicplayer.models.ModulesOfHomeScreen
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.navigation.InfoScreenObj
 import com.ar.musicplayer.navigation.SettingsScreenObj
@@ -122,6 +125,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import kotlinx.serialization.json.Json
 
+data class ItemWithPosition(val item: String, val position: Int)
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
@@ -167,19 +171,34 @@ fun HomeScreen(
         endY = 0f
     )
 
+    Log.d("title","${homeData?.modules?.a8}")
+    Log.d("title","${homeData?.cityMod}")
+
+
+//    val homeDataList = remember(homeData) {
+//        homeData?.let {
+//            mapOf(
+//                "Trending" to it.newTrending,
+//                "Top Playlist" to it.topPlaylist,
+//                "Albums" to it.newAlbums,
+//                "Artist" to it.artistRecos,
+////                "City Mod" to it.cityMod,
+//                "Charts" to it.charts,
+//                "Radio" to it.radio,
+//                "Discover" to it.browserDiscover,
+//            ).toList()
+//        } ?: emptyList()
+//    }
+
     val homeDataList = remember(homeData) {
         homeData?.let {
-            mapOf(
-                "Trending" to it.newTrending,
-                "Top Playlist" to it.topPlaylist,
-                "Albums" to it.newAlbums,
-                "Artist" to it.artistRecos,
-                "Radio" to it.radio,
-                "Discover" to it.browserDiscover,
-            ).toList()
+            homeData?.modules?.let { it1 ->
+                getMappedHomeData(it, it1).toList()
+            }
         } ?: emptyList()
     }
 
+//    Log.d("title","${homeDataItems}")
 
     Scaffold(
         modifier = Modifier
@@ -210,19 +229,17 @@ fun HomeScreen(
                     }
 
                     items(homeDataList) { (key, dataList) ->
-                        dataList?.let {
-                            LazyRowItem(
-                                modifier = Modifier.padding(bottom = 30.dp),
-                                heading = key,
-                                songItems = it,
-                                onMoreButtonClick = {},
-                                navController = navController,
-                                radioStationViewModel = radioStationViewModel,
-                                playerViewModel = playerViewModel,
-                                sharedTransitionScope = sharedTransitionScope,
-                                animatedContentScope = animatedContentScope
-                            )
-                        }
+                        LazyRowItem(
+                            modifier = Modifier.padding(bottom = 30.dp),
+                            heading = key ?: "unknown",
+                            songItems = dataList,
+                            onMoreButtonClick = {},
+                            navController = navController,
+                            radioStationViewModel = radioStationViewModel,
+                            playerViewModel = playerViewModel,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedContentScope = animatedContentScope
+                        )
                     }
 
                     item {
@@ -373,24 +390,23 @@ fun LazyRowItem(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp)
             )
-            TextButton(onClick = onMoreButtonClick) {
-                Text(text = "View All", color = Color.LightGray, fontSize = 14.sp)
-                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "more", tint = Color.LightGray)
-            }
+
         }
         LazyRow(
             modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)
         ) {
-            items(songItems , key = { it.id!! }) { songItem ->
-                SongItemView(
-                    heading=  heading,
-                    homeListItem = songItem,
-                    navController = navController,
-                    radioStationViewModel = radioStationViewModel,
-                    playerViewModel = playerViewModel,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope
-                )
+            items(songItems) { songItem ->
+                if(songItem.id != ""){
+                    SongItemView(
+                        heading=  heading,
+                        homeListItem = songItem,
+                        navController = navController,
+                        radioStationViewModel = radioStationViewModel,
+                        playerViewModel = playerViewModel,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope
+                    )
+                }
             }
         }
     }
@@ -675,6 +691,49 @@ fun shimmerEffectfun(showShimmer: Boolean = true, targetValue: Float = 1000f): B
 }
 
 
+fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> {
+    return listOf(
+        modules.a1, modules.a2, modules.a3, modules.a4, modules.a5,
+        modules.a6, modules.a7, modules.a8, modules.a9, modules.a10,
+        modules.a11, modules.a12, modules.a13, modules.a14,modules.a15,
+        modules.a16, modules.a17
+    ).filterNotNull()
+        .sortedBy {
+        it.position?.toIntOrNull() ?: Int.MAX_VALUE
+    }.associate { it.source to it.title  }
+}
+
+
+
+fun getMappedHomeData(homeData: HomeData, modules: ModulesOfHomeScreen): Map<String?, List<HomeListItem>> {
+    val sortedSourceTitleMap = createSortedSourceTitleMap(modules)
+
+    val sourceToListMap = mapOf(
+        "new_trending" to homeData.newTrending,
+        "top_playlists" to homeData.topPlaylist,
+        "new_albums" to homeData.newAlbums,
+        "charts" to homeData.charts,
+        "radio" to homeData.radio,
+        "artist_recos" to homeData.artistRecos,
+        "city_mod" to homeData.cityMod,
+        "tag_mixes" to homeData.tagMixes,
+        "promo:vx:data:68" to homeData.data68,
+        "promo:vx:data:76" to homeData.data76,
+        "promo:vx:data:185" to homeData.data185,
+        "promo:vx:data:107" to homeData.data107,
+        "promo:vx:data:113" to homeData.data113,
+        "promo:vx:data:114" to homeData.data114,
+        "promo:vx:data:116" to homeData.data116,
+        "promo:vx:data:145" to homeData.data144,
+        "promo:vx:data:211" to homeData.data211,
+        "browser_discover" to homeData.browserDiscover,
+
+    )
+
+    return sortedSourceTitleMap.mapNotNull { (source, title) ->
+        sourceToListMap[source]?.let { title to it }
+    }.toMap()
+}
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Preview

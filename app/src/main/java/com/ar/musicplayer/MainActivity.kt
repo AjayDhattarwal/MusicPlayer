@@ -43,7 +43,7 @@ import kotlin.math.absoluteValue
 
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity  : ComponentActivity() {
 
 
     private val viewModel: HomeViewModel by viewModels()
@@ -55,7 +55,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var musicPlayer: MusicPlayer
     @Inject lateinit var playerViewModel: PlayerViewModel
-    @Inject lateinit var exoPlayer: ExoPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,15 +74,13 @@ class MainActivity : ComponentActivity() {
                 musicPlayer = musicPlayer
             )
 
+
         }
-        val intent = Intent(this, MusicPlayerService::class.java)
-        startService(intent)
+
     }
-    override fun onDestroy() {
-        super.onDestroy()
-//        val intent = Intent(this, MusicPlayerService::class.java)
-//        stopService(intent)
-    }
+
+
+
 }
 
 

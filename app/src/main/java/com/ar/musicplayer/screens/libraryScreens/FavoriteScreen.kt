@@ -77,7 +77,7 @@ fun FavoriteScreen(
             TopAppBar(
                 title = { Text(text = "Favorite Songs", color = Color.White)},
                 navigationIcon = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {navController.navigateUp() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },

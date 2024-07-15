@@ -1,9 +1,19 @@
 package com.ar.musicplayer.api
 
+import com.ar.musicplayer.models.SongRecognitionResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Call
 import retrofit2.Retrofit
+import retrofit2.awaitResponse
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 class ApiConfig {
 
@@ -46,6 +56,31 @@ class ApiConfig {
 
             return retrofit.create(SpotifyApiService::class.java)
         }
+
+        fun getMusicRecognizer(): MusicRecognizerApiService {
+//            val BASE_URL = "https://shazam-api-free.p.rapidapi.com/"
+            val BASE_URL = "https://shazam-api7.p.rapidapi.com/"
+            val loggingInterceptor = HttpLoggingInterceptor()
+                .setLevel(HttpLoggingInterceptor.Level.BODY)
+
+            val okHttpClient = OkHttpClient.Builder()
+                .connectTimeout(120, TimeUnit.SECONDS) // Adjust as needed
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .addInterceptor(loggingInterceptor)
+                .build()
+
+            val retrofit = Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create()) // Use Gson for JSON parsing
+                .build()
+
+
+            return retrofit.create(MusicRecognizerApiService::class.java)
+        }
+
+
 
 
     }

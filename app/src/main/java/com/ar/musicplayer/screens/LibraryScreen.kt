@@ -35,6 +35,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ar.musicplayer.navigation.FavoriteScreenObj
 import com.ar.musicplayer.navigation.ListeningHisScreenObj
+import com.ar.musicplayer.navigation.MyMusicScreenObj
 import com.ar.musicplayer.viewmodel.DetailsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
@@ -123,7 +124,12 @@ fun LibraryScreen(navController: NavHostController, brush: Brush, playerViewMode
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .clickable {
+                        navController.navigate(MyMusicScreenObj)
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(

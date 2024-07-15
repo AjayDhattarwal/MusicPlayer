@@ -36,6 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
@@ -45,6 +46,7 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 @Composable
 fun ListeningHistoryScreen(
+    navController:NavHostController,
     playerViewModel: PlayerViewModel,
     favViewModel: FavoriteViewModel,
     lastSessionViewModel: LastSessionViewModel
@@ -55,7 +57,7 @@ fun ListeningHistoryScreen(
             TopAppBar(
                 title = { Text(text = "Recently played", color = Color.White)},
                 navigationIcon = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { navController.navigateUp()}) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },

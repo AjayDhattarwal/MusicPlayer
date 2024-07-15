@@ -31,3 +31,9 @@ object FavoriteScreenObj
 
 @Serializable
 object ListeningHisScreenObj
+
+@Serializable
+object MyMusicScreenObj
+
+@Serializable
+object MusicRecognizerObj

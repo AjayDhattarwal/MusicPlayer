@@ -1,16 +1,20 @@
 package com.ar.musicplayer.utils.playerHelper
 
+import android.app.Application
+import android.content.ContentResolver
 import android.content.Context
 import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.viewmodel.DetailsViewModel
+import com.ar.musicplayer.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RecommendationViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -20,10 +24,17 @@ import javax.inject.Singleton
 object MusicPlayerSingleton {
 
     @Provides
-    @Singleton
-    fun provideExoPlayer(@ApplicationContext context: Context): ExoPlayer {
-        return ExoPlayer.Builder(context).build()
+    fun provideContentResolver(
+        @ApplicationContext context: Context
+    ): ContentResolver {
+        return context.contentResolver
     }
+
+    @Provides
+    @Singleton
+    fun provideExoPlayer(application: Application): ExoPlayer =
+        ExoPlayer.Builder(application).build()
+
     @Provides
     @Singleton
     fun provideDetailsViewModel() = DetailsViewModel()
@@ -52,20 +63,6 @@ object MusicPlayerSingleton {
     }
 
 
-//    @Provides
-//    @Singleton
-//    fun provideNotificationManager(
-//        @ApplicationContext context: Context,
-//        exoPlayer: ExoPlayer,
-//        playerViewModel: PlayerViewModel,
-//        musicPlayer: MusicPlayer,
-//        favoriteViewModel: FavoriteViewModel,
-//        musicPlayerService: MusicPlayerService
-//    ): NotificationManager {
-//        val notificationManager = NotificationManager(context, exoPlayer, playerViewModel,musicPlayer, favoriteViewModel = favoriteViewModel,musicPlayerService)
-//        return notificationManager
-//    }
-
 
     @Provides
     @Singleton
@@ -74,5 +71,7 @@ object MusicPlayerSingleton {
     @Provides
     @Singleton
     fun provideDownloaderViewModel(musicDownloadRepository: MusicDownloadRepository) = DownloaderViewModel(musicDownloadRepository)
+
+
 
 }

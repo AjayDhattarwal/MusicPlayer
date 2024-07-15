@@ -93,9 +93,12 @@ class MusicPlayerService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         Log.d("MusicPlayerService", "Service destroyed")
-        musicPlayer.release()
+        playerViewModel.starter.value = true
+        playerViewModel.isPlaying.value = false
+        playerViewModel.pause()
+        super.onDestroy()
+
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -167,7 +170,6 @@ class MusicPlayerService : Service() {
                             isFav = it1
                             val notification =
                                 createNotification(song = it, playerViewModel.bitmapImg.value)
-                            notificationManager.notify(notificationId, notification)
                             startForeground(notificationId, notification)
                         }
                     }
@@ -264,10 +266,11 @@ class MusicPlayerService : Service() {
         mediaSession.setMetadata(metadataBuilder.build())
     }
 
+
     companion object {
-        fun startService(context: Context, song: SongResponse) {
+        fun startService(context: Context) {
             val intent = Intent(context, MusicPlayerService::class.java)
-            context.startForegroundService(intent)
+            context.startService(intent)
         }
 
         fun stopService(context: Context) {

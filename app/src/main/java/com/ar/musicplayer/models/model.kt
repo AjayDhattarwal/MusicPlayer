@@ -17,27 +17,68 @@ data class HomeData(
     @SerializedName("radio") val radio: List<HomeListItem>,
     @SerializedName("artist_recos") val artistRecos: List<HomeListItem>,
     @SerializedName("city_mod") val cityMod: List<HomeListItem>,
+    @SerializedName("tag_mixes") val tagMixes: List<HomeListItem>,
+    @SerializedName("promo:vx:data:68") val data68: List<HomeListItem>,
+    @SerializedName("promo:vx:data:76") val data76: List<HomeListItem>,
+    @SerializedName("promo:vx:data:185") val data185: List<HomeListItem>,
+    @SerializedName("promo:vx:data:107") val data107: List<HomeListItem>,
+    @SerializedName("promo:vx:data:113") val data113: List<HomeListItem>,
+    @SerializedName("promo:vx:data:114") val data114: List<HomeListItem>,
+    @SerializedName("promo:vx:data:116") val data116: List<HomeListItem>,
+    @SerializedName("promo:vx:data:145") val data144: List<HomeListItem>,
+    @SerializedName("promo:vx:data:211") val data211: List<HomeListItem>,
+    @SerializedName("modules") val modules: ModulesOfHomeScreen
 )
+
+
+@Serializable
+@Parcelize
+data class ModulesOfHomeScreen(
+    @SerializedName("new_trending") val a1: HomeScreenModuleInfo,
+    @SerializedName("charts") val a2: HomeScreenModuleInfo,
+    @SerializedName("new_albums") val a3: HomeScreenModuleInfo,
+    @SerializedName("top_playlists") val a4: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:107") val a5: HomeScreenModuleInfo,
+    @SerializedName("radio") val a6: HomeScreenModuleInfo,
+    @SerializedName("artist_recos") val a7: HomeScreenModuleInfo,
+    @SerializedName("city_mod") val a8: HomeScreenModuleInfo,
+    @SerializedName("tag_mixes") val a9: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:68") val a10: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:76") val a11: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:185") val a12: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:113") val a13: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:114") val a14: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:116") val a15: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:145") val a16: HomeScreenModuleInfo,
+    @SerializedName("promo:vx:data:211") val a17: HomeScreenModuleInfo
+) : Parcelable
+
+@Serializable
+@Parcelize
+data class HomeScreenModuleInfo(
+    @SerializedName("source") val source: String? = "",
+    @SerializedName("position") val position: String? = "",
+    @SerializedName("title") val title: String? = ""
+) : Parcelable
 
 @Serializable
 @Parcelize
 data class HomeListItem(
-    @SerializedName("id") val id: String? = " ",
-    @SerializedName("title") val title: String? = " ",
-    @SerializedName("subtitle") val subtitle: String? = " ",
-    @SerializedName("header_desc") val headerDesc: String? = " ",
-    @SerializedName("type") val type: String? = " ",
-    @SerializedName("perma_url") val permaUrl: String? = " ",
-    @SerializedName("image") var image: String? = " ",
-    @SerializedName("language") val language: String? = " ",
-    @SerializedName("year") val year: String? = " ",
-    @SerializedName("play_count") val playCount: String? = " ",
-    @SerializedName("explicit_content") val explicitContent: String? = " ",
-    @SerializedName("list_count") val listCount: String? = " ",
-    @SerializedName("list_type") val listType: String? = " ",
-    @SerializedName("list") val list: String? = " ",
+    @SerializedName("id") val id: String? = "",
+    @SerializedName("title") val title: String? = "",
+    @SerializedName("subtitle") val subtitle: String? = "",
+    @SerializedName("header_desc") val headerDesc: String? = "",
+    @SerializedName("type") val type: String? = "",
+    @SerializedName("perma_url") val permaUrl: String? = "",
+    @SerializedName("image") var image: String? = "",
+    @SerializedName("language") val language: String? = "",
+    @SerializedName("year") val year: String? = "",
+    @SerializedName("play_count") val playCount: String? = "",
+    @SerializedName("explicit_content") val explicitContent: String? = "",
+    @SerializedName("list_count") val listCount: String? = "",
+    @SerializedName("list_type") val listType: String? = "",
+    @SerializedName("list") val list: String? = "",
     @SerializedName("more_info") val moreInfoHomeList: MoreInfoHomeList?,
-//    @SerializedName("modules") val modules: Any?,
 //    @SerializedName("button_tooltip_info") val buttonTooltipInfo: List<Any>,
 ): Parcelable
 
@@ -132,6 +173,7 @@ data class SongResponse(
     @SerializedName("entity") val entity: String? = "",
     @SerializedName("role") val role: String? = "",
     @SerializedName("is_followed") val isFollowed: Boolean? = false,
+    @SerializedName("uri") val uri: String? = "",
 ) : Parcelable
 
 

@@ -35,15 +35,37 @@ class ImageColorGradient  : ViewModel() {
         val palette = Palette.from(compatibleBitmap).generate()
 
         // Retrieve the dominant color
-        val dominantSwatch =  palette.darkMutedSwatch ?: palette.dominantSwatch
+        val dominantSwatch = palette.dominantSwatch ?: palette.darkMutedSwatch ?: palette.darkVibrantSwatch
 
         // Check if dominantSwatch is null
-        return if (dominantSwatch != null) {
+        val color = if (dominantSwatch != null) {
             Color(dominantSwatch.rgb)
         } else {
             // Return a default color if dominantSwatch is null
             Color.White
         }
+
+        // Function to determine if a color is light
+        fun isColorLight(color: Color): Boolean {
+            val darkness = 1 - (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue)
+            return darkness < 0.5
+        }
+
+        // Function to darken a color
+        fun darkenColor(color: Color, factor: Float): Color {
+            val r = (color.red * factor).coerceAtLeast(0f)
+            val g = (color.green * factor).coerceAtLeast(0f)
+            val b = (color.blue * factor).coerceAtLeast(0f)
+            return Color(r, g, b, color.alpha)
+        }
+
+        // If the color is light, darken it
+        return if (isColorLight(color)) {
+            darkenColor(color, 0.7f) // Darken by 30%
+        } else {
+            color
+        }
     }
+
 
 }

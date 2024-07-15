@@ -1,7 +1,10 @@
 package com.ar.musicplayer.screens
 
 import android.content.Context
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -14,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -58,18 +63,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -137,9 +154,11 @@ fun PlayerScreen(
 
     val listState = rememberLazyListState()
 
+    val statusBarPadding = getStatusBarHeight()
+
     val size by animateDpAsState(targetValue = lerp(70.dp, 310.dp, bottomSheetState.currentFraction))
     val sizeofCollapseBar by animateDpAsState(targetValue = lerp(0.dp, 30.dp, bottomSheetState.currentFraction))
-    val dynamicPaddingValues by animateDpAsState(targetValue = lerp(0.dp, 20.dp, bottomSheetState.currentFraction))
+    val dynamicPaddingValues by animateDpAsState(targetValue = lerp(0.dp, statusBarPadding, bottomSheetState.currentFraction))
     val dynamicImgBoxSize by animateDpAsState(targetValue = lerp(70.dp, LocalConfiguration.current.screenWidthDp.dp, bottomSheetState.currentFraction))
     val dynamicSongTitleTopPadding by animateDpAsState(targetValue = lerp(100.dp, 10.dp, bottomSheetState.currentFraction))
     LaunchedEffect(currentDownloading) {
@@ -295,7 +314,6 @@ fun PlayerScreen(
                             .fillMaxWidth()
                             .height((LocalConfiguration.current.screenHeightDp / 2).dp)
                             .padding(top = 4.dp)
-                            .background(Color(0xB9131313)),
                     ) {
 
                         Box(
@@ -337,8 +355,8 @@ fun PlayerScreen(
                     }
 
                 },
-                sheetBackgroundColor = Color(0xC4000000),
-                backgroundColor = Color.Transparent,
+                sheetBackgroundColor = Color(0xDC000000),
+                backgroundColor = Color.Transparent
             ) {
 
 
@@ -861,3 +879,15 @@ suspend fun prefetchImage(context: Context, url: String): Drawable? {
         delay(1000) // Wait for a second before retrying
     }
 }
+
+@Composable
+fun getStatusBarHeight(): Dp {
+    val view = LocalView.current
+    val insets = ViewCompat.getRootWindowInsets(view)
+    val statusBarHeightPx = insets?.getInsets(WindowInsetsCompat.Type.statusBars())?.top ?: 0
+    val density = LocalDensity.current
+
+    return with(density) { statusBarHeightPx.toDp() }
+}
+
+
