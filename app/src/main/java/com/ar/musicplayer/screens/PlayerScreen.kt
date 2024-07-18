@@ -160,7 +160,7 @@ fun PlayerScreen(
     val sizeofCollapseBar by animateDpAsState(targetValue = lerp(0.dp, 30.dp, bottomSheetState.currentFraction))
     val dynamicPaddingValues by animateDpAsState(targetValue = lerp(0.dp, statusBarPadding, bottomSheetState.currentFraction))
     val dynamicImgBoxSize by animateDpAsState(targetValue = lerp(70.dp, LocalConfiguration.current.screenWidthDp.dp, bottomSheetState.currentFraction))
-    val dynamicSongTitleTopPadding by animateDpAsState(targetValue = lerp(100.dp, 10.dp, bottomSheetState.currentFraction))
+    val dynamicSongTitleTopPadding by animateDpAsState(targetValue = lerp(100.dp, 5.dp, bottomSheetState.currentFraction))
     LaunchedEffect(currentDownloading) {
         if (currentDownloading == currentSong) {
             isDownloading.value = true
@@ -512,7 +512,7 @@ fun PlayerScreen(
                                     modifier = Modifier
                                         .padding(
                                             top = dynamicSongTitleTopPadding,
-                                            bottom = 30.dp,
+                                            bottom = 20.dp,
                                             start = 20.dp,
                                             end = 20.dp
                                         )
@@ -558,7 +558,7 @@ fun PlayerScreen(
                                     },
                                     songDuration = totalDuration.longValue.toFloat()
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
@@ -572,9 +572,8 @@ fun PlayerScreen(
                                         style = TextStyle(fontWeight = FontWeight.Bold)
                                     )
 
-                                    val remainTime = totalDuration.longValue - currentPosition.longValue
                                     Text(
-                                        text = if (remainTime >= 0) remainTime.convertToText() else "",
+                                        text =  totalDuration.longValue.convertToText(),
                                         modifier = Modifier
                                             .padding(end = 8.dp),
                                         color = Color.White,
@@ -587,7 +586,7 @@ fun PlayerScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 10.dp)
+                                        .padding(top = 5.dp)
                                 ) {
                                     ControlButton(
                                         icon = Icons.Default.Shuffle,

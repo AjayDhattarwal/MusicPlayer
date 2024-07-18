@@ -37,3 +37,7 @@ object MyMusicScreenObj
 
 @Serializable
 object MusicRecognizerObj
+
+@Serializable
+object SearchMyMusicObj
+

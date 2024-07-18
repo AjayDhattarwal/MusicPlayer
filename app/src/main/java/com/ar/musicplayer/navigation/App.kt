@@ -27,7 +27,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
@@ -67,18 +66,19 @@ import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.screens.HomeScreen
 import com.ar.musicplayer.screens.InfoScreen
 import com.ar.musicplayer.screens.LibraryScreen
-import com.ar.musicplayer.screens.MusicRecognizer
 import com.ar.musicplayer.screens.PlayerScreen
 import com.ar.musicplayer.screens.SearchScreen
 import com.ar.musicplayer.screens.SettingsScreen
 import com.ar.musicplayer.screens.libraryScreens.FavoriteScreen
 import com.ar.musicplayer.screens.libraryScreens.ListeningHistoryScreen
-import com.ar.musicplayer.screens.libraryScreens.MyMusicScreen
+import com.ar.musicplayer.screens.libraryScreens.mymusic.MyMusicScreen
+import com.ar.musicplayer.screens.libraryScreens.mymusic.SearchMyMusic
 import com.ar.musicplayer.ui.theme.MusicPlayerTheme
 import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.viewmodel.ImageColorGradient
+import com.ar.musicplayer.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import kotlinx.coroutines.launch
@@ -161,6 +161,8 @@ fun PlayerScreenWithBottomNav(
     val imageColorGradient = viewModel<ImageColorGradient>()
 
     val coroutineScope = rememberCoroutineScope()
+
+    val localSongsViewModel = viewModel<LocalSongsViewModel>()
 
     val lastSession by lastSessionViewModel.lastSession.observeAsState()
 
@@ -290,7 +292,6 @@ fun PlayerScreenWithBottomNav(
                         Json.decodeFromString(HomeListItem.serializer(), args.serialized)
                     val heading = args.heading
 
-
                     InfoScreen(
                         navController = navController,
                         heading = heading,
@@ -323,8 +324,17 @@ fun PlayerScreenWithBottomNav(
                 composable<MyMusicScreenObj> {
                     MyMusicScreen(
                         navController = navController,
+                        localSongsViewModel = localSongsViewModel,
                         playerViewModel = playerViewModel,
                         favViewModel = favViewModel
+                    )
+                }
+                composable<SearchMyMusicObj> {
+                    SearchMyMusic(
+                        navController = navController,
+                        playerViewModel = playerViewModel,
+                        localSongsViewModel = localSongsViewModel
+//                        favViewModel = favViewModel
                     )
                 }
 //                composable<MusicRecognizerObj> {

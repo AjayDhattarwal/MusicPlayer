@@ -115,14 +115,8 @@ fun InfoScreen(
 
 
     LaunchedEffect(homeListItem.image) {
-        val perfectImg =
-            if(homeListItem.image?.contains("350x350") == true) {
-                homeListItem.image!!.replace("350x350", "150x150")
-            } else homeListItem.image
 
-        if (perfectImg != null) {
-            colorViewModel.loadImage(perfectImg, context)
-        }
+        colorViewModel.loadImage(homeListItem.image.toString(), context)
         apiCallViewModel.getApiData(
             homeListItem.permaUrl?.substringAfterLast('/') ?: "",
             homeListItem.type?:"song",

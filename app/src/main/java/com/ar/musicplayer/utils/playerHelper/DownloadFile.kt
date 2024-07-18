@@ -38,7 +38,7 @@ fun handleMp4ToMp3Conversion(
     val finalArtist = if (artist.isEmpty()) songResponse.moreInfo?.artistMap?.primaryArtists?.get(0)?.name ?: "" else artist
     val album = songResponse.moreInfo?.album ?: ""
     val genre = songResponse.role ?: ""
-    val imageFile = songResponse.image ?: ""
+    val imageFile = songResponse.image?.replace("150x150", "350x350") ?: ""
 
     // Directory to store music files
     val musicFolderPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).absolutePath

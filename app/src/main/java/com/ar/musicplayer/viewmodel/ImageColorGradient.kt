@@ -18,6 +18,7 @@ class ImageColorGradient  : ViewModel() {
     val colorForBackGround = MutableStateFlow<Color?>(null)
 
     fun loadImage(url: String,context: Context) {
+
         viewModelScope.launch {
             val bitmap = loadImageBitmapFromUrl(url, context)
             bitmapState.value = bitmap

@@ -649,7 +649,6 @@ fun SearchBar(
     searchResultViewModel: SearchResultViewModel,
     selectedType: MutableState<String>,
     keyboardController: SoftwareKeyboardController?,
-
     ) {
 
     val searchText by searchResultViewModel.searchText.collectAsState()

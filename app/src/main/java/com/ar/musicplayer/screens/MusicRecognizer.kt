@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.ar.musicplayer.di.permission.hasPermissions
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.AudioRecorder.AndroidAudioRecorder
 import com.ar.musicplayer.viewmodel.MusicRecognizerViewModel
@@ -108,7 +109,3 @@ private fun requestPermissions(context: ComponentActivity) {
     }
 }
 
-private fun hasPermissions(context: ComponentActivity, vararg permissions: String): Boolean =
-    permissions.all {
-        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-    }
