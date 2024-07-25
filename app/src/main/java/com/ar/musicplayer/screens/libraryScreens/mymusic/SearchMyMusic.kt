@@ -1,6 +1,5 @@
 package com.ar.musicplayer.screens.libraryScreens.mymusic
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,19 +35,11 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.ar.musicplayer.R
-import com.ar.musicplayer.components.SearchTopAppBar
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
-import com.ar.musicplayer.models.Artist
-import com.ar.musicplayer.models.ArtistMap
-import com.ar.musicplayer.models.MoreInfoResponse
+import com.ar.musicplayer.components.search.SearchTopAppBar
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.screens.capitalizeFirstLetter
-import com.ar.musicplayer.screens.shimmerEffectfun
 import com.ar.musicplayer.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
@@ -123,7 +113,6 @@ fun SearchResultsOfMyMusic(searchResults: List<SongResponse>, playerViewModel: P
                     modifier = Modifier
                         .size(50.dp)
                         .padding(4.dp)
-                        .background(brush = shimmerEffectfun(showShimmer.value))
                         .clip(RoundedCornerShape(3.dp)),
                     onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,

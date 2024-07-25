@@ -6,13 +6,9 @@ sealed interface RadioStationEvent {
         val name: String,
         val query: String,
         val k: String,
-        val next: String
-    ) : RadioStationEvent
-
-    data class getStationId(
-        val call: String,
-        val name: String,
-        val query: String
+        val next: String,
+        val radioStationType: String,
+        val language: String
     ) : RadioStationEvent
 
 }

@@ -9,6 +9,7 @@ import com.ar.musicplayer.models.RadiosongItem
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.models.StationResponse
 import com.ar.musicplayer.utils.events.RadioStationEvent
+import org.intellij.lang.annotations.Language
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -31,28 +32,35 @@ class RadioStationViewModel (
                     k = event.k,
                     next = event.next,
                     name = event.name,
-                    query = event.query
+                    query = event.query,
+                    radioStationType = event.radioStationType,
+                    language = event.language
                 )
-            is RadioStationEvent.getStationId ->
-                GetStationId(event.call,event.name,event.query)
         }
     }
 
 
 
-    private fun GetStationId(call: String, name: String, query: String) {
 
 
-    }
+    private fun LoadCurrentStation(call: String, k: String, next: String, name: String, query: String,radioStationType: String,language:String) {
 
-    private fun LoadCurrentStation(call: String, k: String, next: String, name: String, query: String) {
+        val clientToGetStationId =
+            if(radioStationType == "artist"){
+                ApiConfig.getApiService().getArtistStationId(
+                    call = "webradio.createArtistStation",
+                    name = name,
+                    query = query
+                )
+            }
+        else{
+            ApiConfig.getApiService().getFeaturedStationId(
+                call = "webradio.createFeaturedStation",
+                name = name,
+                language = language
+            )
 
-
-        val clientToGetStationId = ApiConfig.getApiService().getArtistStationId(
-            call = "webradio.createArtistStation",
-            name = name,
-            query = query
-        )
+        }
 
         // Send API request using Retrofit
         clientToGetStationId.enqueue(object : Callback<StationResponse> {

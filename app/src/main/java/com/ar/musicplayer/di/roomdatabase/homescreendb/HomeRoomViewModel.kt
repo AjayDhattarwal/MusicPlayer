@@ -1,6 +1,8 @@
 package com.ar.musicplayer.di.roomdatabase.homescreendb
 
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.di.roomdatabase.dbmodels.HomeDataEntity
@@ -17,7 +19,9 @@ import javax.inject.Inject
 class HomeRoomViewModel @Inject constructor(
     private val homeDataDao: HomeDataDao
 ) : ViewModel() {
-    var homeData = MutableStateFlow<HomeData?>(null)
+//    var homeData = MutableStateFlow<HomeData?>(null)
+    val _homeData = MutableLiveData<HomeData?>()
+    val homeData: LiveData<HomeData?> = _homeData
 
     fun onEvent(event: HomeDataEvent) {
         when (event) {
@@ -30,7 +34,7 @@ class HomeRoomViewModel @Inject constructor(
     private fun loadHomeData() {
         viewModelScope.launch {
             val homeDataEntity = homeDataDao.getHomeDataById(1)
-            homeData.value = homeDataEntity?.toHomeData()
+            _homeData.value = homeDataEntity?.toHomeData()
         }
     }
 
@@ -90,7 +94,6 @@ class HomeRoomViewModel @Inject constructor(
             data144 = parseJsonArray(data144),
             data211 = parseJsonArray(data211),
             modules = Gson().fromJson(modules, ModulesOfHomeScreen::class.java)
-
 
         )
     }

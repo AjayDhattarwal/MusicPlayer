@@ -31,7 +31,7 @@ class PlayerViewModel @Inject constructor() : ViewModel()  {
     val starter = MutableStateFlow<Boolean?>(true)
     val isFavorite = MutableStateFlow<Boolean?>(false)
     val currentIndex = MutableStateFlow<Int>(0)
-
+    val waitToPlay = MutableStateFlow<Boolean>(false)
 
 
     // Function to update the current song
@@ -69,6 +69,10 @@ class PlayerViewModel @Inject constructor() : ViewModel()  {
     }
     fun setCurrentSongIndex(int: Int){
         currentIndex.value = int
+    }
+    fun waitForPlay(reset: Boolean){
+        pause()
+        waitToPlay.value = reset
     }
 
 }

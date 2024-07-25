@@ -1,7 +1,6 @@
-package com.ar.musicplayer.components
+package com.ar.musicplayer.components.home
 
 import android.icu.util.Calendar
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.ar.musicplayer.screens.shimmerEffectfun
 
 @Composable
 fun TopProfileBar(
@@ -43,7 +41,6 @@ fun TopProfileBar(
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(brush = shimmerEffectfun(true))
 
         )
         Column(

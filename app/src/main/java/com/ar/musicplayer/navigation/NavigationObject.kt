@@ -18,7 +18,7 @@ object LibraryScreenObj
 @Serializable
 data class InfoScreenObj(  //
     val serialized: String,
-    val heading: String,
+    val sharedKey: Int,
 )
 
 @Serializable
@@ -40,4 +40,10 @@ object MusicRecognizerObj
 
 @Serializable
 object SearchMyMusicObj
+
+@Serializable
+data class DetailsScreenObj(
+    val playlistResponse: String,
+
+)
 

@@ -1,12 +1,11 @@
 package com.ar.musicplayer.screens
 
+import MusicPlayingAni
 import android.content.Context
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,7 +16,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableLongStateOf
@@ -63,16 +61,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.focus.focusModifier
-import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.asComposeRenderEffect
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -90,17 +80,21 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.ar.musicplayer.components.ControlButton
-import com.ar.musicplayer.components.DownloadButton
-import com.ar.musicplayer.components.FavToggleButton
+import com.ar.musicplayer.components.CircularProgress
 import com.ar.musicplayer.components.MusicPlayingAnimation
-import com.ar.musicplayer.components.PlayPauseButton
-import com.ar.musicplayer.components.PlayPauseLargeButton
-import com.ar.musicplayer.components.SkipNextButton
-import com.ar.musicplayer.components.TrackSlider
-import com.ar.musicplayer.components.convertToText
+import com.ar.musicplayer.components.player.ControlButton
+import com.ar.musicplayer.components.player.DownloadButton
+import com.ar.musicplayer.components.player.FavToggleButton
+import com.ar.musicplayer.components.player.PlayPauseButton
+import com.ar.musicplayer.components.player.PlayPauseLargeButton
+import com.ar.musicplayer.components.player.SkipNextButton
+import com.ar.musicplayer.components.player.TrackSlider
+import com.ar.musicplayer.components.player.convertToText
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
@@ -141,7 +135,8 @@ fun PlayerScreen(
     val playlist by playerViewModel.playlist.collectAsState()
     val currentIndex by playerViewModel.currentIndex.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
-    val UpNextPlaylist = musicPlayer.getPlaylist().collectAsState()
+    val upNextPlaylist by musicPlayer.getPlaylist().collectAsState()
+    val waitForPlayer by playerViewModel.waitToPlay.collectAsState()
 
     val favButtonClick = remember { mutableStateOf(false) }
 
@@ -207,6 +202,9 @@ fun PlayerScreen(
     DisposableEffect(Unit) {
         musicPlayer.onSongChanged = { song ->
             playerViewModel.updateCurrentSong(song)
+            if(playerViewModel.waitToPlay.value){
+                playerViewModel.waitForPlay(false)
+            }
             playerViewModel.play()
         }
         onDispose {
@@ -238,7 +236,7 @@ fun PlayerScreen(
         }
 
         coroutineScope.launch {
-            if (UpNextPlaylist.value.isNotEmpty() && currentIndex > 0) {
+            if (upNextPlaylist.isNotEmpty()  && currentIndex > 0) {
                 listState.animateScrollToItem(currentIndex)
             }
         }
@@ -273,6 +271,7 @@ fun PlayerScreen(
         Log.d("color", "color is  ${perfectColor.value}")
     }
 
+
     val currentPosition = remember { mutableLongStateOf(0) }
     val sliderPosition = remember { mutableLongStateOf(0) }
     val totalDuration = remember { mutableLongStateOf(0) }
@@ -293,403 +292,403 @@ fun PlayerScreen(
     }
 
 
-    Column {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(brush = verticalGradient.value)
-                .clickable { onExpand() }
-        ) {
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(brush = verticalGradient.value)
+            .clickable { onExpand() }
+    ) {
 
-            BottomSheetScaffold(
-                scaffoldState = UpNextSheetState,
-                sheetPeekHeight = 70.dp,
-                sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                sheetContent = {
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                    Column(
+        BottomSheetScaffold(
+            scaffoldState = UpNextSheetState,
+            sheetPeekHeight = 70.dp,
+            sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            sheetContent = {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height((LocalConfiguration.current.screenHeightDp / 2).dp)
+                        .padding(top = 4.dp)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(vertical = 8.dp)
+                            .width(40.dp)
+                            .height(4.dp)
+                            .background(Color.White, shape = RoundedCornerShape(2.dp))
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height((LocalConfiguration.current.screenHeightDp / 2).dp)
-                            .padding(top = 4.dp)
+                            .padding(4.dp)
                     ) {
-
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(vertical = 8.dp)
-                                .width(40.dp)
-                                .height(4.dp)
-                                .background(Color.White, shape = RoundedCornerShape(2.dp))
+                        Text(
+                            text = "Up Next",
+                            fontSize = 22.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
-                        ) {
-                            Text(
-                                text = "Up Next",
-                                fontSize = 22.sp,
-                                color = Color.White,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxSize(),
+                        state = listState,
+                    ) {
+                        items(upNextPlaylist , key = { it.id!! }){
+                            UpNextPlaylist(it,playerViewModel,favViewModel,downloaderViewModel)
                         }
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxSize(),
-                            state = listState,
-                        ) {
+                    }
 
-                            if(UpNextPlaylist.value.size != 0){
-                                items(UpNextPlaylist.value){
-                                    UpNextPlaylist(it,playerViewModel,favViewModel,downloaderViewModel)
-                                }
+                }
+
+            },
+            sheetBackgroundColor = Color(0xDC000000),
+            backgroundColor = Color.Transparent
+        ) {
+
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                verticalArrangement = Arrangement.Top
+
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = dynamicPaddingValues)
+                        .height(sizeofCollapseBar),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    IconButton(onClick = { onCollapse() }, modifier = Modifier) {
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = { /* Handle menu button click */ }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "Menu",
+                            tint = Color.White
+                        )
+                    }
+
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(dynamicImgBoxSize)
+                            .background(Color.Transparent)
+                            .padding(10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        SubcomposeAsyncImage(
+                            model = if(waitForPlayer) "" else imageDrawable,
+                            contentDescription = "",
+                            modifier = Modifier
+                                .size(size)
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.FillBounds,
+                            alignment = Alignment.Center,
+                        ){
+                            val state = painter.state
+                            if (state is AsyncImagePainter.State.Loading || state is AsyncImagePainter.State.Error && currentSong != null) {
+                                CircularProgress()
+                            } else {
+                                SubcomposeAsyncImageContent()
                             }
                         }
 
                     }
 
-                },
-                sheetBackgroundColor = Color(0xDC000000),
-                backgroundColor = Color.Transparent
-            ) {
 
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Transparent),
-                    verticalArrangement = Arrangement.Top
-
-                ) {
-
-                    Column(modifier = Modifier.fillMaxWidth()) {
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = dynamicPaddingValues)
-                                .height(sizeofCollapseBar),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ){
-                            IconButton(onClick = onCollapse, modifier = Modifier) {
-                                Icon(
-                                    Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "Back",
-                                    tint = Color.White
-                                )
-                            }
-                            IconButton(onClick = { /* Handle menu button click */ }) {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = "Menu",
-                                    tint = Color.White
-                                )
-                            }
-
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-
-                            Box(
+                    AnimatedVisibility(
+                        visible = bottomSheetState.currentFraction < 0.9f,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Row(){
+                            Column(
                                 modifier = Modifier
-                                    .size(dynamicImgBoxSize)
-                                    .background(Color.Transparent)
-                                    .padding(10.dp),
-                                contentAlignment = Alignment.Center
+                                    .weight(1f)
+                                    .padding(end = 20.dp)
                             ) {
-                                AsyncImage(
-                                    model = imageDrawable,
-                                    contentDescription = "image",
-                                    modifier = Modifier
-                                        .size(size)
-                                        .background(brush = shimmerEffectfun(true))
-                                        .clip(RoundedCornerShape(4.dp)),
-                                    onSuccess = { showShimmer.value = false },
-                                    contentScale = ContentScale.FillBounds,
-                                    alignment = Alignment.Center,
-                                )
+                                currentSong?.title?.let {
+                                    Text(
+                                        text = if(waitForPlayer)"Loading..." else it.replace("&quot;",""),
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.basicMarquee(
+                                            animationMode = MarqueeAnimationMode.Immediately,
+                                            repeatDelayMillis = 2000,
+                                            initialDelayMillis = 2000,
+                                            iterations = Int.MAX_VALUE
+                                        )
+                                    )
+                                }
 
+                                artistsNames?.let {
+                                    Text(
+                                        text = if(waitForPlayer) "" else it.replace("&quot;",""),
+                                        fontSize = 14.sp,
+                                        color = Color.LightGray,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.basicMarquee(
+                                            animationMode = MarqueeAnimationMode.Immediately,
+                                            repeatDelayMillis = 2000,
+                                            initialDelayMillis = 2000,
+
+                                            )
+                                    )
+                                }
                             }
-
-
-                            AnimatedVisibility(
-                                visible = bottomSheetState.currentFraction < 0.9f,
-                                enter = fadeIn(),
-                                exit = fadeOut()
-                            ) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Row(){
-                                    Column(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(end = 20.dp)
-                                    ) {
-                                        currentSong?.title?.let {
-                                            Text(
-                                                text = it.replace("&quot;",""),
-                                                fontSize = 16.sp,
-                                                color = Color.White,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.basicMarquee(
-                                                    animationMode = MarqueeAnimationMode.Immediately,
-                                                    repeatDelayMillis = 2000,
-                                                    initialDelayMillis = 2000,
-                                                    iterations = Int.MAX_VALUE
-                                                )
+                            FavToggleButton(
+                                isFavorite = isFavourite.value,
+                                onFavClick = remember{
+                                    {
+                                        favViewModel.onEvent(
+                                            FavoriteSongEvent.toggleFavSong(
+                                                songResponse = currentSong!!
                                             )
-                                        }
+                                        )
+                                        favButtonClick.value = !favButtonClick.value
+                                    }
+                                }
+                            )
 
-                                        artistsNames?.let {
-                                            Text(
-                                                text = it.replace("&quot;",""),
-                                                fontSize = 14.sp,
-                                                color = Color.LightGray,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.basicMarquee(
-                                                    animationMode = MarqueeAnimationMode.Immediately,
-                                                    repeatDelayMillis = 2000,
-                                                    initialDelayMillis = 2000,
-
-                                                    )
-                                            )
+                            PlayPauseButton(
+                                isPlaying = isPlaying ,
+                                onPlayPauseClick = remember {
+                                    {
+                                        if (isPlaying) {
+                                            playerViewModel.pause()
+                                        } else {
+                                            playerViewModel.starter.value = false
+                                            playerViewModel.play()
                                         }
                                     }
-                                    FavToggleButton(
-                                        isFavorite = isFavourite.value,
-                                        onFavClick = remember{
-                                            {
-                                                favViewModel.onEvent(
-                                                    FavoriteSongEvent.toggleFavSong(
-                                                        songResponse = currentSong!!
-                                                    )
-                                                )
-                                                favButtonClick.value = !favButtonClick.value
-                                            }
-                                        }
-                                    )
-
-                                    PlayPauseButton(
-                                        isPlaying = isPlaying ,
-                                        onPlayPauseClick = remember {
-                                            {
-                                                if (isPlaying) {
-                                                    playerViewModel.pause()
-                                                } else {
-                                                    playerViewModel.starter.value = false
-                                                    playerViewModel.play()
-                                                }
-                                            }
-                                        }
-                                    )
-
-                                    SkipNextButton(
-                                        onSkipNext = remember {
-                                            { musicPlayer.skipToNext() }
-                                        }
-                                    )
                                 }
-                            }
+                            )
+
+                            SkipNextButton(
+                                onSkipNext = remember {
+                                    { musicPlayer.skipToNext() }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = bottomSheetState.currentFraction > 0,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column (modifier = Modifier.padding(start = 10.dp, end = 10.dp)){
+                        Column(
+                            modifier = Modifier
+                                .padding(
+                                    top = dynamicSongTitleTopPadding,
+                                    bottom = 20.dp,
+                                    start = 20.dp,
+                                    end = 20.dp
+                                )
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+
+                            Text(
+                                text = songName ,
+                                modifier = Modifier.basicMarquee(
+                                    animationMode = MarqueeAnimationMode.Immediately,
+                                    repeatDelayMillis = 2000,
+                                    initialDelayMillis = 2000
+                                ),
+                                color = Color.White,
+                                fontSize = 30.sp,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = artistsNames.toString(),
+                                modifier = Modifier.basicMarquee(
+                                    animationMode = MarqueeAnimationMode.Immediately,
+                                    repeatDelayMillis = 2000,
+                                    initialDelayMillis = 2000
+                                ),
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+
                         }
 
-                        AnimatedVisibility(
-                            visible = bottomSheetState.currentFraction > 0,
-                            enter = fadeIn(),
-                            exit = fadeOut()
+                        TrackSlider(
+                            value =  sliderPosition.longValue.toFloat() ,
+                            onValueChange = { newValue ->
+                                sliderPosition.longValue = newValue.toLong()
+                            },
+                            onValueChangeFinished = {
+                                currentPosition.longValue = sliderPosition.longValue
+                                player.seekTo(sliderPosition.longValue)
+                            },
+                            songDuration = totalDuration.longValue.toFloat()
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Column (modifier = Modifier.padding(start = 10.dp, end = 10.dp)){
-                                Column(
-                                    modifier = Modifier
-                                        .padding(
-                                            top = dynamicSongTitleTopPadding,
-                                            bottom = 20.dp,
-                                            start = 20.dp,
-                                            end = 20.dp
+
+                            Text(
+                                text = (currentPosition.longValue).convertToText(),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp),
+                                color = Color.White,
+                                style = TextStyle(fontWeight = FontWeight.Bold)
+                            )
+
+                            Text(
+                                text =  totalDuration.longValue.convertToText(),
+                                modifier = Modifier
+                                    .padding(end = 8.dp),
+                                color = Color.White,
+                                style = TextStyle(fontWeight = FontWeight.Bold)
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 5.dp)
+                        ) {
+                            ControlButton(
+                                icon = Icons.Default.Shuffle,
+                                size = 30.dp,
+                                onClick = remember {
+                                    {
+                                        ////// Shuffle
+                                    }
+                                },
+                                tint = Color.LightGray
+                            )
+                            Spacer(modifier = Modifier.width(20.dp))
+
+                            ControlButton(
+                                icon = Icons.Default.SkipPrevious,
+                                size = 50.dp,
+                                onClick = remember {
+                                    {
+                                        musicPlayer.skipToPrevious()
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            PlayPauseLargeButton (
+                                isPlaying = isPlaying ,
+                                onPlayPauseClick = remember {
+                                    {
+                                        if (isPlaying) {
+                                            playerViewModel.pause()
+                                        } else {
+                                            playerViewModel.starter.value = false
+                                            playerViewModel.play()
+                                        }
+                                    }
+                                }
+                            )
+
+
+                            Spacer(modifier = Modifier.width(10.dp))
+                            ControlButton(
+                                icon = Icons.Default.SkipNext,
+                                size = 50.dp,
+                                onClick = remember {
+                                    {
+                                        musicPlayer.skipToNext()
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(20.dp))
+                            ControlButton(
+                                icon = Icons.Default.Repeat,
+                                size = 30.dp,
+                                onClick = remember {
+                                    {
+                                        //// Repeat
+                                    }
+                                },
+                                tint = Color.LightGray
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            FavToggleButton(
+                                isFavorite = isFavourite.value,
+                                onFavClick = remember{
+                                    {
+                                        favViewModel.onEvent(
+                                            FavoriteSongEvent.toggleFavSong(
+                                                songResponse = currentSong!!
+                                            )
                                         )
-                                        .fillMaxWidth(),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-
-
-                                    Text(
-                                        text = songName ,
-                                        modifier = Modifier.basicMarquee(
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                            repeatDelayMillis = 2000,
-                                            initialDelayMillis = 2000
-                                        ),
-                                        color = Color.White,
-                                        fontSize = 30.sp,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = artistsNames.toString(),
-                                        modifier = Modifier.basicMarquee(
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                            repeatDelayMillis = 2000,
-                                            initialDelayMillis = 2000
-                                        ),
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        maxLines = 1
-                                    )
-
+                                        favButtonClick.value = !favButtonClick.value
+                                    }
                                 }
+                            )
 
-                                TrackSlider(
-                                    value = sliderPosition.longValue.toFloat(),
-                                    onValueChange = { newValue ->
-                                       sliderPosition.longValue = newValue.toLong()
-                                    },
-                                    onValueChangeFinished = {
-                                        currentPosition.longValue = sliderPosition.longValue
-                                        player.seekTo(sliderPosition.longValue)
-                                    },
-                                    songDuration = totalDuration.longValue.toFloat()
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-
-                                    Text(
-                                        text = (currentPosition.longValue).convertToText(),
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp),
-                                        color = Color.White,
-                                        style = TextStyle(fontWeight = FontWeight.Bold)
-                                    )
-
-                                    Text(
-                                        text =  totalDuration.longValue.convertToText(),
-                                        modifier = Modifier
-                                            .padding(end = 8.dp),
-                                        color = Color.White,
-                                        style = TextStyle(fontWeight = FontWeight.Bold)
-                                    )
-                                }
-
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 5.dp)
-                                ) {
-                                    ControlButton(
-                                        icon = Icons.Default.Shuffle,
-                                        size = 30.dp,
-                                        onClick = remember {
-                                            {
-                                                ////// Shuffle
-                                            }
-                                        },
-                                        tint = Color.LightGray
-                                    )
-                                    Spacer(modifier = Modifier.width(20.dp))
-
-                                    ControlButton(
-                                        icon = Icons.Default.SkipPrevious,
-                                        size = 50.dp,
-                                        onClick = remember {
-                                            {
-                                                musicPlayer.skipToPrevious()
-                                            }
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-
-                                    PlayPauseLargeButton (
-                                        isPlaying = isPlaying ,
-                                        onPlayPauseClick = remember {
-                                            {
-                                                if (isPlaying) {
-                                                    playerViewModel.pause()
-                                                } else {
-                                                    playerViewModel.starter.value = false
-                                                    playerViewModel.play()
-                                                }
-                                            }
-                                        }
-                                    )
-
-
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    ControlButton(
-                                        icon = Icons.Default.SkipNext,
-                                        size = 50.dp,
-                                        onClick = remember {
-                                            {
-                                                musicPlayer.skipToNext()
-                                            }
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(20.dp))
-                                    ControlButton(
-                                        icon = Icons.Default.Repeat,
-                                        size = 30.dp,
-                                        onClick = remember {
-                                            {
-                                                //// Repeat
-                                            }
-                                        },
-                                        tint = Color.LightGray
-                                    )
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    FavToggleButton(
-                                        isFavorite = isFavourite.value,
-                                        onFavClick = remember{
-                                            {
-                                                favViewModel.onEvent(
-                                                    FavoriteSongEvent.toggleFavSong(
-                                                        songResponse = currentSong!!
-                                                    )
+                            DownloadButton(
+                                isDownloaded = isDownloaded.value,
+                                isDownloading = isDownloading.value,
+                                downloadProgress = downloadProgress?.toFloat(),
+                                onDownloadClick = remember(currentSong) {
+                                    {
+                                        if (!isDownloaded.value) {
+                                            currentSong?.let {
+                                                downloaderViewModel.onEvent(
+                                                    DownloadEvent.downloadSong(it)
                                                 )
-                                                favButtonClick.value = !favButtonClick.value
                                             }
                                         }
-                                    )
-
-                                    DownloadButton(
-                                        isDownloaded = isDownloaded.value,
-                                        isDownloading = isDownloading.value,
-                                        downloadProgress = downloadProgress?.toFloat(),
-                                        onDownloadClick = remember(currentSong) {
-                                            {
-                                                if (!isDownloaded.value) {
-                                                    currentSong?.let {
-                                                        downloaderViewModel.onEvent(
-                                                            DownloadEvent.downloadSong(it)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    )
-
+                                    }
                                 }
+                            )
 
-                            }
                         }
 
                     }
                 }
+
+
             }
         }
     }
@@ -750,9 +749,9 @@ fun UpNextPlaylist(
             }
         )
 
-        launch { // Launch a coroutine to collect the Flow
+        launch {
             isFavVar?.collect { isFav ->
-                isFavourite.value = isFav // Update the state in the composable
+                isFavourite.value = isFav
             }
         }
     }
@@ -770,7 +769,6 @@ fun UpNextPlaylist(
             modifier = Modifier
                 .size(50.dp)
                 .padding(4.dp)
-                .background(brush = shimmerEffectfun(showShimmer.value))
                 .clip(RoundedCornerShape(3.dp)),
             onSuccess = { showShimmer.value = false },
             contentScale = ContentScale.Crop,
@@ -813,54 +811,59 @@ fun UpNextPlaylist(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        if(currentSong != songResponse){
-
-            DownloadButton(
-                isDownloaded = isDownloaded.value,
-                isDownloading = isDownloading.value,
-                downloadProgress = downloadProgress?.toFloat(),
-                onDownloadClick = remember(songResponse) {
-                    {
-                        if (!isDownloaded.value) {
-                            songResponse.let {
-                                downloaderViewModel.onEvent(
-                                    DownloadEvent.downloadSong(it)
-                                )
-                            }
-                        }
-                    }
-                }
-            )
-            FavToggleButton(
-                isFavorite = isFavourite.value,
-                onFavClick = remember{
-                    {
-                        favViewModel.onEvent(
-                            FavoriteSongEvent.toggleFavSong(
-                                songResponse = songResponse
-                            )
-                        )
-                        favButtonClick.value = !favButtonClick.value
-                    }
-                }
-            )
-
-            IconButton(onClick = { /* Handle menu button click */ }) {
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "Menu",
-                    tint = Color.White
-                )
-            }
-        }
-        else{
-            MusicPlayingAnimation(isPlaying = isPlaying, modifier = Modifier.padding(start = 10.dp, end = 10.dp).width(80.dp).height(30.dp))
-        }
+//        if(currentSong != songResponse){
+//
+//            DownloadButton(
+//                isDownloaded = isDownloaded.value,
+//                isDownloading = isDownloading.value,
+//                downloadProgress = downloadProgress?.toFloat(),
+//                onDownloadClick = remember(songResponse) {
+//                    {
+//                        if (!isDownloaded.value) {
+//                            songResponse.let {
+//                                downloaderViewModel.onEvent(
+//                                    DownloadEvent.downloadSong(it)
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            )
+//            FavToggleButton(
+//                isFavorite = isFavourite.value,
+//                onFavClick = remember{
+//                    {
+//                        favViewModel.onEvent(
+//                            FavoriteSongEvent.toggleFavSong(
+//                                songResponse = songResponse
+//                            )
+//                        )
+//                        favButtonClick.value = !favButtonClick.value
+//                    }
+//                }
+//            )
+//
+//            IconButton(onClick = { /* Handle menu button click */ }) {
+//                Icon(
+//                    Icons.Default.MoreVert,
+//                    contentDescription = "Menu",
+//                    tint = Color.White
+//                )
+//            }
+//        }
+//        else{
+//            MusicPlayingAnimation(isPlaying = isPlaying, modifier = Modifier
+//                .padding(start = 10.dp, end = 10.dp)
+//                .width(80.dp)
+//                .height(30.dp))
+//        }
     }
 }
 
 
-suspend fun prefetchImage(context: Context, url: String): Drawable? {
+
+
+suspend fun prefetchImage(context: Context, url: String): Drawable {
     val imageLoader = ImageLoader(context)
     val request = ImageRequest.Builder(context)
         .data(url)
@@ -875,7 +878,6 @@ suspend fun prefetchImage(context: Context, url: String): Drawable? {
         } catch (e: Exception) {
             // Log error if needed
         }
-        delay(1000) // Wait for a second before retrying
     }
 }
 
@@ -890,3 +892,8 @@ fun getStatusBarHeight(): Dp {
 }
 
 
+data class UpNextState(
+    val isDownloading: Boolean,
+    val isDownloaded: Boolean,
+    val isFavourite: Boolean
+)

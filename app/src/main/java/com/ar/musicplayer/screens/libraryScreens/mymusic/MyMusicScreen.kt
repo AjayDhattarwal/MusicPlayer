@@ -1,7 +1,6 @@
 package com.ar.musicplayer.screens.libraryScreens.mymusic
 
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +27,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -50,38 +48,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.ar.musicplayer.components.SearchTopAppBar
 import com.ar.musicplayer.di.permission.PermissionHandler
 import com.ar.musicplayer.di.permission.PermissionModel
 import com.ar.musicplayer.di.permission.hasPermissions
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.models.PlaylistResponse
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.navigation.InfoScreenObj
+import com.ar.musicplayer.navigation.DetailsScreenObj
 import com.ar.musicplayer.navigation.SearchMyMusicObj
-import com.ar.musicplayer.screens.SearchBar
-import com.ar.musicplayer.screens.shimmerEffectfun
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -252,7 +243,6 @@ fun LocalSongsScreen(
                         modifier = Modifier
                             .size(50.dp)
                             .padding(4.dp)
-                            .background(brush = shimmerEffectfun(showShimmer.value))
                             .clip(RoundedCornerShape(3.dp)),
                         onSuccess = { showShimmer.value = false },
                         contentScale = ContentScale.Crop,
@@ -343,11 +333,20 @@ fun AlbumSection(album: String, songs: List<SongResponse>,navController: NavHost
     val showShimmer = remember { mutableStateOf(true) }
 
     val artists = songs.first().moreInfo?.artistMap?.artists?.distinctBy { it.name }?.joinToString(", "){it.name.toString()}
+
+    val playlistResponse = PlaylistResponse(
+        title = album,
+        image = songs.first().image,
+        list = songs
+    )
+
+    val serialized = remember { Json.encodeToString(PlaylistResponse.serializer(), playlistResponse) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-            .clickable {  },
+            .clickable { navController.navigate(DetailsScreenObj(playlistResponse = serialized))  },
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
@@ -357,7 +356,7 @@ fun AlbumSection(album: String, songs: List<SongResponse>,navController: NavHost
             contentDescription = "image",
             modifier = Modifier
                 .size(150.dp)
-                .background(brush = shimmerEffectfun(showShimmer.value))
+                
                 .clip(RoundedCornerShape(5)),
             onSuccess = { showShimmer.value = false },
             contentScale = ContentScale.Crop,
@@ -427,7 +426,7 @@ fun ArtistSection(artist: String, songs: List<SongResponse>) {
             modifier = Modifier
                 .size(50.dp)
                 .padding(4.dp)
-                .background(brush = shimmerEffectfun(showShimmer.value))
+                
                 .clip(CircleShape),
             onSuccess = { showShimmer.value = false },
             contentScale = ContentScale.Crop,

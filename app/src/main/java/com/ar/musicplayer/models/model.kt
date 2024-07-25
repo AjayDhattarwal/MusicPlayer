@@ -79,20 +79,23 @@ data class HomeListItem(
     @SerializedName("list_type") val listType: String? = "",
     @SerializedName("list") val list: String? = "",
     @SerializedName("more_info") val moreInfoHomeList: MoreInfoHomeList?,
-//    @SerializedName("button_tooltip_info") val buttonTooltipInfo: List<Any>,
+    @SerializedName("count") val count: Int? = 0,
 ): Parcelable
 
 @Serializable
 @Parcelize
 data class MoreInfoHomeList(
     @SerializedName("release_date") val releaseDate: String? = " ",
-    @SerializedName("song_count") val songCount: String? = " ",
+    @SerializedName("song_count") val songCount: Int? = 0,
     @SerializedName("artistMap") val artistMap: ArtistMap? = null,
     @SerializedName("follower_count") val followerCount: String? = " ",
     @SerializedName("firstname") val firstname: String? = " ",
     @SerializedName("last_updated") val lastUpdate: String? = " " ,
     @SerializedName("uid") val uid: String? = " ",
+    @SerializedName("featured_station_type") val stationType : String? = "",
     @SerializedName("query") val query: String? = "",
+    @SerializedName("language") val language: String? = "",
+
 ): Parcelable
 
 
@@ -149,6 +152,14 @@ data class PlaylistResponse(
 
 ) : Parcelable
 
+
+///             ***************** Song ********************
+
+@Serializable
+@Parcelize
+data class SongResponseList(
+    @SerializedName("list") val list: List<SongResponse>? = emptyList()
+): Parcelable
 
 @Serializable
 @Parcelize

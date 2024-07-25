@@ -160,7 +160,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                             modifier = Modifier
                                 .size(50.dp)
                                 .padding(4.dp)
-                                .background(brush = shimmerEffectfun(showShimmer.value))
+                                
                                 .clip(RoundedCornerShape(3.dp)),
                             onSuccess = { showShimmer.value = false },
                             contentScale = ContentScale.Crop,
@@ -328,7 +328,7 @@ fun TopSearchDisplay(
                     modifier = Modifier
                         .size(50.dp)
                         .padding(4.dp)
-                        .background(brush = shimmerEffectfun(showShimmer.value))
+                        
                         .clip(RoundedCornerShape(3.dp)),
                     onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,
@@ -388,7 +388,7 @@ fun TopSearchDisplay(
                     modifier = Modifier
                         .size(50.dp)
                         .padding(4.dp)
-                        .background(brush = shimmerEffectfun(showShimmer.value))
+                        
                         .clip(RoundedCornerShape(3.dp)),
                     onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,
@@ -455,7 +455,7 @@ fun TopSearchDisplay(
                     modifier = Modifier
                         .size(50.dp)
                         .padding(4.dp)
-                        .background(brush = shimmerEffectfun(showShimmer.value))
+                        
                         .clip(RoundedCornerShape(3.dp)),
                     onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,
@@ -514,7 +514,7 @@ fun TopSearchDisplay(
                     modifier = Modifier
                         .size(50.dp)
                         .padding(4.dp)
-                        .background(brush = shimmerEffectfun(showShimmer.value))
+                        
                         .clip(RoundedCornerShape(3.dp)),
                     onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,
@@ -583,7 +583,7 @@ fun SearchResultDisplay(searchResults: SearchResults?, navController: NavHostCon
                     modifier = Modifier
                         .size(50.dp)
                         .padding(4.dp)
-                        .background(brush = shimmerEffectfun(showShimmer.value))
+                        
                         .clip(RoundedCornerShape(3.dp)),
                     onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,

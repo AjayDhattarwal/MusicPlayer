@@ -127,6 +127,8 @@ dependencies {
 
     implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
 
+    implementation ("com.google.accompanist:accompanist-glide:0.10.0")
+
     //room database
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
@@ -136,5 +138,11 @@ dependencies {
 
     // mp3 create
     implementation (libs.mpatric.mp3agic)
+
+
+//    implementation("androidx.compose.runtime:runtime-tracing:1.0.0-beta01")
+//    implementation("androidx.tracing:tracing-perfetto:1.0.0")
+//    implementation("androidx.tracing:tracing-perfetto-binary:1.0.0")
+
 
 }

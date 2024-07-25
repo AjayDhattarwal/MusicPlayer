@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -23,10 +24,10 @@ class LastSessionViewModel @Inject constructor(
 ) : ViewModel(){
 
     val lastSession = MutableLiveData<List<SongResponse>>()
-    val listeningHistory: LiveData<List<SongResponse>> =
+    val listeningHistory: LiveData<List<Pair<Int?, SongResponse>>> =
         lastSessionDao.getHistory().map { lastSessionDataEntities ->
-            lastSessionDataEntities.map { lastSession ->
-                Gson().fromJson(lastSession.lastSession, SongResponse::class.java)
+            lastSessionDataEntities.map { history->
+                history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
             }
         }.asLiveData()
 

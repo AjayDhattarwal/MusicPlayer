@@ -1,4 +1,4 @@
-package com.ar.musicplayer.components
+package com.ar.musicplayer.components.player
 
 fun Long.convertToText(): String {
     val sec = this / 1000

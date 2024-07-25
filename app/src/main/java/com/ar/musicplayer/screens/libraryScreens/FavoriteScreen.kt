@@ -33,8 +33,6 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -52,10 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.screens.shimmerEffectfun
 import com.ar.musicplayer.viewmodel.ImageColorGradient
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
@@ -174,7 +170,7 @@ fun SongsScreen(
                         modifier = Modifier
                             .size(50.dp)
                             .padding(4.dp)
-                            .background(brush = shimmerEffectfun(showShimmer.value))
+                            
                             .clip(RoundedCornerShape(3.dp)),
                         onSuccess = { showShimmer.value = false },
                         contentScale = ContentScale.Crop,

@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -53,6 +55,7 @@ class MusicPlayer @Inject constructor(
                 currentIndex = if(viewModel.isPlayingHistory.value == true) newPlaylist.size - 1 else 0
                 viewModel.setCurrentSongIndex(currentIndex)
                 playCurrentSong()
+
             }
         }
 
@@ -183,6 +186,7 @@ class MusicPlayer @Inject constructor(
                 viewModel.setCurrentSongIndex(currentIndex)
                 onSongChanged?.invoke(song)
             }
+
         }
     }
 

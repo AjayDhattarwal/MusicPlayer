@@ -65,6 +65,13 @@ interface ApiService {
         @Query("query") query: String = "",
     ):Call<StationResponse>
 
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getFeaturedStationId(
+        @Query("__call") call: String = "webradio.createFeaturedStation",
+        @Query("name") name: String = "",
+        @Query("language") language: String = "",
+    ):Call<StationResponse>
+
 
     @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
     fun getRadioSongs(
