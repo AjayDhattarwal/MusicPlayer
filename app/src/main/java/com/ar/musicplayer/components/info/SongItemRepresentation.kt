@@ -1,7 +1,6 @@
 package com.ar.musicplayer.components.info
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,22 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import coil.size.Size
-import coil.size.SizeResolver
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.screens.libraryScreens.mymusic.toPx
 import com.ar.musicplayer.utils.playerHelper.DownloadEvent
 import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
-import com.ar.musicplayer.viewmodel.ImageColorGradient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -58,7 +50,6 @@ fun SongItemRepresentation(
     index: Int,
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
-    imageColorViewModel: ImageColorGradient,
     onTrackClicked: () -> Unit
 )
 {

@@ -4,17 +4,15 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import androidx.media3.exoplayer.ExoPlayer
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.utils.MusicPlayer
-import com.ar.musicplayer.viewmodel.DetailsViewModel
-import com.ar.musicplayer.viewmodel.LocalSongsViewModel
-import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.viewmodel.RecommendationViewModel
+import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionDao
+import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.screens.player.DetailsViewModel
+import com.ar.musicplayer.screens.player.RecommendationViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -39,28 +37,10 @@ object MusicPlayerSingleton {
     @Singleton
     fun provideDetailsViewModel() = DetailsViewModel()
 
-    @Provides
-    @Singleton
-    fun providePlayerViewModel() = PlayerViewModel()
-
 
     @Provides
     @Singleton
     fun provideRecommendationViewModel() = RecommendationViewModel()
-
-
-
-    @Provides
-    @Singleton
-    fun provideMusicPlayer(
-        @ApplicationContext context: Context,
-        viewModel: PlayerViewModel,
-        exoPlayer: ExoPlayer,
-        detailsViewModel: DetailsViewModel,
-        recommendationViewModel: RecommendationViewModel
-    ): MusicPlayer {
-        return MusicPlayer(context, viewModel, exoPlayer,detailsViewModel,recommendationViewModel )
-    }
 
 
 
@@ -73,5 +53,18 @@ object MusicPlayerSingleton {
     fun provideDownloaderViewModel(musicDownloadRepository: MusicDownloadRepository) = DownloaderViewModel(musicDownloadRepository)
 
 
+    @Provides
+    @Singleton
+    fun provideLastSessionViewModel(lastSessionDao: LastSessionDao) = LastSessionViewModel(lastSessionDao = lastSessionDao)
+
+    @Provides
+    @Singleton
+    fun provideMusicPlayerViewModel(
+        application: Application,
+        exoPlayer: ExoPlayer,
+        lastSessionViewModel: LastSessionViewModel
+    ): PlayerViewModel {
+       return PlayerViewModel(application,exoPlayer,lastSessionViewModel)
+    }
 
 }

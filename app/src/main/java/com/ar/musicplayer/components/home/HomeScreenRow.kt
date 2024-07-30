@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +27,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
 import com.ar.musicplayer.models.HomeListItem
+import com.ar.musicplayer.models.SongResponse
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import kotlinx.serialization.json.Json
 
@@ -51,21 +54,24 @@ fun HomeScreenRow(
         ) {
 
             itemsIndexed(data) { index, item ->
-                val serialized =   Json.encodeToString(HomeListItem.serializer(), item)
-                val cornerRadius = if(item.type == "radio_station" || item.type == "artist") 50 else 0
-                val radioOrNot = if(item.type == "radio_station") true else false
-                val subtitle = if(item.subtitle != "") item.subtitle.toString() else item.moreInfoHomeList?.artistMap?.artists?.getOrNull(0)?.name.toString()
-                Log.d("type","${item.type}")
+
+                val cornerRadius = remember {
+                    if (item.type == "radio_station" || item.type == "artist") 50 else 0
+                }
+                val radioOrNot = remember { item.type == "radio_station" }
+                val subtitle = remember {
+                    item.subtitle?.ifEmpty { item.moreInfoHomeList?.artistMap?.artists?.getOrNull(0)?.name.toString() }
+                }
+
                 HomeScreenRowCard(
-                    subtitle = subtitle,
+                    isRadio = radioOrNot,
+                    item = item,
+                    subtitle = subtitle.toString(),
                     cornerRadius = cornerRadius,
                     imageUrl = item.image.toString(),
                     title = item.title.toString(),
                     size = size,
-                    modifier = Modifier
-                        .clickable {
-                            onCardClicked(radioOrNot,serialized)
-                        }
+                    onClick =  onCardClicked
                 )
             }
 
@@ -75,25 +81,28 @@ fun HomeScreenRow(
 
 @Composable
 fun HomeScreenRowCard(
+    item: HomeListItem,
+    isRadio: Boolean,
     subtitle: String,
     cornerRadius: Int = 0,
     imageUrl: String,
     title: String,
     size: Int,
-    modifier: Modifier,
+    onClick: (Boolean, String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
+    val serialized = remember { Json.encodeToString(HomeListItem.serializer(), item) }
 
     Column(
         modifier
             .padding(bottom = 10.dp, top = 10.dp)
             .width(size.dp)
-
-
     ) {
         Card(
             modifier = modifier
-                .size((size).dp),
+                .size((size).dp)
+                .clickable { onClick(isRadio, serialized) },
             backgroundColor = Color.Transparent,
             shape = RoundedCornerShape(percent = cornerRadius)
         ) {

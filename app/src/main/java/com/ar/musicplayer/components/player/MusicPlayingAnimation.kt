@@ -29,6 +29,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun MusicPlayingAnimation(isPlaying: Boolean, modifier: Modifier = Modifier) {
     val animatables = remember { List(5) { Animatable(0f) } }
+    LaunchedEffect(Unit) {
+        if(!isPlaying) {
+            animatables.forEachIndexed { index, item ->
+                launch {
+                    item.snapTo(0.2f * index)
+                }
+
+            }
+        }
+    }
     LaunchedEffect(isPlaying) {
         if (isPlaying) {
             animatables.forEachIndexed { index, animatable ->

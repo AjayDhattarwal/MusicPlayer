@@ -4,27 +4,22 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.ar.musicplayer.screens.player.PlayerViewModel
 import com.ar.musicplayer.di.permission.PermissionHandler
 import com.ar.musicplayer.di.permission.PermissionModel
-import com.ar.musicplayer.di.permission.PermissionViewModel
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
 import com.ar.musicplayer.navigation.App
-import com.ar.musicplayer.utils.MusicPlayer
 import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
 
-import com.ar.musicplayer.viewmodel.HomeViewModel
-import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.viewmodel.RadioStationViewModel
+import com.ar.musicplayer.screens.home.HomeViewModel
+import com.ar.musicplayer.screens.home.RadioStationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -40,8 +35,9 @@ class MainActivity  : ComponentActivity() {
     private val radioStationViewModel: RadioStationViewModel by viewModels()
     private val downloaderViewModel: DownloaderViewModel by viewModels()
 
-    @Inject lateinit var musicPlayer: MusicPlayer
-    @Inject lateinit var playerViewModel: PlayerViewModel
+    @Inject
+    lateinit var playerViewModel: PlayerViewModel
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,8 +65,7 @@ class MainActivity  : ComponentActivity() {
                 lastSessionViewModel = lastSessionViewModel,
                 favViewModel = favViewModel,
                 radioStationViewModel = radioStationViewModel,
-                downloaderViewModel = downloaderViewModel,
-                musicPlayer = musicPlayer
+                downloaderViewModel = downloaderViewModel
             )
 
 

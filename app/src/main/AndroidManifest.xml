@@ -39,9 +39,14 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".utils.notification.MusicPlayerService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false"/>
+            android:name=".utils.notification.NotificationService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+<!--        <service-->
+<!--            android:name=".utils.notification.MusicPlayerService"-->
+<!--            android:foregroundServiceType="mediaPlayback"-->
+<!--            android:exported="false"/>-->
 
 
 

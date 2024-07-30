@@ -18,7 +18,7 @@ class RateLimitInterceptor : Interceptor {
                 } catch (e: InterruptedException) {
                     throw IOException("Rate limit wait interrupted", e)
                 }
-                response.close() // Close the previous response
+                response.close()
                 response = chain.proceed(request) // Retry the request
             }
         }
