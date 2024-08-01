@@ -3,13 +3,14 @@ package com.ar.musicplayer
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.di.permission.PermissionHandler
 import com.ar.musicplayer.di.permission.PermissionModel
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
@@ -20,8 +21,8 @@ import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
 
 import com.ar.musicplayer.screens.home.HomeViewModel
 import com.ar.musicplayer.screens.home.RadioStationViewModel
+import com.ar.musicplayer.utils.notification.NotificationService
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -35,8 +36,7 @@ class MainActivity  : ComponentActivity() {
     private val radioStationViewModel: RadioStationViewModel by viewModels()
     private val downloaderViewModel: DownloaderViewModel by viewModels()
 
-    @Inject
-    lateinit var playerViewModel: PlayerViewModel
+    private val playerViewModel: PlayerViewModel by viewModels()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,6 +71,15 @@ class MainActivity  : ComponentActivity() {
 
         }
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("kill", "main activity destroyed")
+        Intent(this, NotificationService::class.java).also{
+            it.action = NotificationService.Actions.STOP.toString()
+            startService(it)
+        }
     }
 
 }

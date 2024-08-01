@@ -1,10 +1,6 @@
 package com.ar.musicplayer.di.roomdatabase.favoritedb
 
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -14,8 +10,6 @@ import com.ar.musicplayer.models.SongResponse
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,9 +47,9 @@ class FavoriteViewModel @Inject constructor(
 
     fun onEvent(event: FavoriteSongEvent){
         when(event){
-            is FavoriteSongEvent.toggleFavSong -> insertAsFavSong(event.songResponse)
-            is FavoriteSongEvent.removeFromFav -> deleteFavSong(event.songId)
-            is FavoriteSongEvent.isFavoriteSong -> isFavouriteSong(event.songId, event.callback)
+            is FavoriteSongEvent.ToggleFavSong -> insertAsFavSong(event.songResponse)
+            is FavoriteSongEvent.RemoveFromFav -> deleteFavSong(event.songId)
+            is FavoriteSongEvent.IsFavoriteSong -> isFavouriteSong(event.songId, event.callback)
         }
     }
 

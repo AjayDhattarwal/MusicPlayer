@@ -26,6 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +42,7 @@ import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.models.SongResponse
 import com.ar.musicplayer.utils.playerHelper.DownloadEvent
 import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -53,12 +56,9 @@ fun SongItemRepresentation(
     onTrackClicked: () -> Unit
 )
 {
+    val coroutineScope = rememberCoroutineScope()
 
-    val favButtonClick  = remember {
-        mutableStateOf(false)
-    }
-    val isFavourite = remember { mutableStateOf(false) }
-
+    var isFavorite by remember { mutableStateOf(false) }
     val isDownloaded = remember { mutableStateOf(false) }
     val isDownloading = remember { mutableStateOf(false) }
     val downloadProgress by downloaderViewModel.songProgress.observeAsState()
@@ -80,25 +80,20 @@ fun SongItemRepresentation(
 
     }
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = track.id) {
         downloaderViewModel.isAllReadyDownloaded(track) { it ->
             isDownloaded.value = it
         }
     }
 
-    LaunchedEffect(key1 = Unit, key2 = favButtonClick) {
-        var isFavVar : Flow<Boolean>? = null
-        val flow = favViewModel.onEvent(
-            FavoriteSongEvent.isFavoriteSong(track.id.toString()) { isFav ->
-                isFavVar = isFav
+    LaunchedEffect(key1 = track.id) {
+        favViewModel.onEvent(FavoriteSongEvent.IsFavoriteSong(track.id.toString()) { flow ->
+            launch {
+                flow.collect { favStatus ->
+                    isFavorite = favStatus
+                }
             }
-        )
-
-        launch { // Launch a coroutine to collect the Flow
-            isFavVar?.collect { isFav ->
-                isFavourite.value = isFav // Update the state in the composable
-            }
-        }
+        })
     }
 
     Row(
@@ -173,13 +168,12 @@ fun SongItemRepresentation(
         }
 
         IconButton(onClick = {
-            favViewModel.onEvent(FavoriteSongEvent.toggleFavSong(track))
-            favButtonClick.value = !favButtonClick.value
+            favViewModel.onEvent(FavoriteSongEvent.ToggleFavSong(track))
         }) {
             Icon(
-                imageVector = if(isFavourite.value) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                imageVector = if(isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 contentDescription = "Like",
-                tint = if(isFavourite.value) Color.Red else Color.White
+                tint = if(isFavorite) Color.Red else Color.White
             )
         }
         IconButton(onClick = { /* Handle menu button click */ }) {

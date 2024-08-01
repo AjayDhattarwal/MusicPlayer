@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.di.permission.PermissionHandler
 import com.ar.musicplayer.di.permission.PermissionModel
 import com.ar.musicplayer.di.permission.hasPermissions

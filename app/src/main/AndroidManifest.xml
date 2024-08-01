@@ -43,12 +43,6 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
-<!--        <service-->
-<!--            android:name=".utils.notification.MusicPlayerService"-->
-<!--            android:foregroundServiceType="mediaPlayback"-->
-<!--            android:exported="false"/>-->
-
-
 
     </application>
 

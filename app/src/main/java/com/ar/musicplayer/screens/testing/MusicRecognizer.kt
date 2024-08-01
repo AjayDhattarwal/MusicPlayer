@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.di.permission.hasPermissions
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.AudioRecorder.AndroidAudioRecorder

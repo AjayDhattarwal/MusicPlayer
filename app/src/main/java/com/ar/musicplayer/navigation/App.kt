@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -51,8 +52,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
+import com.ar.musicplayer.screens.player.BottomSheetState
 import com.ar.musicplayer.screens.player.MusicPlayerScreen
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
@@ -148,7 +150,7 @@ fun PlayerScreenWithBottomNav(
     localSongsViewModel: LocalSongsViewModel = hiltViewModel()
 ) {
     val upNextSheetState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberBottomSheetState(Collapsed)
+        rememberBottomSheetState(Collapsed)
     )
 
     val listState = rememberLazyListState()
@@ -165,8 +167,6 @@ fun PlayerScreenWithBottomNav(
 
             val paletteExtractor = remember { PaletteExtractor() }
             val upNextLazyListState = rememberLazyListState()
-
-
             MusicPlayerScreen(
                 playerViewModel = playerViewModel,
                 bottomSheetState = bottomSheetState,
@@ -179,20 +179,23 @@ fun PlayerScreenWithBottomNav(
         },
         sheetBackgroundColor = Color.Transparent,
         modifier = Modifier.navigationBarsPadding(),
+        sheetGesturesEnabled = upNextSheetState.bottomSheetState.isCollapsed
     ) {
-        BackHandler {
-            coroutineScope.launch {
-                if (bottomSheetState.bottomSheetState.isExpanded) {
-                    bottomSheetState.bottomSheetState.collapse()
-                }
-            }
-        }
+
 
         NavHost(
             navController = navController,
             startDestination = HomeScreenObj,
             modifier = Modifier.padding().fillMaxSize(),
         ) {
+            val handleBackNavigation: suspend () -> Unit = {
+                when {
+                    upNextSheetState.bottomSheetState.isExpanded -> upNextSheetState.bottomSheetState.collapse()
+                    bottomSheetState.bottomSheetState.isExpanded -> bottomSheetState.bottomSheetState.collapse()
+                }
+            }
+
+
             composable<HomeScreenObj> {
                 HomeScreen(
                     navController = navController,
@@ -203,32 +206,50 @@ fun PlayerScreenWithBottomNav(
                     playerViewModel = playerViewModel,
                     lastSessionViewModel = lastSessionViewModel,
                 )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
+
             composable<SearchScreenObj> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                SearchScreen(navController, playerViewModel)
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
                 ) {
-                    Log.d("recompose", " recompose called for SearchScreen Function")
-                    SearchScreen(navController, playerViewModel)
+                    coroutineScope.launch { handleBackNavigation() }
                 }
             }
+
+
             composable<LibraryScreenObj> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                LibraryScreen(
+                    navController = navController,
+                    brush = blackToGrayGradient,
+                )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
                 ) {
-                    LibraryScreen(
-                        navController = navController,
-                        brush = blackToGrayGradient,
-                    )
+                    coroutineScope.launch { handleBackNavigation() }
                 }
             }
+
+
             composable<SettingsScreenObj> {
                 SettingsScreen()
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
 
             composable<InfoScreenObj> {
                 val args = it.toRoute<InfoScreenObj>()
@@ -244,15 +265,30 @@ fun PlayerScreenWithBottomNav(
                 ){
                     navController.navigateUp()
                 }
-
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
+
             composable<FavoriteScreenObj> {
                 FavoriteScreen(
                     navController = navController,
                     playerViewModel = playerViewModel,
                     favViewModel = favViewModel,
                 )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
+
             composable<ListeningHisScreenObj> {
                 ListeningHistoryScreen(
                     navController = navController,
@@ -260,7 +296,15 @@ fun PlayerScreenWithBottomNav(
                     favViewModel = favViewModel,
                     lastSessionViewModel = lastSessionViewModel
                 )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
+
             composable<MyMusicScreenObj> {
                 MyMusicScreen(
                     navController = navController,
@@ -268,14 +312,30 @@ fun PlayerScreenWithBottomNav(
                     favViewModel = favViewModel,
                     localSongsViewModel = localSongsViewModel
                 )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
+
             composable<SearchMyMusicObj> {
                 SearchMyMusic(
                     navController = navController,
                     playerViewModel = playerViewModel,
                     localSongsViewModel = localSongsViewModel
                 )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
+
+
             composable<DetailsScreenObj> {
                 val args = it.toRoute<DetailsScreenObj>()
                 val playlistResponse = Json.decodeFromString(PlaylistResponse.serializer(), args.playlistResponse)
@@ -284,6 +344,12 @@ fun PlayerScreenWithBottomNav(
                     playlistResponse = playlistResponse,
                     playerViewModel = playerViewModel
                 )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
             }
 //                composable<MusicRecognizerObj> {
 //                    MusicRecognizer(
@@ -291,6 +357,12 @@ fun PlayerScreenWithBottomNav(
 //                        playerViewModel = playerViewModel,
 //                        favViewModel = favViewModel
 //                    )
+//                    BackHandler(
+//                        enabled = bottomSheetState.bottomSheetState.isExpanded ||
+//                                upNextSheetState.bottomSheetState.isExpanded
+//                    ) {
+//                        coroutineScope.launch { handleBackNavigation() }
+//                    }
 //                }
         }
     }
@@ -355,8 +427,6 @@ fun BottomNavigationBar(navController: NavController, bottomSheetState: BottomSh
                         color = if (isSelected) Color.White else Color.Gray
                     )
                 },
-                selectedContentColor = MaterialTheme.colors.primary,
-                unselectedContentColor = MaterialTheme.colors.onBackground
             )
         }
     }

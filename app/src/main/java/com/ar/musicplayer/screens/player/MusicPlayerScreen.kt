@@ -78,6 +78,7 @@ import com.ar.musicplayer.navigation.currentFraction
 import com.ar.musicplayer.ui.theme.DarkBlackThemeColor
 import com.ar.musicplayer.ui.theme.black
 import com.ar.musicplayer.utils.helper.PaletteExtractor
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -112,7 +113,6 @@ fun MusicPlayerScreen(
     val artistsNames = currentSong?.moreInfo?.artistMap?.artists?.distinctBy { it.name }?.joinToString(", ") { it.name.toString() }
 
 
-
     val pagerState = rememberPagerState(pageCount = {playlist.size})
     val colors = remember {
         mutableStateOf(arrayListOf<Color>(black, DarkBlackThemeColor, black))
@@ -144,13 +144,6 @@ fun MusicPlayerScreen(
         }
         if (currentIndex != pagerState.currentPage) {
             pagerState.scrollToPage(currentIndex)
-        }
-    }
-    BackHandler {
-        coroutineScope.launch {
-            if (upNextSheetState.bottomSheetState.isExpanded) {
-                upNextSheetState.bottomSheetState.collapse()
-            }
         }
     }
 
@@ -227,8 +220,8 @@ fun MusicPlayerScreen(
                     .drawBehind {
                         drawRect(
                             brush = Brush.verticalGradient(
-                            colors.value.toList()
-                        ))
+                                colors.value.toList()
+                            ))
                     },
                 verticalArrangement = Arrangement.Top
             ) {

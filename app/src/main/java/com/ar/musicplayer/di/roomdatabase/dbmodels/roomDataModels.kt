@@ -33,6 +33,9 @@ data class LastSessionDataEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null,
     val title: String,
+    val genres: String,
+    val playCount: Int,
+    val skipCount: Int,
     val lastSession: String
 )
 

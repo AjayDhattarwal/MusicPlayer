@@ -11,9 +11,9 @@ import com.ar.musicplayer.models.SongResponse
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -23,7 +23,6 @@ class LastSessionViewModel @Inject constructor(
     private val lastSessionDao: LastSessionDao
 ) : ViewModel(){
 
-    val lastSession = MutableLiveData<List<SongResponse>>()
     val listeningHistory: LiveData<List<Pair<Int?, SongResponse>>> =
         lastSessionDao.getHistory().map { lastSessionDataEntities ->
             lastSessionDataEntities.map { history->
@@ -31,10 +30,22 @@ class LastSessionViewModel @Inject constructor(
             }
         }.asLiveData()
 
+    val lastSession: LiveData<List<Pair<Int?, SongResponse>>> =
+        lastSessionDao.getLastSession().map { lastSessionDataEntities ->
+            lastSessionDataEntities.map { history->
+                history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
+            }
+        }.asLiveData()
+
+    suspend fun getLastSessionForPlaying(): List<Pair<Int?, SongResponse>> {
+        return lastSessionDao.getLastSessionForPlaying().map { history ->
+            history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
+        }
+    }
+
     fun onEvent(event: LastSessionEvent){
         when(event){
-            is LastSessionEvent.LoadLastSessionData -> loadLastSession()
-            is LastSessionEvent.InsertLastPlayedData -> insertLastSession(event.songResponse)
+            is LastSessionEvent.InsertLastPlayedData -> insertLastSession(event.songResponse,event.playCount,event.skipCount)
             is LastSessionEvent.DeleteHistoryById -> deleteLastSession(event.id)
             is LastSessionEvent.DeleteAll -> deleteAllLastSession()
         }
@@ -53,30 +64,19 @@ class LastSessionViewModel @Inject constructor(
         }
     }
 
-    private fun insertLastSession(songResponse: SongResponse) {
+    private fun insertLastSession(songResponse: SongResponse,playCount: Int,skipCount: Int) {
         viewModelScope.launch {
-            val lastSessionDataEntity = LastSessionDataEntity(lastSession = Gson().toJson(songResponse), title = songResponse.title.toString())
+            val lastSessionDataEntity = LastSessionDataEntity(
+                lastSession = Gson().toJson(songResponse),
+                title = songResponse.title.toString(),
+                genres = "",
+                playCount = playCount,
+                skipCount = skipCount
+            )
             lastSessionDao.insertLastSession(lastSessionDataEntity)
         }
     }
 
-    fun loadLastSession() {
-        viewModelScope.launch {
-            val lastSessionDataEntities = withContext(Dispatchers.IO) {
-                lastSessionDao.getLastSession()
-            }
-            var list : List<SongResponse> = emptyList()
-            if(lastSessionDataEntities != null){
-                lastSessionDataEntities.forEach {
-                    list = list + it.toSongResponse()
-                    Log.d("lastSession"," ${ list.size }")
-
-                }
-            }
-            lastSession.value = list.reversed()
-            Log.d("lastSession","${lastSessionDataEntities.size},, ${lastSession.value}")
-        }
-    }
 
     private fun LastSessionDataEntity.toSongResponse(): SongResponse {
         return Gson().fromJson(this.lastSession, SongResponse::class.java)

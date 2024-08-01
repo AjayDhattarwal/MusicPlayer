@@ -121,7 +121,6 @@
 //            if(song.moreInfo?.encryptedMediaUrl == "" || song.moreInfo?.encryptedMediaUrl.isNullOrEmpty()){
 //                Log.d("invoked","${song.id}")
 //                detailsViewModel.onEvent(DetailsEvent.getSongDetails(song.id.toString(),"song.getDetails",callback = {
-//                    Log.d("invoked","invoked ${it}")
 //                    if(it != null){
 //                        val decodedUrl = decodeDES(it.moreInfo?.encryptedMediaUrl ?: "")
 //                        Log.d("url",decodedUrl)
@@ -161,86 +160,12 @@
 //    }
 //
 //
-//    fun playPlaylist(songs: List<SongResponse>) {
-//        playlist.value = songs
-//        currentIndex = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
-//        viewModel.setCurrentSongIndex(currentIndex)
-//    }
-//
-//    private fun playCurrentSong() {
-//        if (playlist.value.isNotEmpty()) {
-//            val song = playlist.value[currentIndex]
-//            if(song.uri != ""){
-//                exoPlayer.setMediaItem(MediaItem.fromUri(song.uri.toString()))
-//                exoPlayer.prepare()
-//                currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
-//                viewModel.setCurrentSongIndex(currentIndex)
-//                onSongChanged?.invoke(song)
-//            } else {
-//                val encodedUrl = song.moreInfo?.encryptedMediaUrl ?: " "
-//                val decodedUrl = decodeDES(encodedUrl)
-//                exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
-//                exoPlayer.prepare()
-//                currentIndex  = if(viewModel.isPlayingHistory.value == true) playlist.value.size - 1 else 0
-//                viewModel.setCurrentSongIndex(currentIndex)
-//                onSongChanged?.invoke(song)
-//            }
-//
-//        }
-//    }
 //
 //
-//    fun skipToNext() {
-//        if (currentIndex < playlist.value.size - 1) {
-//            currentIndex++
-//            viewModel.setCurrentSongIndex(currentIndex)
-//            val song = playlist.value[currentIndex]
-//            if(song.uri != ""){
-//                exoPlayer.setMediaItem(MediaItem.fromUri(song.uri.toString()))
-//                exoPlayer.prepare()
-//                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-//                onSongChanged?.invoke(song)
-//                viewModel.starter.value = false
-//            } else{
-//                val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
-//                exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
-//                exoPlayer.prepare()
-//                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-//                onSongChanged?.invoke(song)
-//                viewModel.starter.value = false
-//            }
-//        }
-//    }
 //
-//    fun skipToPrevious() {
-//        if (currentIndex > 0) {
-//            currentIndex--
-//            viewModel.setCurrentSongIndex(currentIndex)
-//            val song = playlist.value[currentIndex]
-//            if(song.uri != ""){
-//                exoPlayer.setMediaItem(MediaItem.fromUri(song.uri.toString()))
-//                exoPlayer.prepare()
-//                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-//                onSongChanged?.invoke(song)
-//                viewModel.starter.value = false
-//            } else{
-//                val decodedUrl = decodeDES(song.moreInfo?.encryptedMediaUrl ?: "")
-//                exoPlayer.setMediaItem(MediaItem.fromUri(decodedUrl))
-//                exoPlayer.prepare()
-//                if(viewModel.starter.value == true) exoPlayer.pause() else exoPlayer.play()
-//                onSongChanged?.invoke(song)
-//                viewModel.starter.value = false
-//            }
-//        }
-//    }
 //
-//    fun getPlayer() = exoPlayer
 //
-//    fun release() {
-//        MusicPlayerService.stopService(context)
-//    }
 //
-//    fun getPlaylist() = playlist
 //
 //
 //

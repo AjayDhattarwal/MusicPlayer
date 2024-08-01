@@ -66,6 +66,9 @@ dependencies {
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.core.animation)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.lifecycle.service)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -138,7 +141,6 @@ dependencies {
 
     // mp3 create
     implementation (libs.mpatric.mp3agic)
-
 
 //    implementation("androidx.compose.runtime:runtime-tracing:1.0.0-beta01")
 //    implementation("androidx.tracing:tracing-perfetto:1.0.0")

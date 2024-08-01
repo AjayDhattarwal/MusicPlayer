@@ -3,8 +3,10 @@ package com.ar.musicplayer.utils.playerHelper
 import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.media3.exoplayer.ExoPlayer
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import androidx.work.WorkManager
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionDao
 import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
 import com.ar.musicplayer.screens.player.DetailsViewModel
@@ -62,9 +64,10 @@ object MusicPlayerSingleton {
     fun provideMusicPlayerViewModel(
         application: Application,
         exoPlayer: ExoPlayer,
-        lastSessionViewModel: LastSessionViewModel
+        lastSessionViewModel: LastSessionViewModel,
+        detailsViewModel: DetailsViewModel,
     ): PlayerViewModel {
-       return PlayerViewModel(application,exoPlayer,lastSessionViewModel)
+       return PlayerViewModel(application,exoPlayer,lastSessionViewModel,detailsViewModel)
     }
 
 }

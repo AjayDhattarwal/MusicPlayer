@@ -52,7 +52,7 @@ import com.ar.musicplayer.models.HomeListItem
 import com.ar.musicplayer.viewmodel.NetworkViewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.components.home.TopProfileBar
 import com.ar.musicplayer.components.home.HomeScreenRow
 import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataEvent
@@ -149,10 +149,11 @@ fun HomeScreen(
                     }
 
                     lastSession?.takeIf { it.isNotEmpty() }?.let {
+                        val songResponseList = it.map { it.second }
                         item(key = "item1") {
                             LastSessionGridLayout(
                                 modifier = Modifier.padding(bottom = 30.dp),
-                                list = it,
+                                lastSessionList = songResponseList,
                                 onRecentSongClicked = { item ->
                                     playerViewModel.setNewTrack(item)
                                 }
@@ -199,16 +200,11 @@ fun HomeScreen(
 fun LastSessionGridLayout(
     modifier: Modifier = Modifier,
     onRecentSongClicked : (SongResponse) -> Unit,
-    list: List<SongResponse>
+    lastSessionList: List<SongResponse>
 ) {
 
-    val lastSessionList by remember(list) {
-        derivedStateOf {
-            list.reversed()
-        }
-    }
-    val gridHeight = if (lastSessionList.size < 2) 80.dp else if (lastSessionList.size in 2..4) 180.dp else 280.dp
-    val gridCells = if (lastSessionList.size < 2) 1 else if (lastSessionList.size in 2..4) 2 else 4
+    val gridHeight = if (lastSessionList.size < 2) 80.dp else if (lastSessionList.size in 2..6) 180.dp else 280.dp
+    val gridCells = if (lastSessionList.size < 2) 1 else if (lastSessionList.size in 2..6) 2 else 4
 
 
     Column(modifier = modifier) {

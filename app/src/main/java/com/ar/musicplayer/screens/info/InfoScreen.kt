@@ -23,8 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ar.musicplayer.models.HomeListItem
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.runtime.setValue
-import com.ar.musicplayer.screens.player.PlayerViewModel
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.components.info.SongListWithTopBar
 import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.ui.theme.DarkBlackThemeColor
@@ -71,9 +70,6 @@ fun InfoScreen(
 
     }
 
-    var isAllReadyPlaying by remember {
-        mutableStateOf(false)
-    }
     val playlistResponse by apiCallViewModel.apiLiveData.observeAsState()
 
     val colors = remember {
@@ -87,7 +83,6 @@ fun InfoScreen(
             shadeColor?.let { col ->
                 colors.value = arrayListOf(col, DarkBlackThemeColor)
             }
-
         }
     }
     Box(
@@ -117,18 +112,19 @@ fun InfoScreen(
                 onFollowClicked = { },
                 isPlaying = if (currentPlaylistId == playlistResponse?.id)  isPlaying  else false,
                 onPlayPause = {
-                    if (!isAllReadyPlaying) {
+                    if (currentPlaylistId == playlistResponse?.id) {
+                        Log.d("play", "id is same clicked")
+                        playerViewModel.playPause()
+                    } else {
                         playlistResponse?.list?.let { it1 ->
+                            Log.d("play", "first time set clicked")
                             playerViewModel.setPlaylist(
                                 newPlaylist =  it1,
                                 playlistId = playlistResponse?.id ?: ""
                             )
                         }
-                        isAllReadyPlaying = true
                     }
-                    if (currentPlaylistId == playlistResponse?.id) {
-                        playerViewModel.playPause()
-                    }
+                    Log.d("play", "clicked $isPlaying ")
                 },
                 onSongClicked = { index ->
                    if(currentPlaylistId == playlistResponse?.id){
