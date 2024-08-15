@@ -3,13 +3,13 @@ package com.ar.musicplayer.di
 import android.content.Context
 import androidx.room.Room
 import androidx.work.WorkManager
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavDao
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteDatabase
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDataDao
-import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeDatabase
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionDao
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionDatabase
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavDao
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteDatabase
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDataDao
+import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDatabase
+import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDao
+import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,6 +30,7 @@ object DatabaseModule {
             "home_data_database"
         ).build()
     }
+
     @Provides
     @Singleton
     fun provideLastSessionDatabase(@ApplicationContext context: Context): LastSessionDatabase {
@@ -63,12 +64,4 @@ object DatabaseModule {
     fun provideFavoriteDao(database: FavoriteDatabase): FavDao {
         return database.dao
     }
-
-    @Provides
-    @Singleton
-    fun provideFavoriteViewModel(
-        database: FavoriteDatabase
-    ) = FavoriteViewModel(database.dao)
-
-
 }

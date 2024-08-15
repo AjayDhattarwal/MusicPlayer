@@ -4,14 +4,27 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-08-01T08:35:59.194251Z">
+        <DropdownSelection timestamp="2024-08-03T15:02:51.929138Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=3080669451000CG" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/ajaysingh/.android/avd/Resizable_Experimental_API_TiramisuPrivacySandbox.avd" />
             </handle>
           </Target>
         </DropdownSelection>
-        <DialogSelection />
+        <DialogSelection>
+          <targets>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="LocalEmulator" identifier="path=/Users/ajaysingh/.android/avd/Resizable_Experimental_API_TiramisuPrivacySandbox.avd" />
+              </handle>
+            </Target>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=OJWW65QCQ8K7VONZ" />
+              </handle>
+            </Target>
+          </targets>
+        </DialogSelection>
       </SelectionState>
       <SelectionState runConfigName="SharedElement_PredictiveBack">
         <option name="selectionMode" value="DROPDOWN" />

@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.util.lerp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.navigation.currentFraction
 import com.ar.musicplayer.screens.library.mymusic.toPx
 import kotlin.math.absoluteValue
@@ -65,40 +65,49 @@ fun AnimatedHorizontalPager(
             .padding(10.dp)
             .background(Color.Transparent)
     ) { page ->
-        val imageUrl = playlist[page].image.toString().replace("150x150", "350x350")
+        if (page in playlist.indices) {
+            val imageUrl = playlist[page].image.toString().replace("150x150", "350x350")
 
-        val painter = rememberAsyncImagePainter(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUrl)
-                .size(300.dp.toPx().toInt(), 300.dp.toPx().toInt()) // Request the image size
-                .build()
-        )
+            val painter = rememberAsyncImagePainter(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .size(300.dp.toPx().toInt(), 300.dp.toPx().toInt()) // Request the image size
+                    .build()
+            )
 
-        val pageOffset = (
-                (pagerState.currentPage - page) + pagerState
-                    .currentPageOffsetFraction
-                ).absoluteValue
+            val pageOffset = (
+                    (pagerState.currentPage - page) + pagerState
+                        .currentPageOffsetFraction
+                    ).absoluteValue
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painter,
-                contentDescription = null,
+            Box(
                 modifier = Modifier
-                    .animateContentSize()
-                    .size(size)
-                    .clip(RoundedCornerShape(4.dp))
-                    .graphicsLayer {
-                        val scale = lerp(1f, 1.7f, pageOffset)
-                        scaleX *= scale
-                        scaleY *= scale
-                    }
+                    .fillMaxSize()
                     .background(Color.Transparent),
-                contentScale = ContentScale.Crop // Adjust content scale as needed
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painter,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .animateContentSize()
+                        .size(size)
+                        .clip(RoundedCornerShape(4.dp))
+                        .graphicsLayer {
+                            val scale = lerp(1f, 1.7f, pageOffset)
+                            scaleX *= scale
+                            scaleY *= scale
+                        }
+                        .background(Color.Transparent),
+                    contentScale = ContentScale.Crop // Adjust content scale as needed
+                )
+            }
+        } else {
+            // Handle cases where the page index is out of bounds, if necessary
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Gray) // Or any other placeholder UI
             )
         }
     }

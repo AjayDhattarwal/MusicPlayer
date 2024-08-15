@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayArrow
@@ -105,35 +106,3 @@ fun SkipNextButton(
     }
 }
 
-
-@Composable
-fun DownloadButton(
-    isDownloaded: Boolean,
-    isDownloading: Boolean,
-    downloadProgress: Float?,
-    onDownloadClick: () -> Unit
-) {
-    IconButton(
-        onClick = onDownloadClick
-    ) {
-        if (isDownloading) {
-            CircularProgressIndicator(
-                modifier = Modifier,
-                progress = downloadProgress?.div(100f) ?: 0f,
-                color = Color.LightGray
-            )
-            Text(
-                text = "${downloadProgress?.toInt()}%",
-                color = Color.White,
-                fontSize = 14.sp
-            )
-        } else {
-            Icon(
-                modifier = Modifier,
-                imageVector = if (isDownloaded) Icons.Filled.DownloadDone else Icons.Default.FileDownload,
-                contentDescription = "Download",
-                tint = Color.White
-            )
-        }
-    }
-}

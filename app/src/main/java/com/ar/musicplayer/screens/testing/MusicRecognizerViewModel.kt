@@ -4,9 +4,9 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ar.musicplayer.Repository.MusicRecognizerRepository
+import com.ar.musicplayer.data.repository.MusicRecognizerRepository
 import com.ar.musicplayer.api.ApiConfig
-import com.ar.musicplayer.models.SongRecognitionResponse
+import com.ar.musicplayer.data.models.SongRecognitionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

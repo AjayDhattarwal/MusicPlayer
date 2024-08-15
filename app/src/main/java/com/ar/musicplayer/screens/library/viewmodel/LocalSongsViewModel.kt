@@ -10,10 +10,10 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ar.musicplayer.models.Artist
-import com.ar.musicplayer.models.ArtistMap
-import com.ar.musicplayer.models.MoreInfoResponse
-import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.data.models.Artist
+import com.ar.musicplayer.data.models.ArtistMap
+import com.ar.musicplayer.data.models.MoreInfoResponse
+import com.ar.musicplayer.data.models.SongResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

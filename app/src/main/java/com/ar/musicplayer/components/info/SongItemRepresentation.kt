@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RemoveFromQueue
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +25,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -37,13 +42,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteSongEvent
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.utils.playerHelper.DownloadEvent
-import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.utils.download.DownloadEvent
+import com.ar.musicplayer.utils.download.DownloaderViewModel
 import kotlinx.coroutines.launch
 
 
@@ -58,11 +61,18 @@ fun SongItemRepresentation(
 {
     val coroutineScope = rememberCoroutineScope()
 
-    var isFavorite by remember { mutableStateOf(false) }
     val isDownloaded = remember { mutableStateOf(false) }
     val isDownloading = remember { mutableStateOf(false) }
     val downloadProgress by downloaderViewModel.songProgress.observeAsState()
     val currentDownloading by downloaderViewModel.currentDownloading.observeAsState()
+    var inDownloadQueue by remember { mutableStateOf(false) }
+    val isFavouriteFlow by remember {
+        derivedStateOf {
+            favViewModel.isFavoriteSong(track.id.toString())
+        }
+    }
+
+    val isFavourite by isFavouriteFlow.collectAsState(false)
 
 
     Log.d("daw",isDownloading.value.toString())
@@ -70,6 +80,7 @@ fun SongItemRepresentation(
         if(currentDownloading == track){
             isDownloading.value =  true
             isDownloaded.value = true
+            inDownloadQueue = false
         }
         if(currentDownloading == null && downloadProgress == 0 ){
             isDownloading.value = false
@@ -77,23 +88,12 @@ fun SongItemRepresentation(
         else if(currentDownloading != track  ){
             isDownloading.value = false
         }
-
     }
 
     LaunchedEffect(key1 = track.id) {
         downloaderViewModel.isAllReadyDownloaded(track) { it ->
             isDownloaded.value = it
         }
-    }
-
-    LaunchedEffect(key1 = track.id) {
-        favViewModel.onEvent(FavoriteSongEvent.IsFavoriteSong(track.id.toString()) { flow ->
-            launch {
-                flow.collect { favStatus ->
-                    isFavorite = favStatus
-                }
-            }
-        })
     }
 
     Row(
@@ -147,8 +147,10 @@ fun SongItemRepresentation(
             onClick = {
                 if(!isDownloaded.value){
                     downloaderViewModel.onEvent(DownloadEvent.downloadSong(track))
+                    inDownloadQueue = true
                 }
-            }) {
+            }
+        ) {
             if(isDownloading.value){
                 CircularProgressIndicator(
                     modifier = Modifier,
@@ -157,10 +159,11 @@ fun SongItemRepresentation(
                 )
                 Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
             }
+
             else{
                 Icon(
                     modifier = Modifier.weight(1f),
-                    imageVector = if(isDownloaded.value) Icons.Default.Check else Icons.Default.FileDownload,
+                    imageVector = if(isDownloaded.value) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
                     contentDescription = "Download",
                     tint = Color.White
                 )
@@ -171,9 +174,9 @@ fun SongItemRepresentation(
             favViewModel.onEvent(FavoriteSongEvent.ToggleFavSong(track))
         }) {
             Icon(
-                imageVector = if(isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                imageVector = if(isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 contentDescription = "Like",
-                tint = if(isFavorite) Color.Red else Color.White
+                tint = if(isFavourite) Color.Red else Color.White
             )
         }
         IconButton(onClick = { /* Handle menu button click */ }) {

@@ -1,5 +1,7 @@
 package com.ar.musicplayer.screens.settings
 
+import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,31 +11,53 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.QueueMusic
-import androidx.compose.material.icons.filled.Spellcheck
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.outlined.Equalizer
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.ar.musicplayer.navigation.DownloadSettingsScreenObj
+import com.ar.musicplayer.navigation.LanguageSettingsScreenObj
+import com.ar.musicplayer.navigation.PlaybackSettingsScreenObj
+import com.ar.musicplayer.navigation.StorageSettingScreenObj
+import com.ar.musicplayer.navigation.ThemeSettingObj
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(){
+fun SettingsScreen(navController: NavController, background: Brush){
+
+    val context = LocalContext.current
+
+    val url = "Https://rewatch.online/music-player/download"
+
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, url)
+        type = "text/plain"
+    }
 
     Scaffold(
         topBar = {
@@ -46,12 +70,14 @@ fun SettingsScreen(){
                     )
                 },
                 navigationIcon = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier.padding(10.dp)
-                    )
+                    IconButton(onClick = {navController.navigateUp()}) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
                 },
                 colors = TopAppBarColors(
                     containerColor = Color.Transparent,
@@ -62,63 +88,55 @@ fun SettingsScreen(){
                 ),
             )
         },
-        containerColor = Color.Black,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(brush = background)
     ) { innerPadding ->
 
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()){
+        Box(modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()){
             Column(
-                modifier = Modifier.padding(10.dp).fillMaxSize(),
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxSize(),
             ) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-
+                            navController.navigate(LanguageSettingsScreenObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Spellcheck,
-                        contentDescription = "Languages",
-                        tint = Color.White,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                    Text(
-                        text = "Languages",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Equalizer,
+                        imageVector = Icons.Outlined.Language,
                         contentDescription = "Audio Quality",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
                     )
                     Text(
-                        text = "Audio Quality ",
+                        text = "Language",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-
+                            navController.navigate(PlaybackSettingsScreenObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.QueueMusic,
+                        imageVector = Icons.Default.MusicNote,
                         contentDescription = "Music Playback ",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -127,47 +145,91 @@ fun SettingsScreen(){
                         text = "Music Playback",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp),
+                        .padding(top = 10.dp)
+                        .clickable {
+                            navController.navigate(StorageSettingScreenObj)
+                        },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = "Download & Storage",
+                        imageVector = Icons.Default.Storage,
+                        contentDescription = "Storage",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
                     )
                     Text(
-                        text = "Download & Storage",
+                        text = "Storage",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
+
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                        .clickable {
+                            navController.navigate(ThemeSettingObj)
+                        },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.DownloadDone,
+                        imageVector = Icons.Default.DarkMode,
                         contentDescription = "Downloads",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
                     )
                     Text(
-                        text = "Downloads",
+                        text = "Theme",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
+
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                        .clickable {
+                            navController.navigate(DownloadSettingsScreenObj)
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FileDownload,
+                        contentDescription = "Download",
+                        tint = Color.White,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                    Text(
+                        text = "Download",
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -180,12 +242,16 @@ fun SettingsScreen(){
                         text = "Help",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -198,11 +264,18 @@ fun SettingsScreen(){
                         text = "About",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                        .clickable {
+                            context.startActivity(Intent.createChooser(sendIntent,null))
+                        },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -215,11 +288,11 @@ fun SettingsScreen(){
                         text = "Share App",
                         fontSize = 16.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 20.dp).weight(1f)
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f)
                     )
                 }
-
-
 
             }
         }
@@ -231,5 +304,15 @@ fun SettingsScreen(){
 @Preview
 @Composable
 fun PreviewSettingScreen(){
-    SettingsScreen()
+    val blackToGrayGradient =
+        Brush.linearGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primaryContainer,
+                Color.Black,
+                Color.Black,
+                Color.Black
+            ),
+            start = Offset.Zero
+        )
+    SettingsScreen(rememberNavController(),blackToGrayGradient)
 }

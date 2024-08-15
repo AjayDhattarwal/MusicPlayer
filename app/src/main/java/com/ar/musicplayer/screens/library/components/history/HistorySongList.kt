@@ -11,17 +11,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionEvent
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
-import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.data.models.SongResponse
 
 @Composable
 fun HistorySongList(
     songResponseList: List<Pair<Int?, SongResponse>>,
     playerViewModel: PlayerViewModel,
     favViewModel: FavoriteViewModel,
-    lastSessionViewModel: LastSessionViewModel
 ) {
     val context = LocalContext.current
     Box(
@@ -33,7 +30,7 @@ fun HistorySongList(
                     songResponse = songResponse,
                     onTrackSelect = {
                         if(id != null){
-                            lastSessionViewModel.onEvent(LastSessionEvent.DeleteHistoryById(id))
+//                            lastSessionViewModel.onEvent(LastSessionEvent.DeleteHistoryById(id))
                         }
                     },
                     onClick = {

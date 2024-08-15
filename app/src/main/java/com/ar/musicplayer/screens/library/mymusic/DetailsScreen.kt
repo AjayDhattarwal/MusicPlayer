@@ -27,8 +27,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -45,15 +46,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.components.info.AnimatedPlayPauseButton
-import com.ar.musicplayer.models.PlaylistResponse
-import com.ar.musicplayer.viewmodel.ImageColorGradient
+import com.ar.musicplayer.data.models.PlaylistResponse
 import kotlin.math.absoluteValue
 
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
     navController: NavHostController,
@@ -61,7 +65,6 @@ fun DetailsScreen(
     playerViewModel: PlayerViewModel,
 ) {
     val context = LocalContext.current
-    val imageColorViewModel: ImageColorGradient = viewModel()
     val songResponseList = playlistResponse.list
     val imageHeight = 250.dp
     val scrollState = rememberScrollState()
@@ -96,7 +99,8 @@ fun DetailsScreen(
 
     Box(modifier = Modifier
         .fillMaxSize()
-        .background(Color.Black)) {
+        .background(Color.Black)
+    ) {
         IconButton(
             onClick = { navController.navigateUp() },
             modifier = Modifier
@@ -124,7 +128,7 @@ fun DetailsScreen(
                         )
                     }
                 },
-                backgroundColor = MaterialTheme.colorScheme.primary
+//                backgroundColor = MaterialTheme.colorScheme.primary
             )
 
         }
@@ -233,11 +237,6 @@ fun DetailsScreen(
 fun Float.toDp() = (this / Resources.getSystem().displayMetrics.density).dp
 fun Dp.toPx() = (this.value * Resources.getSystem().displayMetrics.density)
 
-@Preview(showBackground = true)
-@Composable
-fun DetailsScreenPreview() {
-//    DetailsScreen()
-}
 
 
 

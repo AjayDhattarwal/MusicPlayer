@@ -39,8 +39,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.components.search.SearchTopAppBar
-import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.screens.library.components.mymusic.SearchTopAppBar
+import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
 import kotlinx.coroutines.launch
 

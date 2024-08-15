@@ -33,6 +33,8 @@ import androidx.navigation.compose.rememberNavController
 import com.ar.musicplayer.navigation.FavoriteScreenObj
 import com.ar.musicplayer.navigation.ListeningHisScreenObj
 import com.ar.musicplayer.navigation.MyMusicScreenObj
+import com.ar.musicplayer.navigation.PlaylistFetchScreenObj
+import com.ar.musicplayer.navigation.SettingsScreenObj
 
 @Composable
 fun LibraryScreen(navController: NavHostController, brush: Brush){
@@ -51,7 +53,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                     color = Color.White,
                     fontSize = MaterialTheme.typography.titleLarge.fontSize
                 )
-                IconButton(onClick = { /*TODO*/ }) {
+                IconButton(onClick = { navController.navigate(SettingsScreenObj) }) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -158,7 +160,12 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .clickable {
+                        navController.navigate(PlaylistFetchScreenObj)
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(

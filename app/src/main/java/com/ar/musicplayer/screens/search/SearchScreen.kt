@@ -1,6 +1,8 @@
 package com.ar.musicplayer.screens.search
 
 import android.annotation.SuppressLint
+import android.util.Log
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,75 +19,73 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.ar.musicplayer.components.mix.SearchAlbumsLazyVGrid
+import com.ar.musicplayer.components.mix.SearchArtistResults
+import com.ar.musicplayer.components.mix.SearchPlaylistLazyVGrid
+import com.ar.musicplayer.components.mix.SongsLazyColumn
+import com.ar.musicplayer.components.search.SearchBar
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.models.Album
-import com.ar.musicplayer.models.ArtistResult
-import com.ar.musicplayer.models.Playlist
-import com.ar.musicplayer.models.SearchResults
-import com.ar.musicplayer.models.Song
-import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.models.TopSearchResults
-import com.ar.musicplayer.navigation.PlayerScreenObj
-import com.ar.musicplayer.viewmodel.ImageColorGradient
+import com.ar.musicplayer.data.models.Album
+import com.ar.musicplayer.data.models.Artist
+import com.ar.musicplayer.data.models.ArtistResult
+import com.ar.musicplayer.data.models.InfoScreenModel
+import com.ar.musicplayer.data.models.Playlist
+import com.ar.musicplayer.data.models.PlaylistResponse
+import com.ar.musicplayer.data.models.Song
+import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.TopSearchResults
+import com.ar.musicplayer.data.models.toInfoScreenModel
+import com.ar.musicplayer.navigation.ArtistInfoScreenObj
+import com.ar.musicplayer.navigation.InfoScreenObj
+import com.ar.musicplayer.screens.info.InfoScreen
+import com.ar.musicplayer.viewmodel.SearchResultViewModel
 import kotlinx.serialization.json.Json
 
+@OptIn(UnstableApi::class)
 @SuppressLint("ClickableViewAccessibility")
 @Composable
-fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewModel){
+fun SearchScreen(
+    navController: NavHostController,
+    playerViewModel: PlayerViewModel,
+    background: Brush
+){
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
 
     val context = LocalContext.current
-
-    val blackToGrayGradient =
-        Brush.verticalGradient(
-            colors = listOf(Color(0xFF000000),Color(0xFF161616)),
-            startY = Float.POSITIVE_INFINITY,
-            endY = 0f
-        )
 
     val searchViewModel: SearchResultViewModel = viewModel()
 
@@ -108,13 +108,13 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
         "Playlists",
         "Albums"
     )
-    var selectedType = rememberSaveable {
+    var selectedType by rememberSaveable {
         mutableStateOf("Top")
     }
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .background(blackToGrayGradient)
+        .background(background)
         .clickable { focusManager.clearFocus() }
     ){
 
@@ -123,9 +123,10 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                 .fillMaxWidth()
                 .padding(16.dp),
             searchResultViewModel = searchViewModel,
-            selectedType = selectedType,
-            keyboardController = keyboardController
+            keyboardController = keyboardController,
         )
+
+
 
         if(searchText.isBlank()){
             Text(
@@ -136,8 +137,6 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
             )
             LazyColumn {
                 items(trendingSearchResult ?: emptyList()) { item ->
-                    val showShimmer = remember { mutableStateOf(true) }
-                    val imageColorGradient: ImageColorGradient = viewModel()
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -151,7 +150,6 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                                 .size(50.dp)
                                 .padding(4.dp)
                                 .clip(RoundedCornerShape(3.dp)),
-                            onSuccess = { showShimmer.value = false },
                             contentScale = ContentScale.Crop,
                             alignment = Alignment.Center
                         )
@@ -224,12 +222,12 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                                 shape = RoundedCornerShape(percent = 50)
                             )
                             .background(
-                                if (selectedType.value == searchType) Color.White else Color.Transparent,
+                                if (selectedType == searchType) Color.White else Color.Transparent,
                                 shape = RoundedCornerShape(percent = 50)
                             )
                             .clickable {
                                 focusManager.clearFocus()
-                                selectedType.value = searchType
+                                selectedType = searchType
                             }
                     ) {
                         Text(
@@ -237,7 +235,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                             modifier = Modifier
                                 .padding(start = 15.dp, end = 15.dp, top = 5.dp, bottom = 5.dp),
                             fontSize = 14.sp,
-                            color = if(selectedType.value == searchType) Color.Black else Color.White
+                            color = if(selectedType == searchType) Color.Black else Color.White
                         )
                     }
                 }
@@ -251,32 +249,47 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
                     CircularProgressIndicator()
                 }
             } else {
-                when (selectedType.value) {
+                when (selectedType) {
                     "Songs" -> {
-                        SearchResultDisplay(
-                            searchResults = searchResults,
+                        SongsLazyColumn(
+                            songResponse = searchResults,
                             playerViewModel = playerViewModel,
                         )
                     }
 
                     "Artists" -> {
-                        SearchResultDisplay(
-                            searchResults = searchArtistResults,
-                            playerViewModel = playerViewModel
+                        SearchArtistResults(
+                            artistResults = searchArtistResults,
+                            onClick = { artist ->
+                                val senderData = Json.encodeToString(Artist.serializer(), artist)
+                                navController.navigate(
+                                    ArtistInfoScreenObj(senderData)
+                                )
+                            }
                         )
                     }
 
                     "Playlists" -> {
-                        SearchResultDisplay(
-                            searchResults = searchPlaylistResults,
-                            playerViewModel = playerViewModel
+                        SearchPlaylistLazyVGrid(
+                            playlistList = searchPlaylistResults,
+                            onClick = { playlistResponse ->
+                                val senderData = Json.encodeToString(InfoScreenModel.serializer(), playlistResponse.toInfoScreenModel())
+                                navController.navigate(
+                                    InfoScreenObj(senderData)
+                                )
+                            }
                         )
                     }
 
                     "Albums" -> {
-                        SearchResultDisplay(
-                            searchResults = searchAlbumsResults,
-                            playerViewModel = playerViewModel
+                        SearchAlbumsLazyVGrid(
+                            albumList = searchAlbumsResults,
+                            onClick = { album ->
+                                val senderData = Json.encodeToString(InfoScreenModel.serializer(), album.toInfoScreenModel())
+                                navController.navigate(
+                                    InfoScreenObj(senderData)
+                                )
+                            }
                         )
                     }
 
@@ -295,6 +308,7 @@ fun SearchScreen(navController: NavHostController,playerViewModel: PlayerViewMod
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 fun TopSearchDisplay(
     navController: NavHostController,
@@ -303,65 +317,64 @@ fun TopSearchDisplay(
 ){
 
     LazyColumn {
-        items(searchResults?.artists?.data ?: emptyList()) { item ->
-            val showShimmer = remember { mutableStateOf(true) }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 5.dp, top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = item.image,
-                    contentDescription = "image",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(4.dp)
-                        
-                        .clip(RoundedCornerShape(3.dp)),
-                    onSuccess = { showShimmer.value = false },
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.Center
-                )
-                val senderData = Json.encodeToString(ArtistResult.serializer(), item)
-                Column(
-                    modifier = Modifier
-                        .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
-                        .weight(1f)
-                        .clickable {
-//                            navController.navigate(
-//                                PlayerScreenObj(senderData)
-//                            )
-                        }
-                ) {
-                    Text(
-                        text = item.title ?: "null",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
-                        modifier = Modifier.padding(bottom = 2.dp),
-                        maxLines = 1,
-                        softWrap = true,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = item.type ?: "unknown",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
-                        maxLines = 1,
-                        softWrap = true,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                IconButton(onClick = { /* Handle menu button click */ }) {
-                    Icon(
-                        if (item.type == "song") Icons.Default.MoreVert else Icons.Default.KeyboardArrowRight,
-                        contentDescription = "More",
-                        tint = Color.White
-                    )
-                }
-            }
-        }
+//        items(searchResults?.artists?.data ?: emptyList()) { item ->
+//            val showShimmer = remember { mutableStateOf(true) }
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(start = 10.dp, end = 5.dp, top = 10.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                AsyncImage(
+//                    model = item.image,
+//                    contentDescription = "image",
+//                    modifier = Modifier
+//                        .size(50.dp)
+//                        .padding(4.dp)
+//
+//                        .clip(RoundedCornerShape(3.dp)),
+//                    onSuccess = { showShimmer.value = false },
+//                    contentScale = ContentScale.Crop,
+//                    alignment = Alignment.Center
+//                )
+////                val senderData = Json.encodeToString(ArtistResult.serializer(), item)
+//                Column(
+//                    modifier = Modifier
+//                        .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
+//                        .weight(1f)
+//                        .clickable {
+////                            Log.d("artist","${item}")
+////                            navController.navigate(ArtistInfoScreenObj(senderData))
+//                        }
+//                ) {
+//                    Text(
+//                        text = item.title ?: "null",
+//                        style = MaterialTheme.typography.labelLarge,
+//                        color = Color.White,
+//                        modifier = Modifier.padding(bottom = 2.dp),
+//                        maxLines = 1,
+//                        softWrap = true,
+//                        overflow = TextOverflow.Ellipsis
+//                    )
+//                    Text(
+//                        text = item.type ?: "unknown",
+//                        style = MaterialTheme.typography.labelSmall,
+//                        color = Color.Gray,
+//                        maxLines = 1,
+//                        softWrap = true,
+//                        overflow = TextOverflow.Ellipsis
+//                    )
+//                }
+//
+//                IconButton(onClick = { /* Handle menu button click */ }) {
+//                    Icon(
+//                        if (item.type == "song") Icons.Default.MoreVert else Icons.Default.KeyboardArrowRight,
+//                        contentDescription = "More",
+//                        tint = Color.White
+//                    )
+//                }
+//            }
+//        }
 
         items(searchResults?.songs?.data ?: emptyList()) { item ->
             val showShimmer = remember { mutableStateOf(true) }
@@ -431,7 +444,7 @@ fun TopSearchDisplay(
             }
         }
         items(searchResults?.albums?.data ?: emptyList()) { item ->
-            val showShimmer = remember { mutableStateOf(true) }
+            val senderData = Json.encodeToString(InfoScreenModel.serializer(), item.toInfoScreenModel())
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -446,18 +459,17 @@ fun TopSearchDisplay(
                         .padding(4.dp)
                         
                         .clip(RoundedCornerShape(3.dp)),
-                    onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,
                     alignment = Alignment.Center
                 )
-                val senderData = Json.encodeToString(Album.serializer(), item)
+
                 Column(
                     modifier = Modifier
                         .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
                         .weight(1f)
                         .clickable {
                             navController.navigate(
-                                PlayerScreenObj(senderData)
+                                InfoScreenObj(senderData)
                             )
                         }
                 ) {
@@ -490,7 +502,9 @@ fun TopSearchDisplay(
             }
         }
         items(searchResults?.playlists?.data ?: emptyList()) { item ->
-            val showShimmer = remember { mutableStateOf(true) }
+
+            val data = item.toInfoScreenModel()
+            val senderData = Json.encodeToString(InfoScreenModel.serializer(), data)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -505,18 +519,16 @@ fun TopSearchDisplay(
                         .padding(4.dp)
                         
                         .clip(RoundedCornerShape(3.dp)),
-                    onSuccess = { showShimmer.value = false },
                     contentScale = ContentScale.Crop,
                     alignment = Alignment.Center
                 )
-                val senderData = Json.encodeToString(Playlist.serializer(), item)
                 Column(
                     modifier = Modifier
                         .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
                         .weight(1f)
                         .clickable {
                             navController.navigate(
-                                PlayerScreenObj(senderData)
+                                InfoScreenObj(senderData)
                             )
                         }
                 ) {
@@ -554,161 +566,5 @@ fun TopSearchDisplay(
     }
 }
 
-@Composable
-fun SearchResultDisplay(searchResults: SearchResults?,playerViewModel: PlayerViewModel) {
-    LazyColumn {
-        items(searchResults?.results ?: emptyList()) { item ->
-
-            val showShimmer = remember { mutableStateOf(true) }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 5.dp, top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = item.image,
-                    contentDescription = "image",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(4.dp)
-                        
-                        .clip(RoundedCornerShape(3.dp)),
-                    onSuccess = { showShimmer.value = false },
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.Center
-                )
-
-                Column(
-                    modifier = Modifier
-                        .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
-                        .weight(1f)
-                        .clickable {
-                            playerViewModel.setNewTrack(item)
-                        }
-                ) {
-                    (if(item.type == "artist")item.name else item.title)?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White,
-                            modifier = Modifier.padding(bottom = 2.dp),
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    (if(item.type == "artist") item.type
-                        else if(item.type == "playlist") "${capitalizeFirstLetter(item.moreInfo?.language!!)}.${item.moreInfo.songCount} Songs"
-                        else item.subtitle)?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                IconButton(onClick = { /* Handle menu button click */ }) {
-                    Icon(
-                        if (item.type == "song") Icons.Default.MoreVert else Icons.Default.KeyboardArrowRight,
-                        contentDescription = "More",
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-        item {
-            Spacer(modifier = Modifier.height(125.dp))
-        }
-    }
-}
-
-fun capitalizeFirstLetter(text: String): String {
-    return text.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchBar(
-    modifier: Modifier,
-    searchResultViewModel: SearchResultViewModel,
-    selectedType: MutableState<String>,
-    keyboardController: SoftwareKeyboardController?,
-    ) {
-
-    val searchText by searchResultViewModel.searchText.collectAsState()
-
-    Row(
-        modifier = modifier.padding(top = 24.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextField(
-            value = searchText,
-            onValueChange =  searchResultViewModel::onSearchTextChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(percent = 10)
-                )
-                .onFocusChanged {
-                    if(!it.isFocused){
-                        keyboardController?.hide()
-                    }
-                },
-            placeholder = { Text(text = "Music, Artists, and Podcasts", fontSize = 14.sp, color = Color.Gray)},
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search",
-                )
-            },
-            trailingIcon = {
-                if(searchText.isNotEmpty()){
-                    Icon(
-                        imageVector = Icons.Filled.Clear,
-                        contentDescription = "clear",
-                        modifier = Modifier.clickable { searchResultViewModel.onSearchTextChange("") }
-                    )
-                }
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = Color.DarkGray,
-                unfocusedTextColor = Color.Gray,
-                focusedLeadingIconColor = Color.DarkGray,
-                unfocusedLeadingIconColor = Color.Gray,
-                focusedTrailingIconColor = Color.DarkGray,
-                unfocusedTrailingIconColor = Color.Gray,
-
-            ),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Search,
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    keyboardController?.hide()
-                }
-            ),
-            singleLine = true,
-
-        )
-
-    }
-}
-
-
-@Preview
-@Composable
-fun SearchScreenPreview(){
-//    SearchBar(Modifier)
-}
 
 

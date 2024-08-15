@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -19,7 +17,6 @@ import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.BottomSheetValue.Collapsed
 import androidx.compose.material.BottomSheetValue.Expanded
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -27,23 +24,24 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -52,15 +50,21 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
-import com.ar.musicplayer.screens.player.BottomSheetState
+import com.ar.musicplayer.data.models.Artist
+import com.ar.musicplayer.data.models.ArtistResult
+import com.ar.musicplayer.screens.settings.subscreens.DownloadSettingsScreen
+import com.ar.musicplayer.screens.settings.subscreens.LanguageSettingsScreen
+import com.ar.musicplayer.screens.settings.subscreens.PlaybackSettingsScreen
+import com.ar.musicplayer.utils.PreferencesManager
+import com.ar.musicplayer.screens.settings.subscreens.StorageSettingScreen
+import com.ar.musicplayer.screens.settings.subscreens.ThemeSettingsScreen
 import com.ar.musicplayer.screens.player.MusicPlayerScreen
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
-import com.ar.musicplayer.models.HomeListItem
-import com.ar.musicplayer.models.PlaylistResponse
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.data.models.InfoScreenModel
+import com.ar.musicplayer.data.models.PlaylistResponse
 import com.ar.musicplayer.screens.home.HomeScreen
+import com.ar.musicplayer.screens.info.ArtistInfoScreen
 import com.ar.musicplayer.screens.info.InfoScreen
 import com.ar.musicplayer.screens.library.LibraryScreen
 import com.ar.musicplayer.screens.search.SearchScreen
@@ -70,16 +74,22 @@ import com.ar.musicplayer.screens.library.history.ListeningHistoryScreen
 import com.ar.musicplayer.screens.library.mymusic.DetailsScreen
 import com.ar.musicplayer.screens.library.mymusic.MyMusicScreen
 import com.ar.musicplayer.screens.library.mymusic.SearchMyMusic
-import com.ar.musicplayer.ui.theme.MusicPlayerTheme
+import com.ar.musicplayer.screens.library.playlist.PlaylistFetchScreen
 import com.ar.musicplayer.utils.helper.PaletteExtractor
-import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
-import com.ar.musicplayer.screens.home.HomeViewModel
+import com.ar.musicplayer.utils.download.DownloaderViewModel
+import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
-import com.ar.musicplayer.screens.home.RadioStationViewModel
+import com.ar.musicplayer.viewmodel.RadioStationViewModel
+import com.ar.musicplayer.ui.theme.AppTheme
+import com.ar.musicplayer.ui.theme.onPrimaryDark
+import com.ar.musicplayer.viewmodel.ThemeViewModel
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.internal.decodeStringToJsonTree
 
 
+@UnstableApi
 @OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -87,44 +97,33 @@ fun App(
     navController: NavHostController,
     homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
-    homeRoomViewModel: HomeRoomViewModel,
     modifier: Modifier = Modifier,
-    lastSessionViewModel: LastSessionViewModel,
     favViewModel: FavoriteViewModel,
     radioStationViewModel: RadioStationViewModel,
     downloaderViewModel: DownloaderViewModel
 ) {
-    val blackToGrayGradient =
-        Brush.verticalGradient(
-            colors = listOf(Color(0xFF000000),Color(0xFF161616)),
-            startY = Float.POSITIVE_INFINITY,
-            endY = 0f
-        )
+
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(Collapsed)
     )
     Log.d("recompose", " recompose called for App Function")
-
-    MusicPlayerTheme() {
+    AppTheme {
         Scaffold(
             bottomBar = {
-                    BottomNavigationBar(
-                        navController = navController,
-                        bottomSheetState = bottomSheetState,
-                        modifier = Modifier
-                            .systemBarsPadding()
-                    )
+                BottomNavigationBar(
+                    navController = navController,
+                    bottomSheetState = bottomSheetState,
+                    modifier = Modifier
+                        .systemBarsPadding()
+                )
 
             },
             modifier = modifier
-        ) { innerPadding ->
+        ) { _ ->
             PlayerScreenWithBottomNav(
                 navController = navController,
                 homeViewModel = homeViewModel,
                 playerViewModel = playerViewModel,
-                blackToGrayGradient = blackToGrayGradient,
-                homeRoomViewModel = homeRoomViewModel,
-                lastSessionViewModel = lastSessionViewModel,
                 radioStationViewModel = radioStationViewModel,
                 downloaderViewModel = downloaderViewModel,
                 favViewModel = favViewModel,
@@ -134,15 +133,13 @@ fun App(
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun PlayerScreenWithBottomNav(
     navController: NavHostController,
     homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
-    blackToGrayGradient: Brush,
-    homeRoomViewModel: HomeRoomViewModel,
-    lastSessionViewModel: LastSessionViewModel,
     favViewModel: FavoriteViewModel,
     radioStationViewModel: RadioStationViewModel,
     downloaderViewModel: DownloaderViewModel,
@@ -153,15 +150,24 @@ fun PlayerScreenWithBottomNav(
         rememberBottomSheetState(Collapsed)
     )
 
+    val themeViewModel = hiltViewModel<ThemeViewModel>()
+
+    val blackToGrayGradient by themeViewModel.blackToGrayGradient
     val listState = rememberLazyListState()
 
     val coroutineScope = rememberCoroutineScope()
+
+    val preferencesManager = PreferencesManager(LocalContext.current)
+
+
+    val showPlayer by playerViewModel.showBottomSheet.collectAsState()
+
 
     Log.d("recompose", " recompose called for PlayerScreenWithBottomNav Function")
 
     BottomSheetScaffold(
         scaffoldState = bottomSheetState,
-        sheetPeekHeight = 125.dp,
+        sheetPeekHeight = if(showPlayer) 125.dp else 0.dp,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetContent = {
 
@@ -174,7 +180,10 @@ fun PlayerScreenWithBottomNav(
                 onExpand = { coroutineScope.launch { bottomSheetState.bottomSheetState.expand() } },
                 onCollapse = { coroutineScope.launch { bottomSheetState.bottomSheetState.collapse() } },
                 upNextLazyListState = upNextLazyListState,
-                paletteExtractor = paletteExtractor
+                paletteExtractor = paletteExtractor,
+                downloaderViewModel = downloaderViewModel,
+                preferencesManager = preferencesManager
+
             )
         },
         sheetBackgroundColor = Color.Transparent,
@@ -186,7 +195,9 @@ fun PlayerScreenWithBottomNav(
         NavHost(
             navController = navController,
             startDestination = HomeScreenObj,
-            modifier = Modifier.padding().fillMaxSize(),
+            modifier = Modifier
+                .padding()
+                .fillMaxSize(),
         ) {
             val handleBackNavigation: suspend () -> Unit = {
                 when {
@@ -201,10 +212,10 @@ fun PlayerScreenWithBottomNav(
                     navController = navController,
                     listState = listState,
                     homeViewModel = homeViewModel,
-                    homeRoomViewModel = homeRoomViewModel,
                     radioStationViewModel = radioStationViewModel,
                     playerViewModel = playerViewModel,
-                    lastSessionViewModel = lastSessionViewModel,
+                    background = blackToGrayGradient,
+                    preferencesManager = preferencesManager
                 )
                 BackHandler(
                     enabled = bottomSheetState.bottomSheetState.isExpanded ||
@@ -216,7 +227,7 @@ fun PlayerScreenWithBottomNav(
 
 
             composable<SearchScreenObj> {
-                SearchScreen(navController, playerViewModel)
+                SearchScreen(navController, playerViewModel, blackToGrayGradient)
                 BackHandler(
                     enabled = bottomSheetState.bottomSheetState.isExpanded ||
                             upNextSheetState.bottomSheetState.isExpanded
@@ -241,7 +252,7 @@ fun PlayerScreenWithBottomNav(
 
 
             composable<SettingsScreenObj> {
-                SettingsScreen()
+                SettingsScreen(navController,blackToGrayGradient)
                 BackHandler(
                     enabled = bottomSheetState.bottomSheetState.isExpanded ||
                             upNextSheetState.bottomSheetState.isExpanded
@@ -253,12 +264,10 @@ fun PlayerScreenWithBottomNav(
 
             composable<InfoScreenObj> {
                 val args = it.toRoute<InfoScreenObj>()
-                val deSerialized =
-                    Json.decodeFromString(HomeListItem.serializer(), args.serialized)
-                val sharedKey = args.sharedKey
+                val data = Json.decodeFromString(InfoScreenModel.serializer(), args.data)
 
                 InfoScreen(
-                    homeListItem = deSerialized,
+                    data = data,
                     playerViewModel = playerViewModel,
                     favViewModel = favViewModel,
                     downloaderViewModel = downloaderViewModel,
@@ -294,7 +303,6 @@ fun PlayerScreenWithBottomNav(
                     navController = navController,
                     playerViewModel = playerViewModel,
                     favViewModel = favViewModel,
-                    lastSessionViewModel = lastSessionViewModel
                 )
                 BackHandler(
                     enabled = bottomSheetState.bottomSheetState.isExpanded ||
@@ -351,19 +359,91 @@ fun PlayerScreenWithBottomNav(
                     coroutineScope.launch { handleBackNavigation() }
                 }
             }
-//                composable<MusicRecognizerObj> {
-//                    MusicRecognizer(
-//                        navController = navController,
-//                        playerViewModel = playerViewModel,
-//                        favViewModel = favViewModel
-//                    )
-//                    BackHandler(
-//                        enabled = bottomSheetState.bottomSheetState.isExpanded ||
-//                                upNextSheetState.bottomSheetState.isExpanded
-//                    ) {
-//                        coroutineScope.launch { handleBackNavigation() }
-//                    }
-//                }
+            composable<ThemeSettingObj> {
+                ThemeSettingsScreen(blackToGrayGradient, themeViewModel,preferencesManager){
+                    navController.navigateUp()
+                }
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
+            composable<DownloadSettingsScreenObj> {
+                DownloadSettingsScreen(
+                    preferencesManager = preferencesManager,
+                    onBackClick = {
+                        navController.navigateUp()
+                    }
+                )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
+            composable<LanguageSettingsScreenObj> {
+                LanguageSettingsScreen(
+                    preferencesManager = preferencesManager,
+                    onBackClick = { navController.navigateUp() }
+                )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
+            composable<PlaybackSettingsScreenObj> {
+                PlaybackSettingsScreen(
+                    preferencesManager = preferencesManager,
+                    onBackClick = {navController.navigateUp()}
+                )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
+            composable<StorageSettingScreenObj> {
+                StorageSettingScreen(onBackClick = {navController.navigateUp()})
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
+            composable<ArtistInfoScreenObj> {
+                val args = it.toRoute<ArtistInfoScreenObj>()
+                val artistInfo = Json.decodeFromString(Artist.serializer(), args.artistInfo)
+                ArtistInfoScreen(
+                    artistInfo = artistInfo
+                ){
+                    navController.navigateUp()
+                }
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
+            composable<PlaylistFetchScreenObj> {
+                PlaylistFetchScreen(
+                    navController = navController,
+                    background = blackToGrayGradient
+                )
+                BackHandler(
+                    enabled = bottomSheetState.bottomSheetState.isExpanded ||
+                            upNextSheetState.bottomSheetState.isExpanded
+                ) {
+                    coroutineScope.launch { handleBackNavigation() }
+                }
+            }
         }
     }
 }
@@ -390,10 +470,11 @@ fun BottomNavigationBar(navController: NavController, bottomSheetState: BottomSh
     }
 
     BottomNavigation(
-        backgroundColor = MaterialTheme.colors.onBackground,
+        backgroundColor = Color.Black,
         modifier =  modifier
             .graphicsLayer {
                 translationY = size.height * currentFraction
+                onPrimaryDark
             }
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -422,9 +503,9 @@ fun BottomNavigationBar(navController: NavController, bottomSheetState: BottomSh
                 label = {
                     Text(
                         text = screen.label,
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) Color.White else Color.Gray
+                        color =  if (isSelected) Color.White else Color.Gray,
                     )
                 },
             )

@@ -15,13 +15,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +31,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -50,11 +52,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.viewmodel.ImageColorGradient
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.data.models.SongResponse
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoriteScreen(
     navController: NavHostController,
@@ -63,7 +65,6 @@ fun FavoriteScreen(
 ) {
 
     val songResponseList by favViewModel.favSongList.observeAsState()
-    val imageColorGradient: ImageColorGradient = viewModel()
     val scope = rememberCoroutineScope()
     val titles = listOf("Songs", "Albums", "Artists", "Genres")
     val pagerState = rememberPagerState(initialPage = 0,pageCount = {titles.size})
@@ -84,8 +85,10 @@ fun FavoriteScreen(
                         Icon(Icons.Filled.Search, contentDescription = "Search",tint = Color.White)
                     }
                 },
-                backgroundColor = Color.Transparent,
-                modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier.padding(bottom = 10.dp)
             )
         },
         modifier = Modifier.fillMaxSize(),

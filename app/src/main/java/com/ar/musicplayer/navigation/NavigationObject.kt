@@ -16,15 +16,10 @@ object LibraryScreenObj
 
 
 @Serializable
-data class InfoScreenObj(  //
-    val serialized: String,
-    val sharedKey: Int,
+data class InfoScreenObj(
+    val data: String
 )
 
-@Serializable
-data class PlayerScreenObj(
-    val songResponse: String
-)
 
 @Serializable
 object FavoriteScreenObj
@@ -44,6 +39,27 @@ object SearchMyMusicObj
 @Serializable
 data class DetailsScreenObj(
     val playlistResponse: String,
-
 )
 
+@Serializable
+object ThemeSettingObj
+
+@Serializable
+object DownloadSettingsScreenObj
+
+@Serializable
+object LanguageSettingsScreenObj
+
+@Serializable
+object PlaybackSettingsScreenObj
+
+@Serializable
+object StorageSettingScreenObj
+
+@Serializable
+data class ArtistInfoScreenObj(
+    val artistInfo: String
+)
+
+@Serializable
+object PlaylistFetchScreenObj

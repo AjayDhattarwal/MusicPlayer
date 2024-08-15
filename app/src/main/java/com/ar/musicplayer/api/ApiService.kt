@@ -1,14 +1,15 @@
 package com.ar.musicplayer.api
 
-import com.ar.musicplayer.models.BasicSongInfo
-import com.ar.musicplayer.models.HomeData
-import com.ar.musicplayer.models.PlaylistResponse
-import com.ar.musicplayer.models.RadioSongs
-import com.ar.musicplayer.models.SearchResults
-import com.ar.musicplayer.models.SongDetails
-import com.ar.musicplayer.models.SongResponse
-import com.ar.musicplayer.models.StationResponse
-import com.ar.musicplayer.models.TopSearchResults
+import com.ar.musicplayer.data.models.ArtistResponse
+import com.ar.musicplayer.data.models.BasicSongInfo
+import com.ar.musicplayer.data.models.HomeData
+import com.ar.musicplayer.data.models.PlaylistResponse
+import com.ar.musicplayer.data.models.RadioSongs
+import com.ar.musicplayer.data.models.SearchResults
+import com.ar.musicplayer.data.models.SongDetails
+import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.StationResponse
+import com.ar.musicplayer.data.models.TopSearchResults
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.GET
@@ -87,5 +88,21 @@ interface ApiService {
         @Query("pids") pids: String = "",
         @Query("__call") call: String = "song.getDetails"
     ):Call<SongDetails>
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getRecoSongs(
+        @Query("pid") pid: String = "",
+        @Query("__call") call: String = "reco.getreco"
+    ):Call<List<SongResponse>>
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    fun getArtistData(
+        @Query("token") token: String = "",
+        @Query("type") type: String = "artist",
+        @Query("n_album") nAlbum: Int = 20,
+        @Query("n_song") nSong: Int = 5,
+        @Query("__call") call: String = "webapi.get"
+    ): Call<ArtistResponse>
+
 
 }

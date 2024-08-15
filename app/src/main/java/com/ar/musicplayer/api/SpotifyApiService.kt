@@ -1,7 +1,7 @@
 package com.ar.musicplayer.api
 
-import com.ar.musicplayer.models.RecommendationsResponse
-import com.ar.musicplayer.models.SearchResponseForReco
+import com.ar.musicplayer.data.models.RecommendationsResponse
+import com.ar.musicplayer.data.models.SearchResponseForReco
 import retrofit2.Response
 import retrofit2.http.*
 

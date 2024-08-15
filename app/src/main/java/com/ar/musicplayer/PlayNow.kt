@@ -22,7 +22,7 @@ class PlayNow : Application(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Music Player",
+                this.getString(R.string.music),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Music Player Controls"
@@ -32,4 +32,5 @@ class PlayNow : Application(){
             notificationManager.createNotificationChannel(channel)
         }
     }
+
 }

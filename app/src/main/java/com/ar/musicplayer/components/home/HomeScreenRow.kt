@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
@@ -26,8 +26,8 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
-import com.ar.musicplayer.models.HomeListItem
-import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.data.models.HomeListItem
+import com.ar.musicplayer.data.models.SongResponse
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import kotlinx.serialization.json.Json
 
@@ -37,19 +37,19 @@ fun HomeScreenRow(
     title: String,
     data: List<HomeListItem>?,
     size: Int = 170,
-    onCardClicked: (Boolean, String) -> Unit,
+    onCardClicked: (Boolean, HomeListItem) -> Unit,
 ) {
 
 
     if(data.isNullOrEmpty()){
         return
     }
-    Column(Modifier.padding(top = 30.dp)) {
+    Column(Modifier) {
 
         Heading(title = title)
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+            contentPadding = PaddingValues(vertical = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
@@ -65,13 +65,12 @@ fun HomeScreenRow(
 
                 HomeScreenRowCard(
                     isRadio = radioOrNot,
-                    item = item,
                     subtitle = subtitle.toString(),
                     cornerRadius = cornerRadius,
                     imageUrl = item.image.toString(),
                     title = item.title.toString(),
                     size = size,
-                    onClick =  onCardClicked
+                    onClick =  { onCardClicked(it, item)}
                 )
             }
 
@@ -81,36 +80,32 @@ fun HomeScreenRow(
 
 @Composable
 fun HomeScreenRowCard(
-    item: HomeListItem,
     isRadio: Boolean,
     subtitle: String,
     cornerRadius: Int = 0,
     imageUrl: String,
     title: String,
     size: Int,
-    onClick: (Boolean, String) -> Unit,
+    onClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
-    val serialized = remember { Json.encodeToString(HomeListItem.serializer(), item) }
 
     Column(
         modifier
-            .padding(bottom = 10.dp, top = 10.dp)
             .width(size.dp)
     ) {
         Card(
             modifier = modifier
                 .size((size).dp)
-                .clickable { onClick(isRadio, serialized) },
-            backgroundColor = Color.Transparent,
+                .clickable { onClick(isRadio) },
             shape = RoundedCornerShape(percent = cornerRadius)
         ) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = "image",
                 contentScale = ContentScale.Crop,
-                alignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
             )
         }
 

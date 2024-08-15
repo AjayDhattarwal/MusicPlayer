@@ -1,6 +1,6 @@
 package com.ar.musicplayer.utils.events
 
-import com.ar.musicplayer.models.SongResponse
+import com.ar.musicplayer.data.models.SongResponse
 import kotlinx.coroutines.flow.Flow
 
 sealed interface DetailsEvent {

@@ -6,45 +6,48 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 
-import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.di.permission.PermissionHandler
-import com.ar.musicplayer.di.permission.PermissionModel
-import com.ar.musicplayer.di.roomdatabase.favoritedb.FavoriteViewModel
-import com.ar.musicplayer.di.roomdatabase.homescreendb.HomeRoomViewModel
-import com.ar.musicplayer.di.roomdatabase.lastsession.LastSessionViewModel
+import com.ar.musicplayer.utils.permission.PermissionHandler
+import com.ar.musicplayer.utils.permission.PermissionModel
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.navigation.App
-import com.ar.musicplayer.utils.playerHelper.DownloaderViewModel
+import com.ar.musicplayer.utils.download.DownloaderViewModel
+import com.ar.musicplayer.utils.notification.ACTIONS
+import com.ar.musicplayer.utils.notification.AudioService
 
-import com.ar.musicplayer.screens.home.HomeViewModel
-import com.ar.musicplayer.screens.home.RadioStationViewModel
-import com.ar.musicplayer.utils.notification.NotificationService
+import com.ar.musicplayer.viewmodel.HomeViewModel
+import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
+@UnstableApi
 class MainActivity  : ComponentActivity() {
-
-
-    private val homeViewModel: HomeViewModel by viewModels()
-    private val homeRoomViewModel: HomeRoomViewModel by viewModels()
-    private val lastSessionViewModel: LastSessionViewModel by viewModels()
-    private val favViewModel : FavoriteViewModel by viewModels()
-    private val radioStationViewModel: RadioStationViewModel by viewModels()
-    private val downloaderViewModel: DownloaderViewModel by viewModels()
-
-    private val playerViewModel: PlayerViewModel by viewModels()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
+
+            val homeViewModel = hiltViewModel<HomeViewModel>()
+            val playerViewModel = hiltViewModel<PlayerViewModel>()
+            val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
+            val radioStationViewModel = viewModel<RadioStationViewModel>()
+            val favViewModel = hiltViewModel<FavoriteViewModel>()
+
             PermissionHandler(
                 permissions = listOf(
                     PermissionModel(
@@ -52,7 +55,7 @@ class MainActivity  : ComponentActivity() {
                         maxSDKVersion = Int.MAX_VALUE,
                         minSDKVersion = 33,
                         rational = "Access to Notification is required"
-                    )
+                    ),
                 ),
                 askPermission = true
             )
@@ -61,25 +64,14 @@ class MainActivity  : ComponentActivity() {
                 navController = navController,
                 homeViewModel = homeViewModel,
                 playerViewModel = playerViewModel,
-                homeRoomViewModel = homeRoomViewModel,
-                lastSessionViewModel = lastSessionViewModel,
                 favViewModel = favViewModel,
                 radioStationViewModel = radioStationViewModel,
                 downloaderViewModel = downloaderViewModel
             )
 
-
         }
 
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d("kill", "main activity destroyed")
-        Intent(this, NotificationService::class.java).also{
-            it.action = NotificationService.Actions.STOP.toString()
-            startService(it)
-        }
     }
 
 }
@@ -91,3 +83,19 @@ fun Activity.openAppSettings(){
         android.net.Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
 }
+
+
+
+//
+//Box(
+//modifier = Modifier.fillMaxSize()
+//.background(background)
+//.blur(20.dp)
+//){
+//    AsyncImage(
+//        model = "https://wallpaper.forfun.com/fetch/63/63da5cd7c95d494cb847c450dcbd1412.jpeg?download=music-ukulele-gitara-zakat-plyazh-sumerki-139741.jpeg",
+//        contentDescription = "",
+//        modifier = Modifier.fillMaxSize(),
+//        contentScale = ContentScale.Crop
+//    )
+//}

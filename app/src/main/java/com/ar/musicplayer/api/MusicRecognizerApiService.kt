@@ -1,6 +1,6 @@
 package com.ar.musicplayer.api
 
-import com.ar.musicplayer.models.SongRecognitionResponse
+import com.ar.musicplayer.data.models.SongRecognitionResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody

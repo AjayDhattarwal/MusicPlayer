@@ -1,9 +1,12 @@
 package com.ar.musicplayer.components.home
 
 import android.icu.util.Calendar
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -27,37 +30,46 @@ import coil.compose.AsyncImage
 
 @Composable
 fun TopProfileBar(
+    title: String = "UserName",
     modifier: Modifier = Modifier,
+    color: Color = Color.White,
     onClick: () -> Unit,
+    onUserFiledClick: () -> Unit
 ){
 
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = "",
-            contentDescription = "Profile",
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-
-        )
+//        AsyncImage(
+//            model = "",
+//            contentDescription = "Profile",
+//            modifier = Modifier
+//                .size(50.dp)
+//                .clip(CircleShape)
+//
+//        )
         Column(
-            modifier = Modifier.padding(10.dp).weight(1f)
+            modifier = Modifier
+                .padding(16.dp)
+                .weight(1f)
+                .clickable { onUserFiledClick() }
         ) {
             Text(
-                text = getGreeting(),
+                text = "${getGreeting()},",
                 modifier = Modifier.wrapContentSize(),
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
-                fontWeight =  FontWeight.Normal
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1,
+                color = color,
             )
+            Spacer(modifier =Modifier.height(2.dp))
             Text(
-                text = "Ajay Dhattarwal",
+                text = title,
                 modifier = Modifier.wrapContentSize(),
                 style = MaterialTheme.typography.labelMedium,
                 color = Color.White,
+                maxLines = 1,
                 fontWeight = FontWeight.ExtraBold,
                 fontFamily = FontFamily.SansSerif
             )
@@ -93,5 +105,5 @@ fun getGreeting(): String{
 @Preview
 @Composable
 fun TopProfileBarPreview(){
-    TopProfileBar(onClick = {})
+    TopProfileBar(onClick = {}, onUserFiledClick = {})
 }

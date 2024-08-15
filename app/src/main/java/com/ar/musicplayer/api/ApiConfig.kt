@@ -1,6 +1,6 @@
 package com.ar.musicplayer.api
 
-import com.ar.musicplayer.models.SongRecognitionResponse
+import com.ar.musicplayer.data.models.SongRecognitionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
