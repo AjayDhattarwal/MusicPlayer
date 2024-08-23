@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -79,6 +80,7 @@ import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
+import com.ar.musicplayer.screens.player.CurrPlayingPlaylist
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import com.ar.musicplayer.ui.theme.AppTheme
 import com.ar.musicplayer.ui.theme.onPrimaryDark
@@ -176,14 +178,15 @@ fun PlayerScreenWithBottomNav(
             MusicPlayerScreen(
                 playerViewModel = playerViewModel,
                 bottomSheetState = bottomSheetState,
-                upNextSheetState = upNextSheetState,
-                onExpand = { coroutineScope.launch { bottomSheetState.bottomSheetState.expand() } },
+                onExpand = {
+                    if(bottomSheetState.bottomSheetState.isCollapsed){
+                        coroutineScope.launch { bottomSheetState.bottomSheetState.expand() }
+                    }
+                },
                 onCollapse = { coroutineScope.launch { bottomSheetState.bottomSheetState.collapse() } },
-                upNextLazyListState = upNextLazyListState,
                 paletteExtractor = paletteExtractor,
                 downloaderViewModel = downloaderViewModel,
-                preferencesManager = preferencesManager
-
+                preferencesManager = preferencesManager,
             )
         },
         sheetBackgroundColor = Color.Transparent,
@@ -444,6 +447,7 @@ fun PlayerScreenWithBottomNav(
                     coroutineScope.launch { handleBackNavigation() }
                 }
             }
+
         }
     }
 }

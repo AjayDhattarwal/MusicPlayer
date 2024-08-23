@@ -48,8 +48,8 @@ class PaletteExtractor() {
                             }
 
                         if(composeColor != null){
-                            if(isColorLight(composeColor)){
-                                color.postValue(darkenColor(composeColor,0.7f))
+                            if(composeColor.isColorLight()){
+                                color.postValue(composeColor.darkenColor(0.7f))
                             } else{
                                 color.postValue(composeColor!!)
                             }
@@ -79,20 +79,23 @@ class PaletteExtractor() {
         }
     }
 
-    fun isColorLight(color: Color): Boolean {
-        val darkness = 1 - (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue)
-        return darkness < 0.5
-    }
 
-    // Function to darken a color
-    fun darkenColor(color: Color, factor: Float): Color {
-        val r = (color.red * factor).coerceAtLeast(0f)
-        val g = (color.green * factor).coerceAtLeast(0f)
-        val b = (color.blue * factor).coerceAtLeast(0f)
-        return Color(r, g, b, color.alpha)
-    }
 
     companion object {
         private const val TAG = "PaletteExtractor"
     }
+}
+
+
+fun Color.isColorLight(): Boolean {
+    val darkness = 1 - (0.299 * this.red + 0.587 * this.green + 0.114 * this.blue)
+    return darkness < 0.5
+}
+
+
+fun Color.darkenColor(factor: Float = 0.7f): Color {
+    val r = (this.red * factor).coerceAtLeast(0f)
+    val g = (this.green * factor).coerceAtLeast(0f)
+    val b = (this.blue * factor).coerceAtLeast(0f)
+    return Color(r, g, b, this.alpha)
 }

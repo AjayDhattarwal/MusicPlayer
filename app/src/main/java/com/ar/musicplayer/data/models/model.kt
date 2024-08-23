@@ -533,3 +533,19 @@ data class ArtistResponse(
 ) : Parcelable
 
 
+
+
+data class LyricsResponse(
+    @SerializedName("id") val id: Int ? = 0,
+    @SerializedName("trackName") val trackName: String ? = "",
+    @SerializedName("artistName") val artistName: String ? = "",
+    @SerializedName("albumName") val albumName: String ? = "",
+    @SerializedName("duration") val duration: Float? = 0.0f,
+    @SerializedName("plainLyrics") val plainLyrics: String ? = "",
+    @SerializedName("syncedLyrics") val syncedLyrics: String ? = ""
+)
+
+data class TranslationResponse(
+    @SerializedName("transliterated_text") val text: String ? = ""
+)
+

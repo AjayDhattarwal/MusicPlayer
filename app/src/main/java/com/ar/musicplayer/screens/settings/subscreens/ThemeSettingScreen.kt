@@ -419,73 +419,73 @@ fun ThemeSettingsScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Set Custom Background Image",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Let Pick You Own Epic Background",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = isImageAsBackGround,
-                        onCheckedChange = {
-                            isImageAsBackGround = it
-                            preferencesManager.setImageAsBackGround(it)
-                        },
-                        modifier = Modifier.padding(start = 16.dp),
-                        colors = SwitchDefaults.colors(
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color.LightGray,
-                            checkedThumbColor = Color.LightGray,
-                            checkedBorderColor = Color(preferencesManager.getAccentColor()),
-                            checkedTrackColor = Color(preferencesManager.getAccentColor())
-                        )
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = isImageAsBackGround,
-                    enter = slideInVertically {
-                        with(density) { -40.dp.roundToPx() }
-                    } + expandVertically (
-                        expandFrom = Alignment.Top
-                    ) + fadeIn(
-                        initialAlpha = 0.3f
-                    ),
-                    exit = slideOutVertically() + shrinkVertically() + fadeOut()
-                ) {
-
-
-                    Column(modifier = Modifier.fillMaxWidth(), ){
-
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clickable {imagePickerLauncher.launch("image/*")}
-                        ) {
-                            Text("Pick an Image", color = Color.White)
-                        }
-                        if(selectedImageUri != "" ){
-                            Image(
-                                bitmap = backgroundBitmap.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.size(150.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                            
-                        }
-                    }
-                }
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ){
+//                    Column(modifier = Modifier.weight(1f)) {
+//                        Text(
+//                            "Set Custom Background Image",
+//                            style = MaterialTheme.typography.titleMedium,
+//                            color = MaterialTheme.colorScheme.onPrimary
+//                        )
+//                        Spacer(modifier = Modifier.height(4.dp))
+//                        Text(
+//                            text = "Let Pick You Own Epic Background",
+//                            style = MaterialTheme.typography.bodySmall,
+//                            color = MaterialTheme.colorScheme.onSurfaceVariant
+//                        )
+//                    }
+//                    Switch(
+//                        checked = isImageAsBackGround,
+//                        onCheckedChange = {
+//                            isImageAsBackGround = it
+//                            preferencesManager.setImageAsBackGround(it)
+//                        },
+//                        modifier = Modifier.padding(start = 16.dp),
+//                        colors = SwitchDefaults.colors(
+//                            uncheckedThumbColor = Color.White,
+//                            uncheckedTrackColor = Color.LightGray,
+//                            checkedThumbColor = Color.LightGray,
+//                            checkedBorderColor = Color(preferencesManager.getAccentColor()),
+//                            checkedTrackColor = Color(preferencesManager.getAccentColor())
+//                        )
+//                    )
+//                }
+//
+//                AnimatedVisibility(
+//                    visible = isImageAsBackGround,
+//                    enter = slideInVertically {
+//                        with(density) { -40.dp.roundToPx() }
+//                    } + expandVertically (
+//                        expandFrom = Alignment.Top
+//                    ) + fadeIn(
+//                        initialAlpha = 0.3f
+//                    ),
+//                    exit = slideOutVertically() + shrinkVertically() + fadeOut()
+//                ) {
+//
+//
+//                    Column(modifier = Modifier.fillMaxWidth(), ){
+//
+//                        Box(
+//                            modifier = Modifier
+//                                .size(30.dp)
+//                                .clickable {imagePickerLauncher.launch("image/*")}
+//                        ) {
+//                            Text("Pick an Image", color = Color.White)
+//                        }
+//                        if(selectedImageUri != "" ){
+//                            Image(
+//                                bitmap = backgroundBitmap.asImageBitmap(),
+//                                contentDescription = null,
+//                                modifier = Modifier.size(150.dp),
+//                                contentScale = ContentScale.Crop
+//                            )
+//
+//                        }
+//                    }
+//                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 

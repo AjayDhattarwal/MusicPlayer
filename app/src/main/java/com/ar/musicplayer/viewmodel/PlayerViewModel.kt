@@ -4,7 +4,11 @@ import android.app.Application
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.compose.runtime.traceEventEnd
+import androidx.compose.ui.util.trace
 import androidx.lifecycle.*
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -15,15 +19,29 @@ import com.ar.musicplayer.data.repository.LastSessionRepository
 import com.ar.musicplayer.data.repository.SongDetailsRepository
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.api.ApiConfig
+import com.ar.musicplayer.api.ApiService
+import com.ar.musicplayer.data.models.LyricsResponse
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.TranslationResponse
+import com.ar.musicplayer.data.models.perfect
+import com.ar.musicplayer.data.models.permutations
 import com.ar.musicplayer.utils.notification.ACTIONS
 import com.ar.musicplayer.utils.notification.AudioService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -34,6 +52,7 @@ import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.DESKeySpec
 import javax.inject.Inject
+import kotlin.math.absoluteValue
 
 @UnstableApi
 @HiltViewModel
@@ -43,6 +62,24 @@ class PlayerViewModel @Inject constructor(
     private val lastSessionRepository: LastSessionRepository,
     private val songDetailsRepository: SongDetailsRepository
 ) : AndroidViewModel(application) {
+
+    private val _currentLyricIndex = MutableLiveData<Int>(0)
+    val currentLyricIndex: LiveData<Int> = _currentLyricIndex
+
+    private val _lyricsData = MutableStateFlow<List<Pair<Int, String>>>(emptyList())
+    val lyricsData: StateFlow<List<Pair<Int, String>>> = _lyricsData
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateLyricsRunnable = object : Runnable {
+        override fun run() {
+            updateLyric()
+            // Schedule the next update after 0.5 second
+            handler.postDelayed(this, 500L)
+        }
+    }
+
+    private val _isLyricsLoading = MutableStateFlow(false)
+    val isLyricsLoading = _isLyricsLoading.asStateFlow()
 
     private var isServiceStarted = false
 
@@ -94,6 +131,8 @@ class PlayerViewModel @Inject constructor(
     val shuffleModeEnabled: LiveData<Boolean> get() = _shuffleModeEnabled
 
 
+
+
     val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             val newPosition = exoPlayer.currentPosition
@@ -106,16 +145,40 @@ class PlayerViewModel @Inject constructor(
                 _duration.postValue(newDuration)
             }
 
-
-
         }
-
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             val newIndex = exoPlayer.currentMediaItemIndex
+            _lyricsData.value = emptyList()
             if (_currentIndex.value != newIndex) {
                 _currentIndex.value = newIndex
             }
-            if(currentSong.value != null){
+            if(mediaItem?.mediaMetadata?.title != null){
+                val title = exoPlayer.currentMediaItem?.mediaMetadata?.title.toString()
+                val artistList = exoPlayer.currentMediaItem?.mediaMetadata?.artist
+                    ?.split(",", "&amp;", "with","&quot;")
+                    ?.map { it.trim() }
+                    ?: listOf()
+
+                val albumName = exoPlayer.currentMediaItem?.mediaMetadata?.albumTitle.toString()
+
+                val duration = exoPlayer.currentMediaItem?.mediaMetadata?.durationMs
+
+                _isLyricsLoading.value = true
+                fetchLyrics(
+                    trackName = title,
+                    artistList = artistList,
+                    albumName = albumName,
+                    duration = duration?.toInt() ?: 0,
+                    onSuccess = {
+                        _lyricsData.value = it
+                        _isLyricsLoading.value = false
+                    },
+                    onError = {
+                        Log.d("lyrics", "${it.message}")
+                        _lyricsData.value = emptyList()
+                        _isLyricsLoading.value = false
+                    }
+                )
                 updateLastSession()
             }
 
@@ -128,6 +191,14 @@ class PlayerViewModel @Inject constructor(
                     startForegroundService()
                     isServiceStarted = true
                 }
+            }
+        }
+
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+            if (playbackState == Player.STATE_READY && playWhenReady) {
+                handler.post(updateLyricsRunnable)
+            } else {
+                handler.removeCallbacks(updateLyricsRunnable)
             }
         }
     }
@@ -156,10 +227,12 @@ class PlayerViewModel @Inject constructor(
                         )
                         .setMediaMetadata(
                             MediaMetadata.Builder()
-                                .setTitle(song.title)
+                                .setTitle(song.title?.perfect())
                                 .setArtworkUri(Uri.parse(song.image))
-                                .setSubtitle(song.subtitle)
-                                .setArtist(artist)
+                                .setSubtitle(song.subtitle?.perfect())
+                                .setArtist(artist?.perfect())
+                                .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
+                                .setDurationMs(song.moreInfo?.duration?.toLong())
                                 .build()
                         )
                         .build()
@@ -183,6 +256,7 @@ class PlayerViewModel @Inject constructor(
             exoPlayer.play()
         }
     }
+
 
     fun changeSong(index: Int) {
         _playlist.value?.let { playlist ->
@@ -252,10 +326,12 @@ class PlayerViewModel @Inject constructor(
             ))
             .setMediaMetadata(
                 MediaMetadata.Builder()
-                    .setTitle(song.title)
+                    .setTitle(song.title?.perfect())
                     .setArtworkUri(Uri.parse(song.image))
-                    .setSubtitle(song.subtitle)
-                    .setArtist(artist)
+                    .setSubtitle(song.subtitle?.perfect())
+                    .setArtist(artist?.perfect())
+                    .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
+                    .setDurationMs(song.moreInfo?.duration?.toLong())
                     .build()
             )
             .build()
@@ -281,10 +357,12 @@ class PlayerViewModel @Inject constructor(
                 ))
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setTitle(song.title)
+                        .setTitle(song.title?.perfect())
                         .setArtworkUri(Uri.parse(song.image))
-                        .setSubtitle(song.subtitle)
-                        .setArtist(artist)
+                        .setSubtitle(song.subtitle?.perfect())
+                        .setArtist(artist?.perfect())
+                        .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
+                        .setDurationMs(song.moreInfo?.duration?.toLong())
                         .build()
                 )
                 .build()
@@ -312,14 +390,12 @@ class PlayerViewModel @Inject constructor(
 
         if (currentIndex > 0) {
             changeSong(currentIndex - 1)
-        } else {
-            changeSong(_playlist.value?.size?.minus(1) ?: 0) // Go to the last song if at the beginning of the playlist
         }
     }
 
 
     private fun decodeDES(input: String, kbps320: Boolean): String {
-        Log.d("input","$input")
+
         val key = "38346591"
         val algorithm = "DES/ECB/PKCS5Padding"
 
@@ -339,16 +415,15 @@ class PlayerViewModel @Inject constructor(
         val matcher = pattern.matcher(decoded)
         decoded = matcher.replaceAll(".mp4")
 
-        // Replace "http:" with "https:"
         decoded = decoded.replace("http:", "https:")
         if(preferencesManager.getStreamQuality() == "320"){
             if(kbps320){
                 decoded = decoded.replace("96.mp4", "${preferencesManager.getStreamQuality()}.mp4")
-                Log.d("320", "its 320 decoded: $decoded")
+
             }
         } else{
             decoded = decoded.replace("96.mp4","${preferencesManager.getStreamQuality()}.mp4")
-            Log.d("320", " not 320 decoded: $decoded")
+
         }
 
         return decoded
@@ -360,22 +435,26 @@ class PlayerViewModel @Inject constructor(
         val playStartTime = System.currentTimeMillis()
         job = viewModelScope.launch(Dispatchers.IO) {
 
-            lastSessionRepository.insertLastSession(
-                songResponse = currentSong.value!!,
-                playCount = 0,
-                skipCount = 1
-            )
+            currentSong.value?.let {
+                lastSessionRepository.insertLastSession(
+                    songResponse = it,
+                    playCount = 0,
+                    skipCount = 1
+                )
+            }
             delay(20000)
             val elapsedTime = System.currentTimeMillis() - playStartTime
             val playCount = if (elapsedTime >= 20000) 1 else 0
             val skipCount = -1
             Log.d("LastSessionService", "Elapsed time: $elapsedTime, playCount: $playCount, skipCount: $skipCount")
 
-            lastSessionRepository.insertLastSession(
-                songResponse = currentSong.value!!,
-                playCount = playCount,
-                skipCount = skipCount
-            )
+            currentSong.value?.let {
+                lastSessionRepository.insertLastSession(
+                    songResponse = it,
+                    playCount = playCount,
+                    skipCount = skipCount
+                )
+            }
 
             if(currentPlaylistId.value == "history"){
                 try {
@@ -432,7 +511,6 @@ class PlayerViewModel @Inject constructor(
 
         val artist = song.moreInfo?.artistMap?.artists?.distinctBy{it.name}?.joinToString(", "){it.name.toString()}
 
-
         val mediaItem = MediaItem.Builder()
             .setUri(
                 decodeDES(
@@ -442,10 +520,12 @@ class PlayerViewModel @Inject constructor(
             )
             .setMediaMetadata(
                 MediaMetadata.Builder()
-                    .setTitle(song.title)
+                    .setTitle(song.title?.perfect())
                     .setArtworkUri(Uri.parse(song.image))
-                    .setSubtitle(song.subtitle)
-                    .setArtist(artist)
+                    .setSubtitle(song.subtitle?.perfect())
+                    .setArtist(artist?.perfect())
+                    .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
+                    .setDurationMs(song.moreInfo?.duration?.toLong())
                     .build()
             )
             .build()
@@ -463,6 +543,172 @@ class PlayerViewModel @Inject constructor(
         context.startService(intent)
     }
 
+
+    fun fetchLyrics(
+        artistList: List<String>,
+        trackName: String,
+        albumName: String,
+        duration: Int,
+        onSuccess: (List<Pair<Int, String>>) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        var count = 0
+
+        fun tryFetch() {
+            if (count >= artistList.size) {
+                onError(Exception("No matching lyrics found for any artist."))
+                return
+            }
+
+            lyricsFinder(
+                artistList = artistList,
+                artistName = artistList[count],
+                trackName = trackName,
+                albumName = albumName,
+                duration = duration,
+                onSuccess = onSuccess,
+                onError = onError,
+                onTryAgain = {
+                    count++
+                    tryFetch()
+                }
+            )
+        }
+
+        tryFetch()
+    }
+
+
+    fun lyricsFinder(
+        artistList: List<String>,
+        artistName: String,
+        trackName: String,
+        albumName: String,
+        duration: Int,
+        onSuccess: (List<Pair<Int, String>>) -> Unit,
+        onError: (Exception) -> Unit,
+        onTryAgain: () -> Unit
+    ){
+        val client = ApiConfig.getLyricsByLrclib().getLyricsLrclib(
+            trackName = trackName,
+            artistName = artistName
+        )
+
+        Log.d("fetchLyrics","track name $trackName, album name $albumName, duration $duration, artistList $artistList")
+
+        client.enqueue(object : Callback<List<LyricsResponse>> {
+            override fun onResponse(
+                call: Call<List<LyricsResponse>> ,
+                response: Response<List<LyricsResponse>>
+            ) {
+                if(response.isSuccessful){
+                    val results = response.body()?.filter { it.syncedLyrics != "null" }
+
+                    results?.forEach { result ->
+                        Log.d("fetchLyrics","response form api track name ${result.trackName}, album name ${result.albumName}, duration ${ result.duration }, artistList ${result.artistName}")
+                    }
+                    val matchedResult = results?.minByOrNull { result ->
+                        var score = 0
+                        if (!artistList.contains(result.artistName))  score++
+                        if (result.albumName != albumName)  score++
+                        if (result.duration?.toInt() == duration) {
+                            score += (duration - result.duration.toInt()).absoluteValue
+                        }
+                        score
+                    }
+                    if (matchedResult != null) {
+                        fetchTranslation(
+                            matchedResult.syncedLyrics.toString(),
+                            onSuccess = onSuccess,
+                            onError = onError
+                        )
+                    } else {
+                        onTryAgain()
+                    }
+                }
+            }
+            override fun onFailure(call: Call<List<LyricsResponse>> , t: Throwable) {
+                onError((t.cause ?: Exception("Unknown error")) as Exception)
+            }
+        })
+    }
+
+    fun fetchTranslation(
+        text: String,
+        onSuccess: (List<Pair<Int, String>>) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val client = ApiConfig.getTranslation().getTranslatedLyrics(
+            text = text
+        )
+
+        client.enqueue(object : Callback<TranslationResponse> {
+            override fun onResponse(
+                call: Call<TranslationResponse>,
+                response: Response<TranslationResponse>
+            ) {
+                if (response.isSuccessful) {
+                    onSuccess(
+                        parseLrc(
+                            response.body()?.text.toString()
+                        )
+                    )
+                } else{
+                    onSuccess(
+                        parseLrc(
+                            text
+                        )
+                    )
+                }
+
+            }
+
+            override fun onFailure(call: Call<TranslationResponse>, t: Throwable) {
+                onSuccess(
+                    parseLrc(
+                        text
+                    )
+                )
+                onError((t.cause ?: Exception("Unknown error")) as Exception)
+            }
+        })
+
+    }
+
+    fun parseLrc(syncedLyrics: String): List<Pair<Int, String>> {
+        val lrcLines = mutableListOf<Pair<Int, String>>()
+        val pattern = Pattern.compile("\\[(\\d{2}):(\\d{2})\\.(\\d{2})](.*)")
+
+        syncedLyrics.lines().forEach { line ->
+            val matcher = pattern.matcher(line)
+            if (matcher.matches()) {
+                val minutes = matcher.group(1).toInt()
+                val seconds = matcher.group(2).toInt()
+                val centiseconds = matcher.group(3).toInt()
+                val text = matcher.group(4)
+                val timeInMs = (minutes * 60 + seconds) * 1000 + centiseconds * 10
+                lrcLines.add(Pair(timeInMs, text))
+            }
+        }
+        return lrcLines
+    }
+
+
+
+
+    private fun updateLyric() {
+        val currentPosition = exoPlayer.currentPosition
+        _currentLyricIndex.value = getLyricForPosition(currentPosition)
+    }
+
+    private fun getLyricForPosition(position: Long): Int {
+        val index = lyricsData.value.indexOfLast {
+            it.first <= position
+        }
+        return index
+    }
+
+
     override fun onCleared() {
         val context = getApplication<Application>().applicationContext
         super.onCleared()
@@ -474,4 +720,6 @@ class PlayerViewModel @Inject constructor(
             context.stopService(it)
         }
     }
+
+
 }

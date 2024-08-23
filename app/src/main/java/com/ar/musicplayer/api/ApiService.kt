@@ -104,5 +104,4 @@ interface ApiService {
         @Query("__call") call: String = "webapi.get"
     ): Call<ArtistResponse>
 
-
 }

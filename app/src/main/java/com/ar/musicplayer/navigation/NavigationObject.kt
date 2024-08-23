@@ -63,3 +63,6 @@ data class ArtistInfoScreenObj(
 
 @Serializable
 object PlaylistFetchScreenObj
+
+@Serializable
+object CurrPlayingPlaylistObj

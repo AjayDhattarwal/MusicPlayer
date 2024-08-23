@@ -183,3 +183,30 @@ fun PlaylistResponse.toInfoScreenModel(): InfoScreenModel {
     )
 }
 
+
+
+// Extension function to generate all permutations of a list
+fun <T> List<T>.permutations(): Sequence<List<T>> = sequence {
+    if (size == 1) {
+        yield(this@permutations)
+    } else {
+        val sub = this@permutations[0]
+        for (perm in this@permutations.drop(1).permutations()) {
+            for (i in 0..perm.size) {
+                val newPerm = perm.toMutableList()
+                newPerm.add(i, sub)
+                yield(newPerm)
+            }
+        }
+    }
+}
+
+
+fun String.perfect(): String{
+    return this
+        .replace("&quot;", "")
+        .replace("&amp;", ",")
+        .replace("3d","")
+        .replace("song", "")
+        .replace("&#039;","")
+}
