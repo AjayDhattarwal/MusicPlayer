@@ -1,8 +1,13 @@
 package com.ar.musicplayer.utils.notification
 
+import android.Manifest
 import android.app.Notification
 import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -67,5 +72,6 @@ class NotificationManager @Inject constructor(
                 setPriority(NotificationCompat.PRIORITY_LOW)
                 setPlayer(exoPlayer)
             }
+
     }
 }

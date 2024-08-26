@@ -33,7 +33,7 @@ import com.ar.musicplayer.data.models.SongResponse
 
 
 @Composable
-fun AlbumsLazyVGrid(songsByAlbum: Map<String, List<SongResponse>>, navHostController: NavHostController ) {
+fun AlbumsLazyVGrid(songsByAlbum: Map<String, List<SongResponse>> ) {
     val list = songsByAlbum.toList()
     Column(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(

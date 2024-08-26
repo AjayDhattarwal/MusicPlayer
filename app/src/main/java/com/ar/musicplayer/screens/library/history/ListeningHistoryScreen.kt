@@ -20,11 +20,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.screens.library.components.history.HistorySongList
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListeningHistoryScreen(

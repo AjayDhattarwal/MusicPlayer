@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
@@ -46,8 +47,8 @@ fun InfoScreen(
     onBackPressed: () -> Unit,
 ) {
 
-    val isPlaying by playerViewModel.isPlaying.observeAsState(initial = false)
-    val currentPlaylistId by playerViewModel.currentPlaylistId.observeAsState()
+    val isPlaying by playerViewModel.isPlaying.collectAsState(initial = false)
+    val currentPlaylistId by playerViewModel.currentPlaylistId.collectAsState()
     val moreInfoViewModel = hiltViewModel<MoreInfoViewModel>()
     val playlistResponse by moreInfoViewModel.playlistData.observeAsState()
     val isLoading by moreInfoViewModel.isLoading.collectAsStateWithLifecycle()

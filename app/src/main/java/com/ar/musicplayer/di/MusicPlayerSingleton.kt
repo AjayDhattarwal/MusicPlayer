@@ -37,6 +37,7 @@ object MusicPlayerSingleton {
             .setAudioAttributes(audioAttributes, true)
             .setTrackSelector(DefaultTrackSelector(context))
             .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
     @Singleton
@@ -44,9 +45,9 @@ object MusicPlayerSingleton {
     fun provideMediaSession(@ApplicationContext context: Context, player: ExoPlayer): MediaSession =
         MediaSession.Builder(context, player).build()
 
+    @UnstableApi
     @Singleton
     @Provides
-    @UnstableApi
     fun provideNotificationManager(@ApplicationContext context: Context, exoPlayer: ExoPlayer,favoriteDataRepository: FavoriteDataRepository): NotificationManager =
         NotificationManager(context,favoriteDataRepository, exoPlayer)
 

@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -48,14 +49,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.ar.musicplayer.components.mix.AlbumsLazyVGrid
+import com.ar.musicplayer.components.mix.ArtistsLazyColumn
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.SongResponse
 import kotlinx.coroutines.launch
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoriteScreen(
@@ -64,7 +70,15 @@ fun FavoriteScreen(
     favViewModel: FavoriteViewModel,
 ) {
 
-    val songResponseList by favViewModel.favSongList.observeAsState()
+    val songResponseList by favViewModel.favSongList.collectAsState()
+    val songByArtist by favViewModel.songsByArtist.collectAsState()
+    val songByAlbum by favViewModel.songsByAlbum.collectAsState()
+
+    Log.d("size","size in fav screen:   ${songResponseList.size}")
+    Log.d("size","size in fav screen:   ${songByArtist.size}")
+    Log.d("size","size in fav screen:   ${songByAlbum.size}")
+
+
     val scope = rememberCoroutineScope()
     val titles = listOf("Songs", "Albums", "Artists", "Genres")
     val pagerState = rememberPagerState(initialPage = 0,pageCount = {titles.size})
@@ -134,9 +148,9 @@ fun FavoriteScreen(
             ) { page ->
 
                 when (page) {
-                    0 -> songResponseList?.let { SongsScreen(it,playerViewModel) }
-                    1 -> AlbumsScreen()
-                    2 -> ArtistsScreen()
+                    0 -> SongsScreen(songResponseList,playerViewModel)
+                    1 -> AlbumsLazyVGrid(songByAlbum)
+                    2 -> ArtistsLazyColumn(songByArtist)
                     3 -> GenresScreen()
                 }
             }
@@ -145,6 +159,7 @@ fun FavoriteScreen(
     }
 }
 
+@UnstableApi
 @Composable
 fun SongsScreen(
     songResponse: List<SongResponse>,
@@ -231,19 +246,10 @@ fun SongsScreen(
 }
 
 @Composable
-fun AlbumsScreen() {
-    Text("Albums content goes here",color = Color.White)
-}
-
-@Composable
-fun ArtistsScreen() {
-    Text("Artists content goes here", color = Color.White)
-}
-
-@Composable
 fun GenresScreen() {
     Text("Genres content goes here", color = Color.White)
 }
+
 
 
 @Preview

@@ -122,6 +122,8 @@ dependencies {
     //music player
     implementation (libs.accompanist.systemuicontroller)
     implementation (libs.androidx.media3.exoplayer)
+    implementation (libs.androidx.media3.session)
+
     implementation (libs.exoplayer.core)
     // ExoPlayer UI module (contains PlayerNotificationManager)
     implementation (libs.exoplayer.ui)

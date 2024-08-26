@@ -2,11 +2,14 @@ package com.ar.musicplayer.utils.roomdatabase.favoritedb
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.data.repository.FavoriteDataRepository
 import com.ar.musicplayer.data.models.SongResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,7 +29,13 @@ class FavoriteViewModel @Inject constructor(
         }
     }
 
-    val favSongList: LiveData<List<SongResponse>> = repository.mapFavSongsToSongResponse()
+    val favSongList: StateFlow<List<SongResponse>> = repository.favSongsStateFlow
+
+    val songsByArtist: StateFlow<Map<String, List<SongResponse>>>  = repository.songsByArtist
+
+    val songsByAlbum: StateFlow<Map<String, List<SongResponse>>> = repository.songsByAlbum
+
+
 
 
     fun isFavoriteSong(songId: String): Flow<Boolean> {

@@ -181,7 +181,7 @@ fun MyMusicScreen(
                         modifier = Modifier.pullRefresh(pullRefreshState),
                     )
 
-                    1 -> AlbumsLazyVGrid(songsByAlbum, navController)
+                    1 -> AlbumsLazyVGrid(songsByAlbum)
                     2 -> ArtistsLazyColumn(songsByArtist)
                     3 -> LocalGenresScreen()
                 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -26,10 +27,10 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 fun CurrPlayingPlaylist(){
     val playerViewModel: PlayerViewModel = hiltViewModel()
     val lazyListState = rememberLazyListState()
-    val currentIndex by playerViewModel.currentIndex.observeAsState(0)
-    val playlist by playerViewModel.playlist.observeAsState()
-    val isPlaying by playerViewModel.isPlaying.observeAsState(false)
-    val currentSong by playerViewModel.currentSong.observeAsState()
+    val currentIndex by playerViewModel.currentIndex.collectAsState(0)
+    val playlist by playerViewModel.playlist.collectAsState()
+    val isPlaying by playerViewModel.isPlaying.collectAsState(false)
+    val currentSong by playerViewModel.currentSong.collectAsState()
 
     LaunchedEffect(Unit) {
         lazyListState.scrollToItem(currentIndex)

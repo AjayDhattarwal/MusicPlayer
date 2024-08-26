@@ -2,11 +2,17 @@ package com.ar.musicplayer.di
 
 import android.content.ContentResolver
 import android.content.Context
+import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.data.repository.FavoriteDataRepository
 import com.ar.musicplayer.data.repository.HomeDataRepository
 import com.ar.musicplayer.data.repository.LastSessionRepository
 import com.ar.musicplayer.data.repository.SongDetailsRepository
 import com.ar.musicplayer.api.ApiService
+import com.ar.musicplayer.api.LyricsByLrclib
+import com.ar.musicplayer.api.Translate
+import com.ar.musicplayer.data.models.LyricsResponse
+import com.ar.musicplayer.data.repository.LyricRepository
+import com.ar.musicplayer.data.repository.PlayerRepository
 import com.ar.musicplayer.data.repository.PlaylistRepository
 import com.ar.musicplayer.utils.download.MusicDownloadRepository
 import com.ar.musicplayer.utils.helper.NetworkConnectivityObserver
@@ -66,4 +72,30 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun providePlaylistRepository(apiService: ApiService) = PlaylistRepository(apiService)
+
+
+    @Provides
+    @Singleton
+    fun provideLyricRepository(
+        lyricsByLrclib: LyricsByLrclib,
+        translationService: Translate
+    ) = LyricRepository(lyricsByLrclib,translationService)
+
+
+    @Provides
+    @Singleton
+    fun providePlayerRepository(
+        @ApplicationContext context: Context,
+        exoPlayer: ExoPlayer,
+        lyricRepository: LyricRepository,
+        lastSessionRepository : LastSessionRepository,
+        songDetailsRepository : SongDetailsRepository
+    ) =
+        PlayerRepository(
+            application = context,
+            exoPlayer = exoPlayer,
+            lyricRepository = lyricRepository,
+            lastSessionRepository = lastSessionRepository,
+            songDetailsRepository =  songDetailsRepository,
+        )
 }

@@ -1,5 +1,6 @@
 package com.ar.musicplayer.data.repository
 
+import android.util.Log
 import com.ar.musicplayer.api.ApiService
 import com.ar.musicplayer.api.LyricsByLrclib
 import com.ar.musicplayer.api.Translate
@@ -9,9 +10,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.regex.Pattern
+import javax.inject.Inject
 import kotlin.math.absoluteValue
 
-class LyricRepository(
+class LyricRepository @Inject constructor(
     private val apiService: LyricsByLrclib,
     private val translationService: Translate
 ) {
@@ -24,6 +26,7 @@ class LyricRepository(
         onSuccess: (List<Pair<Int, String>>) -> Unit,
         onError: (Exception) -> Unit
     ) {
+
         var count = 0
 
         fun tryFetch() {
@@ -60,9 +63,11 @@ class LyricRepository(
         onError: (Exception) -> Unit,
         onTryAgain: () -> Unit
     ) {
+
         apiService.getLyricsLrclib(trackName, artistName).enqueue(object :
             Callback<List<LyricsResponse>> {
             override fun onResponse(call: Call<List<LyricsResponse>>, response: Response<List<LyricsResponse>>) {
+                Log.d("lyrics", "Lyrics :::::: called ${response.message()} ")
                 if (response.isSuccessful) {
                     val results = response.body()?.filter { it.syncedLyrics != "null" }
                     val matchedResult = results?.minByOrNull { result ->
@@ -83,10 +88,13 @@ class LyricRepository(
                     } else {
                         onTryAgain()
                     }
+
                 }
             }
 
+
             override fun onFailure(call: Call<List<LyricsResponse>>, t: Throwable) {
+                Log.d("lyrics", "Lyrics :::::: error ${t.message} ")
                 onError((t.cause ?: Exception("Unknown error")) as Exception)
             }
         })

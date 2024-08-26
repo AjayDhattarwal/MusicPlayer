@@ -120,10 +120,10 @@ fun MusicPlayerScreen(
 
     val favourite = hiltViewModel<FavoriteViewModel>()
 
-    val isPlaying by playerViewModel.isPlaying.observeAsState(false)
-    val currentSong by playerViewModel.currentSong.observeAsState()
-    val currentPosition by playerViewModel.currentPosition.observeAsState(0L)
-    val duration by playerViewModel.duration.observeAsState(0L)
+    val isPlaying by playerViewModel.isPlaying.collectAsState(false)
+    val currentSong by playerViewModel.currentSong.collectAsState()
+    val currentPosition by playerViewModel.currentPosition.collectAsState(0L)
+    val duration by playerViewModel.duration.collectAsState(0L)
     val lyricsData by playerViewModel.lyricsData.collectAsState()
     val currentLyricIndex = playerViewModel.currentLyricIndex.observeAsState(0)
     val isLyricsLoading by playerViewModel.isLyricsLoading.collectAsStateWithLifecycle()
@@ -131,8 +131,8 @@ fun MusicPlayerScreen(
     val repeatMode by playerViewModel.repeatMode.observeAsState(Player.REPEAT_MODE_OFF)
     val shuffleModeEnabled by playerViewModel.shuffleModeEnabled.observeAsState(false)
 
-    val playlist by playerViewModel.playlist.observeAsState(emptyList())
-    val currentIndex by playerViewModel.currentIndex.observeAsState(0)
+    val playlist by playerViewModel.playlist.collectAsState(emptyList())
+    val currentIndex by playerViewModel.currentIndex.collectAsState(0)
 
     val isFavouriteFlow by remember {
         derivedStateOf {
