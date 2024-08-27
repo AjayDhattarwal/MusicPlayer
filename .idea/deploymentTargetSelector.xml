@@ -26,9 +26,6 @@
           </targets>
         </DialogSelection>
       </SelectionState>
-      <SelectionState runConfigName="AnimatedSearchBarPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="SearchMyMusicPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>

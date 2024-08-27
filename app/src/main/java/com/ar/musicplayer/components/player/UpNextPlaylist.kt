@@ -26,14 +26,15 @@ import com.ar.musicplayer.data.models.SongResponse
 fun NextPlaylist(
     songResponse: SongResponse,
     isPlaying: Boolean,
-    currentSong: () -> SongResponse?,
+    showAnim: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ){
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 5.dp, top = 10.dp)
-            .clickable{
+            .clickable {
                 onClick()
             },
         verticalAlignment = Alignment.CenterVertically
@@ -74,12 +75,17 @@ fun NextPlaylist(
             )
         }
 
-        if(currentSong() == songResponse) {
+        if(showAnim) {
             MusicPlayingAnimation(isPlaying = isPlaying, modifier = Modifier
                 .padding(start = 10.dp, end = 10.dp)
                 .width(80.dp)
                 .height(30.dp))
         }
+
+
+    }
+}
+
 
 //        if(currentSong != songResponse){
 //
@@ -127,5 +133,3 @@ fun NextPlaylist(
 //                .width(80.dp)
 //                .height(30.dp))
 //        }
-    }
-}

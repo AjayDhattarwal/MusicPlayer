@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,7 +15,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.api.ApiConfig
@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.switchMap
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -471,6 +472,55 @@ class PlayerRepository @Inject constructor(
     fun skipPrevious() {
         exoPlayer.seekToPreviousMediaItem()
     }
+
+    fun removeTrack(index: Int) {
+        val currentList = playlist.value
+
+        if (index in currentList.indices) {
+            val updatedList = currentList.toMutableList().apply {
+                removeAt(index)
+            }
+            _playlist.value = updatedList
+        }
+
+        val mediaItemCount = exoPlayer.mediaItemCount
+        if (index in 0 until mediaItemCount) {
+            exoPlayer.removeMediaItem(index)
+            _currentIndex.value = exoPlayer.currentMediaItemIndex
+        }
+
+    }
+
+
+    fun replaceIndex(add: Int, remove: Int) {
+        val mediaItem = exoPlayer.getMediaItemAt(remove)
+        var currentList = _playlist.value
+        val track = currentList[remove]
+
+        if (remove in currentList.indices) {
+            val updatedList = currentList.toMutableList().apply {
+                removeAt(remove)
+            }
+            currentList = updatedList
+        }
+
+
+        val newList = currentList.toMutableList().apply {
+            if (add in 0..size) {
+                add(add, track)
+            }
+        }
+        _playlist.value = newList.distinct()
+
+        exoPlayer.removeMediaItem(remove)
+        exoPlayer.addMediaItem(add,mediaItem)
+        _currentIndex.value = exoPlayer.currentMediaItemIndex
+
+
+        exoPlayer.prepare()
+
+    }
+
 
     private fun updateLyric() {
         val currentPosition = exoPlayer.currentPosition

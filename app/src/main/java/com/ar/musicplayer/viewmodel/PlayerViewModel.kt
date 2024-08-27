@@ -144,8 +144,13 @@ class PlayerViewModel @Inject constructor(
         playerRepository.setPlaylist(newPlaylist, playlistId)
     }
 
+    fun removeTrack(index: Int){
+        playerRepository.removeTrack(index)
+    }
 
-
+    fun replaceIndex(add: Int, remove: Int) {
+        playerRepository.replaceIndex(add, remove)
+    }
 
 
 //    private val _currentLyricIndex = MutableLiveData<Int>(0)
