@@ -30,8 +30,8 @@ import coil.compose.AsyncImage
 
 @Composable
 fun TopProfileBar(
-    title: String = "UserName",
     modifier: Modifier = Modifier,
+    title: String = "UserName",
     color: Color = Color.White,
     onClick: () -> Unit,
     onUserFiledClick: () -> Unit
@@ -75,7 +75,7 @@ fun TopProfileBar(
             )
         }
         IconButton(
-            onClick = {onClick()},
+            onClick = onClick,
             modifier = Modifier.padding(start = 10.dp)
         ) {
             Icon(

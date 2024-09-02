@@ -3,7 +3,10 @@ package com.ar.musicplayer.utils.download
 import android.content.Context
 import android.os.Environment
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.perfect
+import com.ar.musicplayer.data.models.toSongDownloadEntity
 import com.ar.musicplayer.utils.PreferencesManager
+import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -17,39 +20,46 @@ class MusicDownloadRepository @Inject constructor(
     val downloadQuality = preferencesManager.getDownloadQuality()
     val downloadPath  = preferencesManager.getDownloadLocation()
     suspend fun downloadSong(
-        songResponse: SongResponse,
-        onProgress: (Int) -> Unit
+        songResponse: SongDownloadEntity,
+        onProgress: (Int) -> Unit,
+        onCompleted: () -> Unit,
     ) {
         withContext(Dispatchers.IO) {
             handleMp4ToMp3Conversion(
                 context = context,
-                songResponse = songResponse,
+                entity = songResponse,
                 downloadQuality = downloadQuality,
                 downloadPath = downloadPath,
                 onProgress = {
                     onProgress(it)
                 },
                 onComplete = {
-
+                    onCompleted()
                 })
         }
     }
 
+
     fun deleteSong(songResponse: SongResponse) {
-        val file = File(getFilePath(songResponse))
+        val artist = songResponse.moreInfo?.artistMap?.artists
+            ?.distinctBy { it.name }
+            ?.joinToString ( "," ) {it.name.toString()}
+            ?.perfect()
+            .toString()
+        val file = File(getFilePath(songResponse.title.toString(), artist))
         if (file.exists()) {
             file.delete()
         }
     }
 
-    fun isFileExist(songResponse: SongResponse, onFileExist: (Boolean) -> Unit) {
-        val file = File(getFilePath(songResponse)).exists()
-        onFileExist(file)
+    fun isDownloaded(downloadEntity: SongDownloadEntity): Boolean {
+        val file = File(getFilePath(downloadEntity.title, downloadEntity.artist)).exists()
+        return file
     }
 
-    private fun getFilePath(songResponse: SongResponse): String {
-        val musicFolderPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).absolutePath
-        return "$musicFolderPath/${songResponse.title} - ${songResponse.moreInfo?.artistMap?.artists?.get(0)?.name}.mp3"
+    private fun getFilePath(title: String, artist: String): String {
+        val musicFolderPath = downloadPath
+        return "$musicFolderPath/${title} - ${artist}.mp3"
     }
 
 

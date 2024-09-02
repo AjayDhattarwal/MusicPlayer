@@ -2,6 +2,7 @@ package com.ar.musicplayer.utils.roomdatabase.dbmodels
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.ar.musicplayer.utils.download.DownloadStatus
 
 @Entity
 data class HomeDataEntity(
@@ -31,7 +32,7 @@ data class HomeDataEntity(
 @Entity
 data class LastSessionDataEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int? = null,
+    val id: Int ?= null,
     val title: String,
     val genres: String,
     val playCount: Int,
@@ -61,4 +62,19 @@ data class FavSongResponseEntity(
     val ctr: Int,
     val entity: String,
     val role: String
+)
+
+
+@Entity(tableName = "downloads")
+data class SongDownloadEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val artist: String,
+    val url: String,
+    val progress: Int = 0,
+    val status: DownloadStatus = DownloadStatus.NOT_DOWNLOADED,
+    val album: String,
+    val genre: String,
+    val imageUrl: String,
+    val is320kbps: Boolean
 )

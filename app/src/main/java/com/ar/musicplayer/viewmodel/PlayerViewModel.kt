@@ -64,8 +64,6 @@ class PlayerViewModel @Inject constructor(
     private val lastSessionRepository: LastSessionRepository
 ) : AndroidViewModel(application) {
 
-
-
     val currentPosition: StateFlow<Long> = playerRepository.currentPosition
     val duration: StateFlow<Long> = playerRepository.duration
     val currentIndex: StateFlow<Int> = playerRepository.currentIndex
@@ -141,7 +139,15 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
-        playerRepository.setPlaylist(newPlaylist, playlistId)
+        try {
+            // Ensure the playlist is not null
+            checkNotNull(playlist) { "Playlist is null" }
+
+            playerRepository.setPlaylist(newPlaylist, playlistId)
+
+        } catch (e: Exception) {
+            Log.e("PlayerRepository", "Error setting playlist", e)
+        }
     }
 
     fun removeTrack(index: Int){

@@ -3,6 +3,8 @@ package com.ar.musicplayer.di
 import android.content.Context
 import androidx.room.Room
 import androidx.work.WorkManager
+import com.ar.musicplayer.utils.roomdatabase.downloadDb.DownloadDao
+import com.ar.musicplayer.utils.roomdatabase.downloadDb.DownloadDatabase
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavDao
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteDatabase
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
@@ -51,17 +53,35 @@ object DatabaseModule {
         ).build()
     }
 
+
     @Provides
+    @Singleton
+    fun provideDownloadDatabase(@ApplicationContext context: Context): DownloadDatabase {
+        return DownloadDatabase.getDatabase(context)
+    }
+
+
+
+    @Provides
+    @Singleton
     fun provideHomeDataDao(database: HomeDatabase): HomeDataDao {
         return database.dao
     }
     @Provides
+    @Singleton
     fun provideLastSessionDao(database: LastSessionDatabase): LastSessionDao {
         return  database.dao
     }
 
     @Provides
+    @Singleton
     fun provideFavoriteDao(database: FavoriteDatabase): FavDao {
         return database.dao
+    }
+
+    @Provides
+    @Singleton
+    fun provideDownloadDao(database: DownloadDatabase): DownloadDao{
+        return database.downloadDao()
     }
 }

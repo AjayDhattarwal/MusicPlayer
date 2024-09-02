@@ -1,5 +1,7 @@
 package com.ar.musicplayer.components.home
 
+import android.util.Log
+import androidx.annotation.OptIn
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,11 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,21 +36,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 
+@OptIn(UnstableApi::class)
 @Composable
 fun LastSessionGridLayout(
     modifier: Modifier = Modifier,
     onRecentSongClicked: (SongResponse) -> Unit,
-    lastSessionList: List<Pair<Int?, SongResponse>>
+    playerViewModel: PlayerViewModel
 ) {
 
-    val gridHeight = if (lastSessionList.size < 2) 80.dp else if (lastSessionList.size in 2..6) 180.dp else 280.dp
-    val gridCells = if (lastSessionList.size < 2) 1 else if (lastSessionList.size in 2..6) 2 else 3
+    val lastSession by playerViewModel.lastSession.collectAsState()
+    val lastSessionList by remember {
+        derivedStateOf {
+            lastSession
+        }
+    }
+    val gridHeight by remember {
+        derivedStateOf {
+            if (lastSessionList.size < 2) 80.dp else if (lastSessionList.size in 2..6) 180.dp else 280.dp
+        }
+    }
 
+    val gridCells by remember {
+        derivedStateOf {
+            if (lastSessionList.size < 2) 1 else if (lastSessionList.size in 2..6) 2 else 3
+        }
+    }
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -66,10 +92,12 @@ fun LastSessionGridLayout(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(8.dp),
-            modifier = Modifier.animateContentSize().height(gridHeight)
+            modifier = Modifier
+                .animateContentSize()
+                .height(gridHeight)
         ) {
 
-            itemsIndexed(lastSessionList, key = {index, item -> index }) { index,songResponse ->
+            itemsIndexed(lastSessionList, key = {index, item -> (item.second.id + index) }) { index,songResponse ->
                 Card(
                     modifier = Modifier
                         .height(50.dp)
@@ -77,8 +105,7 @@ fun LastSessionGridLayout(
                         .clip(RoundedCornerShape(1.dp))
                         .clickable {
                             onRecentSongClicked(songResponse.second)
-                        }
-                    ,
+                        },
                     colors = CardColors(
                         containerColor = Color(0xBC383838),
                         contentColor = Color.Transparent,

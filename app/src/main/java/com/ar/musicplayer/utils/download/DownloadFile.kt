@@ -7,6 +7,7 @@ import android.os.Environment
 import android.util.Log
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.utils.PreferencesManager
+import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.mpatric.mp3agic.ID3v24Tag
@@ -29,42 +30,40 @@ import okio.*
 
 fun handleMp4ToMp3Conversion(
     context: Context,
-    songResponse: SongResponse,
+    entity: SongDownloadEntity,
     downloadQuality: String,
     downloadPath: String,
     onProgress: (Int) -> Unit,
     onComplete: (Boolean) -> Unit
 ) {
-    val mp4Url = decodeDES(songResponse.moreInfo?.encryptedMediaUrl.toString(),songResponse.moreInfo?.kbps320 ?:false, downloadQuality = downloadQuality)
-    val title = songResponse.title
-    val artist = songResponse.moreInfo?.artistMap?.artists?.get(0)?.name ?: ""
-    val artist2 = songResponse.moreInfo?.artistMap?.artists?.get(1)?.name ?: ""
-    val finalArtist = if (artist.isEmpty()) songResponse.moreInfo?.artistMap?.primaryArtists?.get(0)?.name ?: "" else artist
-    val album = songResponse.moreInfo?.album ?: ""
-    val genre = songResponse.role ?: ""
-    val imageFile = songResponse.image?.replace("150x150", "350x350") ?: ""
 
-    val musicFolderPath = downloadPath
+    val mp4Url = decodeDES(entity.url,entity.is320kbps, downloadQuality = downloadQuality)
 
-    val tempFileName = "${title} - ${finalArtist}_temp.mp3"
+    val tempFileName = "${entity.title} - ${entity.artist}_temp.mp3"
     val tempFilePath = File(context.cacheDir, tempFileName).absolutePath
-
-    val downloadPath = File(context.filesDir, "downloaded.mp4").absolutePath
     val mp3Path = tempFilePath
 
-    val mp4File = File(downloadPath)
+    val tempMp4 = File(context.filesDir, "downloaded.mp4").absolutePath
+    val mp4File = File(tempMp4)
 
     downloadFile(mp4Url, mp4File,
         onProgress = { progress ->
-            // Update your progress bar or display the progress here
-            println("Download progress: $progress%")
             onProgress(progress)
         },
         onComplete = { success ->
             if(success){
                 convertMp4ToMp3(mp4File.absolutePath, mp3Path) { conversionSuccess ->
                     if (conversionSuccess) {
-                        addMetadataToMp3(tempFilePath, title.toString(), artist, album,genre,imageFile)
+                        addMetadataToMp3(
+                            tempFilePath,
+                            entity.title,
+                            entity.artist,
+                            entity.album,
+                            entity.genre,
+                            entity.imageUrl,
+                            downloadPath,
+                            onComplete = onComplete
+                        )
                     }
                 }
             }
@@ -73,24 +72,44 @@ fun handleMp4ToMp3Conversion(
 }
 
 fun convertMp4ToMp3(inputPath: String, outputPath: String, onComplete: (Boolean) -> Unit) {
+    val outputFile = File(outputPath)
 
+    // Check if the output file exists and delete it if necessary
+    if (outputFile.exists()) {
+        if (!outputFile.delete()) {
+            Log.e("FileError", "Failed to delete existing file: $outputPath")
+            onComplete(false)
+            return
+        }
+    }
+
+    // FFmpeg command for converting MP4 to MP3
     val command = "-i \"$inputPath\" -q:a 0 -map a \"$outputPath\""
 
+    // Execute FFmpeg command
     FFmpegKit.executeAsync(command) { session ->
         val returnCode = session.returnCode
         val logs = session.allLogsAsString
         if (ReturnCode.isSuccess(returnCode)) {
+            Log.i("FFmpegKit", "Conversion successful. Output file: $outputPath")
             onComplete(true)
         } else {
             Log.e("FFmpegKit", "Command failed with state ${session.state} and returnCode $returnCode. Logs: $logs")
             onComplete(false)
         }
     }
-
-
 }
 
-fun addMetadataToMp3(tempFilePath: String, title: String, artist: String, album: String, genre: String, imageUrl: String?) {
+fun addMetadataToMp3(
+    tempFilePath: String,
+    title: String,
+    artist: String,
+    album: String,
+    genre: String,
+    imageUrl: String?,
+    savePath: String,
+    onComplete: (Boolean) -> Unit
+) {
     try {
         println("Adding metadata to MP3: $tempFilePath")
 
@@ -124,19 +143,31 @@ fun addMetadataToMp3(tempFilePath: String, title: String, artist: String, album:
         // Set the ID3v2 tag back to the MP3 file
         mp3File.id3v2Tag = id3v2Tag
 
-        val finalFilePath  = tempFilePath.replace("_temp","")
+        val newPath = getFilePath(title, artist, savePath)
+        val newFile = File(newPath)
+        val parentDir = newFile.parentFile
 
-        // Save the MP3 file with updated metadata to the final file location
-        mp3File.save(finalFilePath)
+        if (parentDir != null && !parentDir.exists()) {
+            try {
+                parentDir.mkdirs()
+            } catch (e: IOException) {
+                Log.e("FileError", "Failed to create directory: ${parentDir.path}", e)
+                return
+            }
+        }
 
-        // Delete the temporary file
+
+        mp3File.save(newPath)
+
         File(tempFilePath).delete()
 
-        println("Metadata added successfully to MP3: $finalFilePath")
+        println("Metadata added successfully to MP3: $savePath")
+
+        onComplete(true)
 
     } catch (e: Exception) {
-        // Print stack trace if an error occurs during metadata addition
         e.printStackTrace()
+        onComplete(false)
     }
 }
 
@@ -175,7 +206,6 @@ private fun decodeDES(input: String, kbps320: Boolean,downloadQuality: String): 
         decoded = decoded.replace("96.mp4","${downloadQuality}.mp4")
         Log.d("320", " not 320 decoded: $decoded")
     }
-
     return decoded
 }
 
@@ -213,6 +243,11 @@ fun downloadFile(url: String, outputFile: File, onProgress: (Int) -> Unit, onCom
             }
         }
     })
+}
+
+private fun getFilePath(title: String, artist: String, downloadPath: String): String {
+    val musicFolderPath = downloadPath
+    return "$musicFolderPath/${title} - ${artist}.mp3"
 }
 
 private class ProgressResponseBody(

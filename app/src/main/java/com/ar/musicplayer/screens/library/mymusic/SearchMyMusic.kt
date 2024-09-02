@@ -35,7 +35,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.ar.musicplayer.viewmodel.PlayerViewModel
@@ -44,12 +46,13 @@ import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
 import kotlinx.coroutines.launch
 
+@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchMyMusic(
-    navController: NavHostController,
-    playerViewModel: PlayerViewModel,
-    localSongsViewModel: LocalSongsViewModel
+    playerViewModel: PlayerViewModel = hiltViewModel(),
+    localSongsViewModel: LocalSongsViewModel = hiltViewModel(),
+    onBackPressed: () -> Unit,
 ) {
     val context = LocalContext.current
     var searchText by remember { mutableStateOf("") }
@@ -61,20 +64,28 @@ fun SearchMyMusic(
     }
     val scope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val showSearchHistory by remember{
+        derivedStateOf {
+            searchText == ""
+        }
+    }
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .background(Color.Black)) {
+        .background(Color.Black)
+    ) {
         SearchTopAppBar(
             searchText = searchText,
             onSearchTextChange = { searchText = it },
-            onCloseClicked = {
-                if (searchText == "") {
-                    navController.navigateUp()
-                } else {
-                    searchText = ""
+            onCloseClicked =  remember{
+                {
                     scope.launch {
                         keyboardController?.hide()
+                    }
+                    if (searchText == "") {
+                        onBackPressed()
+                    } else {
+                        searchText = ""
                     }
                 }
             },
@@ -83,18 +94,19 @@ fun SearchMyMusic(
                 .statusBarsPadding()
                 .padding(10.dp)
         )
-        if (searchText.isEmpty()) {
+        if (showSearchHistory) {
             Text(
                 text = "Search History",
                 color = Color.White,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         } else {
-            SearchResultsOfMyMusic(searchResults,playerViewModel)
+//            SearchResultsOfMyMusic(searchResults,playerViewModel)
         }
     }
 }
 
+@UnstableApi
 @Composable
 fun SearchResultsOfMyMusic(searchResults: List<SongResponse>, playerViewModel: PlayerViewModel) {
     LazyColumn {
@@ -159,7 +171,9 @@ fun SearchResultsOfMyMusic(searchResults: List<SongResponse>, playerViewModel: P
             }
         }
         item {
-            Spacer(modifier = Modifier.height(125.dp).navigationBarsPadding())
+            Spacer(modifier = Modifier
+                .height(125.dp)
+                .navigationBarsPadding())
         }
     }
 }
@@ -175,14 +189,11 @@ fun searchSongs(songs: List<SongResponse>, query: String): List<SongResponse> {
 }
 
 
+@UnstableApi
 @Preview(showBackground = true)
 @Composable
 fun SearchMyMusicPreview() {
-    val viewModel = viewModel<LocalSongsViewModel>()
-    val playerViewModel = viewModel<PlayerViewModel>()
-    SearchMyMusic(
-        navController = NavHostController(LocalContext.current),
-        playerViewModel = playerViewModel,
-        localSongsViewModel = viewModel
-    )
+    SearchMyMusic(){
+
+    }
 }

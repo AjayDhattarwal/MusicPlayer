@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -42,7 +43,7 @@ fun SearchTopAppBar(
                 shape = RoundedCornerShape(percent = 10)
             )
             .onFocusChanged {
-                if(!it.isFocused){
+                if (!it.isFocused) {
                     keyboardController?.hide()
                 }
             },
@@ -54,11 +55,12 @@ fun SearchTopAppBar(
             )
         },
         trailingIcon = {
-            Icon(
-                imageVector = Icons.Filled.Clear,
-                contentDescription = "clear",
-                modifier = Modifier.clickable { onCloseClicked() }
-            )
+            IconButton(onClick = { onCloseClicked()}) {
+                Icon(
+                    imageVector = Icons.Filled.Clear,
+                    contentDescription = "clear",
+                )
+            }
 
         },
         colors = TextFieldDefaults.textFieldColors(

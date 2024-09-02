@@ -5,36 +5,24 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
-import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -42,25 +30,44 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.util.lerp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.ar.musicplayer.components.CircularProgress
-import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.navigation.currentFraction
 import com.ar.musicplayer.screens.library.mymusic.toPx
-import com.ar.musicplayer.utils.PreferencesManager
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlin.math.absoluteValue
 
 @UnstableApi
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AnimatedHorizontalPager(
-    pagerState: PagerState,
     modifier: Modifier = Modifier,
+    playerViewModel: PlayerViewModel = hiltViewModel(),
     bottomSheetState: BottomSheetScaffoldState,
-    playlist: List<SongResponse>
 ) {
+    val playlist by playerViewModel.playlist.collectAsState(emptyList())
+    val currentIndex by playerViewModel.currentIndex.collectAsState()
+    val currentSong by playerViewModel.currentSong.collectAsState()
+
+    val pagerState = rememberPagerState(pageCount = {playlist.size})
+
+    LaunchedEffect(playlist) {
+        pagerState.scrollToPage(currentIndex)
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (currentIndex != pagerState.currentPage) {
+            playerViewModel.changeSong(pagerState.currentPage)
+        }
+    }
+
+    LaunchedEffect(currentSong) {
+        if (currentIndex != pagerState.currentPage) {
+            pagerState.scrollToPage(currentIndex)
+        }
+    }
 
     val size by animateDpAsState(targetValue = lerp(
         70.dp,
@@ -73,6 +80,7 @@ fun AnimatedHorizontalPager(
         LocalConfiguration.current.screenWidthDp.dp,
         bottomSheetState.currentFraction
     ))
+
 
     HorizontalPager(
         state = pagerState,
@@ -135,3 +143,8 @@ fun AnimatedHorizontalPager(
     }
 }
 
+fun getSizeBasedOnFraction(minSize: Dp, maxSize: Dp,fraction: Float): Dp {
+
+    // Linear interpolation between minSize and maxSize
+    return minSize + (maxSize - minSize) * fraction
+}

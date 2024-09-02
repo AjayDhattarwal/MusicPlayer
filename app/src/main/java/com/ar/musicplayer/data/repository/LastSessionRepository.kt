@@ -6,26 +6,47 @@ import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.LastSessionDataEntity
 import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDao
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 class LastSessionRepository @Inject constructor(
     private val lastSessionDao: LastSessionDao
 ) {
 
-    val listeningHistory: LiveData<List<Pair<Int?, SongResponse>>> =
-        lastSessionDao.getHistory().map { lastSessionDataEntities ->
-            lastSessionDataEntities.map { history->
-                history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
-            }
-        }.asLiveData()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    val lastSession: LiveData<List<Pair<Int?, SongResponse>>> =
-        lastSessionDao.getLastSession().map { lastSessionDataEntities ->
-            lastSessionDataEntities.map { history->
-                history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
+    // Convert to StateFlow
+    val listeningHistory: StateFlow<List<Pair<Int?, SongResponse>>> =
+        lastSessionDao.getHistory()
+            .map { lastSessionDataEntities ->
+                lastSessionDataEntities.map { history ->
+                    history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
+                }
             }
-        }.asLiveData()
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+
+    val lastSession: StateFlow<List<Pair<Int?, SongResponse>>> =
+        lastSessionDao.getLastSession()
+            .map { lastSessionDataEntities ->
+                lastSessionDataEntities.map { history ->
+                    history.id to Gson().fromJson(history.lastSession, SongResponse::class.java)
+                }
+            }
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
 
     suspend fun getLastSessionForPlaying(): List<Pair<Int?, SongResponse>> {
         return lastSessionDao.getLastSessionForPlaying().map { history ->

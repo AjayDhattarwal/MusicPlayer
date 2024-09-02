@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ar.musicplayer.navigation.FavoriteScreenObj
 import com.ar.musicplayer.navigation.ListeningHisScreenObj
@@ -37,8 +36,11 @@ import com.ar.musicplayer.navigation.PlaylistFetchScreenObj
 import com.ar.musicplayer.navigation.SettingsScreenObj
 
 @Composable
-fun LibraryScreen(navController: NavHostController, brush: Brush){
-    Box(modifier = Modifier.fillMaxSize().background(brush)){
+fun  LibraryScreen(
+    background: Brush,
+    onScreenSelect :  (Any) -> Unit
+){
+    Box(modifier = Modifier.fillMaxSize().background(background)){
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -53,7 +55,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                     color = Color.White,
                     fontSize = MaterialTheme.typography.titleLarge.fontSize
                 )
-                IconButton(onClick = { navController.navigate(SettingsScreenObj) }) {
+                IconButton(onClick = { onScreenSelect(SettingsScreenObj) }) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -66,7 +68,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                     .fillMaxWidth()
                     .padding(top = 10.dp)
                     .clickable {
-                        navController.navigate(FavoriteScreenObj)
+                        onScreenSelect(FavoriteScreenObj)
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -104,7 +106,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp)
-                    .clickable { navController.navigate(ListeningHisScreenObj) },
+                    .clickable {  onScreenSelect(ListeningHisScreenObj) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -125,7 +127,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                     .fillMaxWidth()
                     .padding(top = 10.dp)
                     .clickable {
-                        navController.navigate(MyMusicScreenObj)
+                        onScreenSelect(MyMusicScreenObj)
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -164,7 +166,7 @@ fun LibraryScreen(navController: NavHostController, brush: Brush){
                     .fillMaxWidth()
                     .padding(top = 10.dp)
                     .clickable {
-                        navController.navigate(PlaylistFetchScreenObj)
+                       onScreenSelect(PlaylistFetchScreenObj)
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -195,5 +197,5 @@ fun LibraryScreenPreview(){
             startY = Float.POSITIVE_INFINITY,
             endY = 0f
         )
-    LibraryScreen(rememberNavController(),blackToGrayGradient)
+    LibraryScreen(blackToGrayGradient,){ _-> }
 }

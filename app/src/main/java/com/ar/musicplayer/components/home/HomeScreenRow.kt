@@ -12,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +45,13 @@ fun HomeScreenRow(
     if(data.isNullOrEmpty()){
         return
     }
+
+    val list by remember {
+        derivedStateOf {
+            data
+        }
+    }
+
     Column(Modifier) {
 
         Heading(title = title)
@@ -53,7 +61,7 @@ fun HomeScreenRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            itemsIndexed(data) { index, item ->
+            itemsIndexed(list) { index, item ->
 
                 val cornerRadius = remember {
                     if (item.type == "radio_station" || item.type == "artist") 50 else 0
@@ -70,7 +78,7 @@ fun HomeScreenRow(
                     imageUrl = item.image.toString(),
                     title = item.title.toString(),
                     size = size,
-                    onClick =  { onCardClicked(it, item)}
+                    onClick = { onCardClicked(it, item) }
                 )
             }
 
@@ -80,14 +88,14 @@ fun HomeScreenRow(
 
 @Composable
 fun HomeScreenRowCard(
+    modifier: Modifier = Modifier,
     isRadio: Boolean,
     subtitle: String,
     cornerRadius: Int = 0,
     imageUrl: String,
     title: String,
     size: Int,
-    onClick: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    onClick: (Boolean) -> Unit
 ) {
 
 

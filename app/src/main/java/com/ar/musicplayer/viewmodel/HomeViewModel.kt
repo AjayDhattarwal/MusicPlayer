@@ -1,6 +1,7 @@
 package com.ar.musicplayer.viewmodel
 
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.data.repository.HomeDataRepository
@@ -19,7 +20,6 @@ class HomeViewModel @Inject constructor(
     private val homeDataRepository: HomeDataRepository,
     private  val networkConnectivityObserver: NetworkConnectivityObserver
 ) : ViewModel(){
-
 
     private val _homeScreenData = MutableStateFlow<HomeData?>(null)
     val homeData: StateFlow<HomeData?> = _homeScreenData.asStateFlow()

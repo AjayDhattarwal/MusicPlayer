@@ -1,6 +1,7 @@
 package com.ar.musicplayer.viewmodel
 
 import android.util.Log
+import androidx.compose.ui.util.fastFilterNotNull
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.ar.musicplayer.api.ApiConfig
@@ -9,17 +10,19 @@ import com.ar.musicplayer.data.models.RadioSongItem
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.StationResponse
 import com.ar.musicplayer.utils.events.RadioStationEvent
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class RadioStationViewModel () : ViewModel() {
 
-    private val _radioStation = MutableLiveData<List<SongResponse>>()
-    val radioStation : MutableLiveData<List<SongResponse>> get() = _radioStation
+    private val _radioStation = MutableStateFlow<List<SongResponse>>(emptyList())
+    val radioStation : StateFlow<List<SongResponse>> get() = _radioStation
 
-    private val _stationId = MutableLiveData<StationResponse>()
-    val stationId : MutableLiveData<StationResponse> get() = _stationId
+    private val _stationId = MutableStateFlow<StationResponse?>(null)
+    val stationId : StateFlow<StationResponse?> get() = _stationId
 
     fun onEvent(event: RadioStationEvent){
         when(event){
@@ -35,10 +38,6 @@ class RadioStationViewModel () : ViewModel() {
                 )
         }
     }
-
-
-
-
 
     private fun LoadCurrentStation(call: String, k: String, next: String, name: String, query: String,radioStationType: String,language:String) {
 
@@ -59,7 +58,6 @@ class RadioStationViewModel () : ViewModel() {
 
         }
 
-        // Send API request using Retrofit
         clientToGetStationId.enqueue(object : Callback<StationResponse> {
 
             override fun onResponse(
@@ -82,7 +80,6 @@ class RadioStationViewModel () : ViewModel() {
                     )
                 }
 
-                // Send API request using Retrofit
                 client?.enqueue(object : Callback<RadioSongs> {
                     override fun onResponse(call: Call<RadioSongs>, response: Response<RadioSongs>) {
                         if (response.isSuccessful) {
@@ -110,7 +107,7 @@ class RadioStationViewModel () : ViewModel() {
                             }
 
                             // Now songResponses list contains all the song responses
-                            _radioStation.postValue(songResponses as List<SongResponse>)
+                            _radioStation.value = (songResponses as List<SongResponse>).fastFilterNotNull()
                         }
                     }
                     override fun onFailure(call: Call<RadioSongs>, t: Throwable) {

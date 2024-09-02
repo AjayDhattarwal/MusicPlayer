@@ -1,11 +1,9 @@
 package com.ar.musicplayer.components.info
 
 import android.util.Log
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,15 +13,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -34,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,14 +43,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
@@ -63,35 +66,43 @@ import com.ar.musicplayer.screens.library.mymusic.toDp
 import com.ar.musicplayer.screens.library.mymusic.toPx
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.util.UnstableApi
+import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 
+@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongListWithTopBar(
     mainImage: String,
-    scrollState: ScrollState,
+    scrollState: LazyListState,
     color: Color,
     subtitle: String,
     data: PlaylistResponse?,
     favViewModel: FavoriteViewModel,
-    downloaderViewModel: DownloaderViewModel,
+    downloaderViewModel: DownloaderViewModel ,
+    playerViewModel: PlayerViewModel ,
     onFollowClicked: () -> Unit,
-    isPlaying: Boolean,
-    onPlayPause: () -> Unit,
-    onSongClicked: (Int) -> Unit,
     onBackPressed: () -> Unit
 ) {
 
+    val currentPlaylistId by playerViewModel.currentPlaylistId.collectAsState()
+
     val minImgSize = 0.dp
     val maxImgSize =  300.dp
-    val comparePxl = 150.dp.toPx()
     var currentImgSize by remember { mutableStateOf(maxImgSize.toPx()) }
+    val isScrollable by remember {
+        derivedStateOf {
+          scrollState.firstVisibleItemIndex == 0
+        }
+    }
 
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if(scrollState.value < comparePxl) {
+                if (isScrollable) {
                     val delta = available.y.toInt()
                     val newImgSize = currentImgSize + delta
                     val previousImgSize = currentImgSize
@@ -100,13 +111,29 @@ fun SongListWithTopBar(
 
                     val consumed = currentImgSize - previousImgSize
                     return Offset(0f, consumed)
-                }
-                else{
+                } else {
                     return Offset.Zero
                 }
             }
+
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                if (isScrollable && available.y > 0) {
+
+                    val delta = available.y.toInt()
+                    val previousImgSize = currentImgSize
+                    val newImgSize = currentImgSize + delta
+
+                    currentImgSize = newImgSize.coerceIn(minImgSize.toPx(), maxImgSize.toPx())
+
+                    val consumed = currentImgSize - previousImgSize
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+
         }
     }
+
 
 
     val topBarAlpha by remember {
@@ -123,9 +150,12 @@ fun SongListWithTopBar(
 
     Box(modifier = Modifier
         .fillMaxSize()
-        .nestedScroll(nestedScrollConnection)
     ) {
-        Box(Modifier.fillMaxWidth().zIndex(1f)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .zIndex(1f)
+        ) {
             Box{
                 CenterAlignedTopAppBar(
                     title = {
@@ -150,24 +180,32 @@ fun SongListWithTopBar(
                             )
                         }
                     },
-                    modifier = Modifier.zIndex(1f),
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .drawBehind {
+                            drawRect(color = color.copy(alpha = topBarAlpha))
+                        },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = color.copy(alpha = topBarAlpha )
+                        containerColor = Color.Transparent
                     )
                 )
             }
-            AsyncImage(
-                model = mainImage,
-                contentDescription = "image",
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .size(currentImgSize.toDp().coerceIn(50.dp, 250.dp))
-                    .alpha(imageAlpha)
-                    .clip(RoundedCornerShape(2))
-                    .align(Alignment.Center),
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.Center
-            )
+//            AsyncImage(
+//                model = mainImage,
+//                contentDescription = "image",
+//                modifier = Modifier
+//                    .statusBarsPadding()
+//                    .size(
+//                        currentImgSize
+//                            .toDp()
+//                            .coerceIn(50.dp, 250.dp)
+//                    )
+//                    .alpha(imageAlpha)
+//                    .clip(RoundedCornerShape(2))
+//                    .align(Alignment.Center),
+//                contentScale = ContentScale.Crop,
+//                alignment = Alignment.Center
+//            )
 
             Row(
                 horizontalArrangement = Arrangement.Absolute.Right,
@@ -178,35 +216,50 @@ fun SongListWithTopBar(
                         IntOffset(x = 0, currentImgSize.toInt())
                     }
             ) {
-                Log.d("alpha", "${scrollState.value},,, size = ${currentImgSize.toDp().toPx()}" )
-
-                AnimatedPlayPauseButton(
-                    isPlaying = isPlaying,
-                    onPlayPauseToggle = {
-                        onPlayPause()
-                    },
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(x = 0, y = 60.dp.toPx().toInt())
-                        }
-                        .zIndex(1f)
-                        .padding(end = 20.dp)
+                PlaylistPlayPauseButton(
+                    playerViewModel = playerViewModel,
+                    data = data
                 )
+
             }
         }
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(nestedScrollConnection)
         ){
-            Column (
-                modifier = Modifier
-                    .offset {
-                        IntOffset(x = 0, currentImgSize.toInt())
-                    }
-                    .verticalScroll(scrollState)
+            LazyColumn (
+                modifier = Modifier,
+//                    .offset {
+//                        IntOffset(x = 0, currentImgSize.toDp().toPx().toInt())
+//                    },
+                state = scrollState
             ) {
-                Column(
-                    modifier = Modifier.padding(start = 10.dp)
-                ) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth()){
+                        AsyncImage(
+                            model = mainImage,
+                            contentDescription = "image",
+                            modifier = Modifier
+                                .statusBarsPadding()
+                                .size(
+                                    (currentImgSize.toDp() - 50.dp)
+                                        .coerceIn(0.dp, 250.dp)
+                                )
+                                .alpha(imageAlpha)
+                                .clip(RoundedCornerShape(2))
+                                .align(Alignment.Center),
+                            contentScale = ContentScale.Crop,
+                            alignment = Alignment.Center
+                        )
+                    }
+                }
+
+                item{
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                item{
                     Text(
                         text = data?.title.toString(),
                         style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
@@ -219,6 +272,8 @@ fun SongListWithTopBar(
                             .fillMaxWidth(1f)
                             .basicMarquee()
                     )
+                }
+                item{
                     Text(
                         text = subtitle,
                         color = Color.LightGray,
@@ -228,6 +283,8 @@ fun SongListWithTopBar(
                         fontSize = 10.sp,
                         modifier = Modifier.padding(4.dp),
                     )
+                }
+                item{
                     ButtonBox(
                         onFollowClicked = onFollowClicked,
                         isFavourite = false,
@@ -237,24 +294,27 @@ fun SongListWithTopBar(
                     )
                 }
 
-                data?.let {
-                    repeat(it.list?.size ?: 0) { index->
-                        val track  = data.list?.get(index)
-                        if (track != null) {
-                            SongItemRepresentation(
-                                track = track,
-                                index = index,
-                                favViewModel = favViewModel,
-                                downloaderViewModel = downloaderViewModel,
-                                onTrackClicked = {
-                                    onSongClicked(index)
+                itemsIndexed(data?.list ?: emptyList(), key = {index, item ->  (item.id + index) }){ index, track ->
+                    SongItemRepresentation(
+                        track = track,
+                        favViewModel = favViewModel,
+                        downloaderViewModel = downloaderViewModel,
+                        onTrackClicked = remember{
+                            {
+                                if (currentPlaylistId == data?.id) {
+                                    playerViewModel.changeSong(index)
+                                } else {
+                                    data?.list?.get(index)
+                                        ?.let { playerViewModel.setNewTrack(it) }
                                 }
-                            )
+                            }
                         }
-                    }
+                    )
                 }
 
-                Spacer(Modifier.height(125.dp))
+                item{
+                    Spacer(Modifier.height(125.dp))
+                }
             }
         }
 
@@ -262,6 +322,49 @@ fun SongListWithTopBar(
 
 
 
+}
+
+@UnstableApi
+@Composable
+fun PlaylistPlayPauseButton(playerViewModel: PlayerViewModel, data: PlaylistResponse?,  ) {
+    val isPlaying by playerViewModel.isPlaying.collectAsState(initial = false)
+    val currentPlaylistId by playerViewModel.currentPlaylistId.collectAsState()
+
+    val isPlaylistPlaying by remember {
+        derivedStateOf {
+            if (currentPlaylistId == data?.id)  isPlaying  else false
+        }
+    }
+
+    AnimatedPlayPauseButton(
+        isPlaying = isPlaylistPlaying,
+        onPlayPauseToggle  = remember {
+            {
+                if (currentPlaylistId == data?.id) {
+                    Log.d("play", "id is same clicked")
+                    playerViewModel.playPause()
+                } else {
+                    data?.list?.let {
+                        playerViewModel.setPlaylist(
+                            newPlaylist = it,
+                            playlistId = data.id ?: ""
+                        )
+                    }
+                }
+            }
+        },
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    x = 0,
+                    y = 60.dp
+                        .toPx()
+                        .toInt()
+                )
+            }
+            .zIndex(1f)
+            .padding(end = 20.dp)
+    )
 }
 
 
@@ -629,3 +732,10 @@ fun ButtonBox(
 //
 //}
 //
+
+
+@Composable
+fun Int.toDpFromPx(): Dp {
+    val density = LocalDensity.current
+    return with(density) { this@toDpFromPx.toDp() }
+}

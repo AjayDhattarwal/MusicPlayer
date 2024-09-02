@@ -42,74 +42,67 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 @Composable
 fun SongsLazyColumn(
     songResponse: List<SongResponse>,
-    playerViewModel: PlayerViewModel,
-    modifier: Modifier = Modifier
+    onSongClick: (SongResponse) -> Unit
 ) {
     val context = LocalContext.current
     val showShimmer = remember { mutableStateOf(true) }
-    val focusManager = LocalFocusManager.current
-    Box(
-        modifier = modifier.fillMaxSize()
-    ) {
-        LazyColumn {
-            items(songResponse) { songResponse ->
-                val artistName = songResponse.moreInfo?.artistMap?.artists?.distinctBy { it.name }?.joinToString(", "){it.name.toString()}
-                Row(
+    LazyColumn {
+        items(songResponse) { songResponse ->
+            val artistName = songResponse.moreInfo?.artistMap?.artists?.distinctBy { it.name }?.joinToString(", "){it.name.toString()}
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, end = 5.dp, top = 10.dp)
+                    .clickable {
+                        onSongClick(songResponse)
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                AsyncImage(
+                    model = songResponse.image,
+                    contentDescription = "image",
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, end = 5.dp, top = 10.dp)
-                        .clickable {
-                            focusManager.clearFocus()
-                            playerViewModel.setNewTrack(songResponse)
-                        },
-                    verticalAlignment = Alignment.CenterVertically
+                        .size(50.dp)
+                        .padding(4.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    onSuccess = { showShimmer.value = false },
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.Center
+                )
+
+                Column(
+                    modifier = Modifier
+                        .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
+                        .weight(1f)
+
                 ) {
-
-                    AsyncImage(
-                        model = songResponse.image,
-                        contentDescription = "image",
-                        modifier = Modifier
-                            .size(50.dp)
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        onSuccess = { showShimmer.value = false },
-                        contentScale = ContentScale.Crop,
-                        alignment = Alignment.Center
+                    Text(
+                        text = songResponse.title ?: "null",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 2.dp),
+                        maxLines = 1,
+                        softWrap = true,
+                        overflow = TextOverflow.Ellipsis
                     )
-
-                    Column(
-                        modifier = Modifier
-                            .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
-                            .weight(1f)
-
-                    ) {
-                        Text(
-                            text = songResponse.title ?: "null",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White,
-                            modifier = Modifier.padding(bottom = 2.dp),
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = artistName?: "unknown",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray,
-                            maxLines = 1,
-                            softWrap = true,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        text = artistName?: "unknown",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray,
+                        maxLines = 1,
+                        softWrap = true,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
 
-                    IconButton(onClick = { /* Handle menu button click */ }) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "Menu",
-                            tint = Color.White
-                        )
-                    }
+                IconButton(onClick = { /* Handle menu button click */ }) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Menu",
+                        tint = Color.White
+                    )
                 }
             }
         }

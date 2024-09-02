@@ -44,8 +44,6 @@ class MainActivity  : ComponentActivity() {
             val homeViewModel = hiltViewModel<HomeViewModel>()
             val playerViewModel = hiltViewModel<PlayerViewModel>()
             val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
-            val radioStationViewModel = viewModel<RadioStationViewModel>()
-            val favViewModel = hiltViewModel<FavoriteViewModel>()
 
             PermissionHandler(
                 permissions = listOf(
@@ -63,8 +61,6 @@ class MainActivity  : ComponentActivity() {
                 navController = navController,
                 homeViewModel = homeViewModel,
                 playerViewModel = playerViewModel,
-                favViewModel = favViewModel,
-                radioStationViewModel = radioStationViewModel,
                 downloaderViewModel = downloaderViewModel
             )
 

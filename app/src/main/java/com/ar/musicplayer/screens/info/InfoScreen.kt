@@ -22,6 +22,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.draw.drawBehind
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
@@ -41,18 +43,14 @@ private const val TAG: String = "PlayListDetail"
 @Composable
 fun InfoScreen(
     data: InfoScreenModel,
-    playerViewModel: PlayerViewModel,
-    favViewModel: FavoriteViewModel,
-    downloaderViewModel: DownloaderViewModel,
     onBackPressed: () -> Unit,
 ) {
 
-    val isPlaying by playerViewModel.isPlaying.collectAsState(initial = false)
-    val currentPlaylistId by playerViewModel.currentPlaylistId.collectAsState()
     val moreInfoViewModel = hiltViewModel<MoreInfoViewModel>()
     val playlistResponse by moreInfoViewModel.playlistData.observeAsState()
     val isLoading by moreInfoViewModel.isLoading.collectAsStateWithLifecycle()
-    val scrollState = rememberScrollState()
+    val scrollState = rememberLazyListState()
+
     LaunchedEffect(data.image) {
         moreInfoViewModel.fetchPlaylistData(
             data.token,
@@ -64,11 +62,12 @@ fun InfoScreen(
     }
 
 
-
     val colors = remember {
         mutableStateOf(arrayListOf<Color>(Color.Black, Color.Black))
     }
-    val paletteExtractor = PaletteExtractor()
+    val paletteExtractor = remember {
+        PaletteExtractor()
+    }
 
     data.image.let {
         val shade = paletteExtractor.getColorFromSwatch(it)
@@ -81,20 +80,24 @@ fun InfoScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors.value.toList(),
-                    endY = 850f
+            .drawBehind {
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors.value.toList(),
+                        endY = 850f
+                    )
                 )
-            )
+            }
     ) {
         if(isLoading){
             CircularProgress(background = Color.Transparent)
         } else{
+            val favViewModel = hiltViewModel<FavoriteViewModel>()
+            val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
+            val playerViewModel = hiltViewModel<PlayerViewModel>()
             AnimatedVisibility(
                 visible = playlistResponse?.list?.isNotEmpty() == true,
-                enter = fadeIn(),
-                exit = fadeOut()
+                enter = fadeIn()
             ) {
                 SongListWithTopBar(
                     mainImage  = data.image,
@@ -107,31 +110,9 @@ fun InfoScreen(
                     data = playlistResponse,
                     favViewModel = favViewModel,
                     downloaderViewModel = downloaderViewModel,
+                    playerViewModel = playerViewModel,
                     onFollowClicked = { },
-                    isPlaying = if (currentPlaylistId == playlistResponse?.id)  isPlaying  else false,
-                    onPlayPause = {
-                        if (currentPlaylistId == playlistResponse?.id) {
-                            Log.d("play", "id is same clicked")
-                            playerViewModel.playPause()
-                        } else {
-                            playlistResponse?.list?.let { it1 ->
-                                Log.d("play", "first time set clicked")
-                                playerViewModel.setPlaylist(
-                                    newPlaylist =  it1,
-                                    playlistId = playlistResponse?.id ?: ""
-                                )
-                            }
-                        }
-                        Log.d("play", "clicked $isPlaying ")
-                    },
-                    onSongClicked = { index ->
-                        if(currentPlaylistId == playlistResponse?.id){
-                            playerViewModel.changeSong(index)
-                        } else{
-                            playlistResponse?.list?.get(index)?.let { playerViewModel.setNewTrack(it) }
-                        }
-                    },
-                    onBackPressed = {onBackPressed()}
+                    onBackPressed = onBackPressed
 
                 )
 

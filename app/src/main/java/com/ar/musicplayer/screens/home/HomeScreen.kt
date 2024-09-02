@@ -1,10 +1,9 @@
 
 package com.ar.musicplayer.screens.home
 
-import android.graphics.Bitmap
+import android.graphics.RenderEffect
 import android.util.Log
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,17 +14,17 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.Text
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,19 +33,24 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ar.musicplayer.data.models.HomeListItem
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
 import com.ar.musicplayer.components.home.EditUsernameDialog
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.viewmodel.PlayerViewModel
@@ -54,74 +58,55 @@ import com.ar.musicplayer.components.home.TopProfileBar
 import com.ar.musicplayer.components.home.HomeScreenRow
 import com.ar.musicplayer.components.home.LastSessionGridLayout
 import com.ar.musicplayer.data.models.HomeData
-import com.ar.musicplayer.data.models.InfoScreenModel
 import com.ar.musicplayer.data.models.ModulesOfHomeScreen
-import com.ar.musicplayer.data.models.toInfoScreenModel
 import com.ar.musicplayer.navigation.InfoScreenObj
-import com.ar.musicplayer.navigation.SettingsScreenObj
-import com.ar.musicplayer.utils.events.RadioStationEvent
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
-import kotlinx.serialization.json.Json
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
-    navController: NavHostController,
     listState: LazyListState,
-    homeViewModel: HomeViewModel,
-    radioStationViewModel: RadioStationViewModel,
-    playerViewModel: PlayerViewModel,
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel = hiltViewModel(),
     background: Brush,
-    preferencesManager: PreferencesManager,
-    backgroundBitmap: Bitmap? = null
+    navigateSetting: () -> Unit,
+    onItemClick: (Boolean,HomeListItem) -> Unit
+
 ) {
-    Log.d("recompose", " recompose called for HomeScreen")
+    Log.d("recompose", "homeScreen recompose")
+    val context = LocalContext.current
+    val preferencesManager = remember{ PreferencesManager(context = context) }
+
     val homeData by homeViewModel.homeData.collectAsState()
-    val lastSession by playerViewModel.lastSession.observeAsState()
-    val radioSongResponse by radioStationViewModel.radioStation.observeAsState()
+    val lastSession by playerViewModel.lastSession.collectAsState()
 
-
-
-    val homeDataList = remember(homeData) {
-        homeData?.let {
-            homeData?.modules?.let { it1 ->
-                getMappedHomeData(it, it1).toList()
-            }
-        } ?: emptyList()
-    }
-    val radioStationSelection = remember {
-        mutableStateOf(false)
-    }
-    LaunchedEffect (radioSongResponse) {
-        Log.d("radio", "is active ")
-        if (radioSongResponse != null && radioStationSelection.value) {
-            playerViewModel.setPlaylist(radioSongResponse!!, "radio")
-            radioStationSelection.value = false
+    val showLastSession by remember {
+        derivedStateOf {
+            lastSession.isNotEmpty()
         }
     }
+
+    val homeDataList by remember {
+        derivedStateOf {
+            homeData?.let {
+                homeData?.modules?.let { it1 ->
+                    getMappedHomeData(it, it1).toList()
+                }
+            }
+        }
+    }
+
+
 
     var showDialog by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize()
-            .background(background)
-            .blur(20.dp)
-    ){
-        if(preferencesManager.isImageAsBackground()){
-            backgroundBitmap?.asImageBitmap()?.let {
-                Image(
-                    bitmap = it,
-                    contentDescription = "background",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+        modifier = Modifier
+            .fillMaxSize()
+            .drawBehind {
+                drawRect(brush = background)
             }
-        }
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
     ){
         Scaffold(
             modifier = Modifier
@@ -147,61 +132,50 @@ fun HomeScreen(
                                 title = preferencesManager.getUsername(),
                                 color = Color(preferencesManager.getAccentColor()),
                                 modifier = Modifier,
-                                onClick = { navController.navigate(SettingsScreenObj) },
-                                onUserFiledClick = {
-                                    showDialog = true
+                                onClick = {
+                                    navigateSetting()
+                                },
+                                onUserFiledClick = remember{
+                                    { showDialog = true }
                                 }
                             )
                             if(showDialog){
                                 EditUsernameDialog(
                                     initialUsername = preferencesManager.getUsername(),
-                                    onDismissRequest = { showDialog = false },
-                                    onUsernameChange = { newUsername ->
-                                        preferencesManager.setUsername(newUsername)
+                                    onDismissRequest = remember {
+                                        { showDialog = false }
+                                    },
+                                    onUsernameChange = remember {
+                                        { newUsername ->
+                                            preferencesManager.setUsername(newUsername)
+                                        }
                                     }
                                 )
                             }
                         }
-
-                        lastSession?.takeIf { it.isNotEmpty() }?.let {
-
-                            item(key = "item1") {
+                        item(key = "item1") {
+                            if(showLastSession){
                                 LastSessionGridLayout(
                                     modifier = Modifier,
-                                    lastSessionList = it,
-                                    onRecentSongClicked = { item ->
-                                        playerViewModel.setNewTrack(item)
+                                    playerViewModel = playerViewModel,
+                                    onRecentSongClicked = remember {
+                                        { item ->
+                                            playerViewModel.setNewTrack(item)
+                                        }
                                     }
                                 )
                             }
                         }
+
                         item(key = "item4") {
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        itemsIndexed(homeDataList, key = {index, item -> index }) { index, (key, dataList) ->
+                        itemsIndexed(homeDataList ?: emptyList(), key = { index, item -> (item.first + index) }) { index, (key, dataList) ->
                             HomeScreenRow(
-                                title = key?: "unknown",
+                                title = key ?: "unknown",
                                 data = dataList,
-                                onCardClicked = { radio, data ->
-                                    if(radio){
-                                        val query = if(data.moreInfoHomeList?.query != "") data.moreInfoHomeList?.query else data.title
-                                        radioStationViewModel.onEvent(
-                                            RadioStationEvent.LoadRadioStationData(
-                                                call = "webradio.getSong",
-                                                k = "20",
-                                                next = "1",
-                                                name = query.toString(),
-                                                query = query.toString(),
-                                                radioStationType = data.moreInfoHomeList?.stationType.toString(),
-                                                language = data.moreInfoHomeList?.language.toString()
-                                            ))
-                                        radioStationSelection.value = true
-                                    } else{
-                                        val serializedData = Json.encodeToString(InfoScreenModel.serializer(), data.toInfoScreenModel())
-                                        navController.navigate(InfoScreenObj(serializedData))
-                                    }
-                                }
+                                onCardClicked = onItemClick
                             )
                         }
                         item(key = "item3"){
@@ -212,6 +186,7 @@ fun HomeScreen(
             }
         )
     }
+
 
 }
 

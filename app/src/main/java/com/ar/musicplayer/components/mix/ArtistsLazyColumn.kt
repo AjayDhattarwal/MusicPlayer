@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,15 +33,17 @@ import com.ar.musicplayer.data.models.SongResponse
 
 @Composable
 fun ArtistsLazyColumn(songsByArtist: Map<String, List<SongResponse>>) {
-    val list = songsByArtist.toList()
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn {
-            items(list){ (artist, songs) ->
-                ArtistSection(artist, songs.first().image.toString(), onClick = {})
-            }
-            item {
-                Spacer(modifier = Modifier.height(125.dp))
-            }
+    val list by remember {
+        derivedStateOf {
+            songsByArtist.toList()
+        }
+    }
+    LazyColumn {
+        items(list){ (artist, songs) ->
+            ArtistSection(artist, songs.first().image.toString(), onClick = {})
+        }
+        item {
+            Spacer(modifier = Modifier.height(125.dp))
         }
     }
 
@@ -47,14 +51,12 @@ fun ArtistsLazyColumn(songsByArtist: Map<String, List<SongResponse>>) {
 
 @Composable
 fun SearchArtistResults(artistResults: List<Artist>, onClick: (Artist) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn {
-            items(artistResults){ artist ->
-                ArtistSection(artist.name.toString(), artist.image.toString(), onClick = {onClick(artist)})
-            }
-            item {
-                Spacer(modifier = Modifier.height(125.dp))
-            }
+    LazyColumn {
+        items(artistResults){ artist ->
+            ArtistSection(artist.name.toString(), artist.image.toString(), onClick = {onClick(artist)})
+        }
+        item {
+            Spacer(modifier = Modifier.height(125.dp))
         }
     }
 }

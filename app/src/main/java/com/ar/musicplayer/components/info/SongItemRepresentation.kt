@@ -41,11 +41,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.utils.download.DownloadEvent
+import com.ar.musicplayer.utils.download.DownloadStatus
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import kotlinx.coroutines.launch
 
@@ -53,19 +55,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun SongItemRepresentation(
     track: SongResponse,
-    index: Int,
-    favViewModel: FavoriteViewModel,
-    downloaderViewModel: DownloaderViewModel,
+    favViewModel: FavoriteViewModel = hiltViewModel() ,
+    downloaderViewModel: DownloaderViewModel = hiltViewModel(),
     onTrackClicked: () -> Unit
 )
 {
     val coroutineScope = rememberCoroutineScope()
 
-    val isDownloaded = remember { mutableStateOf(false) }
-    val isDownloading = remember { mutableStateOf(false) }
-    val downloadProgress by downloaderViewModel.songProgress.observeAsState()
-    val currentDownloading by downloaderViewModel.currentDownloading.observeAsState()
-    var inDownloadQueue by remember { mutableStateOf(false) }
     val isFavouriteFlow by remember {
         derivedStateOf {
             favViewModel.isFavoriteSong(track.id.toString())
@@ -74,26 +70,55 @@ fun SongItemRepresentation(
 
     val isFavourite by isFavouriteFlow.collectAsState(false)
 
+    var isDownloaded by remember { mutableStateOf(false) }
+    var isDownloading by remember { mutableStateOf(false) }
+    val downloadProgress by downloaderViewModel.songProgress.collectAsState()
 
-    Log.d("daw",isDownloading.value.toString())
-    LaunchedEffect(currentDownloading) {
-        if(currentDownloading == track){
-            isDownloading.value =  true
-            isDownloaded.value = true
-            inDownloadQueue = false
-        }
-        if(currentDownloading == null && downloadProgress == 0 ){
-            isDownloading.value = false
-        }
-        else if(currentDownloading != track  ){
-            isDownloading.value = false
+    val songDownloadStatus by downloaderViewModel.songDownloadStatus.observeAsState(emptyMap())
+
+    val status =
+        songDownloadStatus[track.id.toString()] ?: DownloadStatus.NOT_DOWNLOADED
+
+    var inDownloadQueue by remember { mutableStateOf(false) }
+
+
+
+    Log.d("daw",isDownloading.toString())
+
+    LaunchedEffect(status) {
+        when (status) {
+            DownloadStatus.NOT_DOWNLOADED -> {
+                isDownloaded = false
+                inDownloadQueue = false
+                isDownloading = false
+            }
+            DownloadStatus.WAITING -> {
+                isDownloaded = false
+                inDownloadQueue = true
+                isDownloading = false
+            }
+            DownloadStatus.DOWNLOADING -> {
+                isDownloaded = false
+                inDownloadQueue = true
+                isDownloading = true
+            }
+            DownloadStatus.DOWNLOADED -> {
+                isDownloaded = true
+                inDownloadQueue = false
+                isDownloading = false
+            }
+            DownloadStatus.PAUSED -> {
+                isDownloaded = false
+                inDownloadQueue = true
+                isDownloading = false
+            }
         }
     }
 
     LaunchedEffect(key1 = track.id) {
-        downloaderViewModel.isAllReadyDownloaded(track) { it ->
-            isDownloaded.value = it
-        }
+        downloaderViewModel.onEvent(DownloadEvent.isDownloaded(track) { it ->
+            isDownloaded = it
+        })
     }
 
     Row(
@@ -144,17 +169,19 @@ fun SongItemRepresentation(
         }
 
         IconButton(
-            onClick = {
-                if(!isDownloaded.value){
-                    downloaderViewModel.onEvent(DownloadEvent.downloadSong(track))
-                    inDownloadQueue = true
+            onClick = remember{
+                {
+                    if (!isDownloaded) {
+                        downloaderViewModel.onEvent(DownloadEvent.downloadSong(track))
+                        inDownloadQueue = true
+                    }
                 }
             }
         ) {
-            if(isDownloading.value){
+            if(isDownloading){
                 CircularProgressIndicator(
                     modifier = Modifier,
-                    progress = downloadProgress?.div(100.toFloat()) ?: 0f,
+                    progress = downloadProgress.div(100.toFloat()) ?: 0f,
                     color = Color.LightGray
                 )
                 Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
@@ -163,16 +190,18 @@ fun SongItemRepresentation(
             else{
                 Icon(
                     modifier = Modifier.weight(1f),
-                    imageVector = if(isDownloaded.value) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
+                    imageVector = if(isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
                     contentDescription = "Download",
                     tint = Color.White
                 )
             }
         }
 
-        IconButton(onClick = {
-            favViewModel.onEvent(FavoriteSongEvent.ToggleFavSong(track))
-        }) {
+        IconButton(
+            onClick = remember{
+                { favViewModel.onEvent(FavoriteSongEvent.ToggleFavSong(track)) }
+            }
+        ) {
             Icon(
                 imageVector = if(isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 contentDescription = "Like",

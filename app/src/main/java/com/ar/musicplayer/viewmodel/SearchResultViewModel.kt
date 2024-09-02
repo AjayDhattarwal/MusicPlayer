@@ -175,10 +175,12 @@ class SearchResultViewModel() : ViewModel() {
                 response: Response<List<BasicSongInfo>>
             ) {
                 val responseBody = response.body()
+
                 if (!response.isSuccessful || responseBody == null) {
                     onError("Data Processing Error")
                     return
                 }
+
 
                 _isSearching.update { false }
                 _trendingSearchResults.value = responseBody

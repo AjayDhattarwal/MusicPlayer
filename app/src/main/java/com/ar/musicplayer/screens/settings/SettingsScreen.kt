@@ -28,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,8 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.ar.musicplayer.navigation.DownloadSettingsScreenObj
 import com.ar.musicplayer.navigation.LanguageSettingsScreenObj
 import com.ar.musicplayer.navigation.PlaybackSettingsScreenObj
@@ -47,7 +46,11 @@ import com.ar.musicplayer.navigation.ThemeSettingObj
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController, background: Brush){
+fun SettingsScreen(
+    background: Brush,
+    onBackPressed: () -> Unit,
+    onNavigate: (Any) -> Unit
+){
 
     val context = LocalContext.current
 
@@ -70,7 +73,7 @@ fun SettingsScreen(navController: NavController, background: Brush){
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {navController.navigateUp()}) {
+                    IconButton(onClick = { onBackPressed() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
@@ -106,7 +109,7 @@ fun SettingsScreen(navController: NavController, background: Brush){
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-                            navController.navigate(LanguageSettingsScreenObj)
+                            onNavigate(LanguageSettingsScreenObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -131,7 +134,7 @@ fun SettingsScreen(navController: NavController, background: Brush){
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-                            navController.navigate(PlaybackSettingsScreenObj)
+                            onNavigate(PlaybackSettingsScreenObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -156,7 +159,7 @@ fun SettingsScreen(navController: NavController, background: Brush){
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-                            navController.navigate(StorageSettingScreenObj)
+                            onNavigate(StorageSettingScreenObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -181,7 +184,7 @@ fun SettingsScreen(navController: NavController, background: Brush){
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-                            navController.navigate(ThemeSettingObj)
+                            onNavigate(ThemeSettingObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -206,7 +209,7 @@ fun SettingsScreen(navController: NavController, background: Brush){
                         .fillMaxWidth()
                         .padding(top = 10.dp)
                         .clickable {
-                            navController.navigate(DownloadSettingsScreenObj)
+                            onNavigate(DownloadSettingsScreenObj)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -314,5 +317,13 @@ fun PreviewSettingScreen(){
             ),
             start = Offset.Zero
         )
-    SettingsScreen(rememberNavController(),blackToGrayGradient)
+    SettingsScreen(
+        blackToGrayGradient,
+        {},
+        remember {
+            { path ->
+
+            }
+        },
+    )
 }

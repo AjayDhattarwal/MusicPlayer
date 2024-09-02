@@ -1,9 +1,8 @@
 package com.ar.musicplayer.data.models
 
-import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.HomeDataEntity
+import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import com.google.gson.Gson
-import kotlinx.coroutines.launch
 
 
 fun SongResponse.toArtist(): Artist {
@@ -210,3 +209,41 @@ fun String.perfect(): String{
         .replace("song", "")
         .replace("&#039;","")
 }
+
+fun Song.toSongResponse(): SongResponse{
+    return  SongResponse(
+        id = this.id,
+        title = this.title,
+        subtitle = this.subtitle,
+        type = this.type,
+        image = this.image,
+        permaUrl = this.permaUrl
+    )
+}
+
+
+fun SongResponse.toSongDownloadEntity(): SongDownloadEntity{
+    val artist = this.moreInfo?.artistMap?.artists
+        ?.distinctBy { it.name }
+        ?.joinToString ( "," ) {it.name.toString()}
+        ?.perfect()
+        .toString()
+
+    val album = this.moreInfo?.album ?: ""
+    val genre = this.role ?: ""
+    val imageUrl = this.image?.replace("150x150", "350x350") ?: ""
+    val url = this.moreInfo?.encryptedMediaUrl.toString()
+    val is320kbps = this.moreInfo?.kbps320 == true
+
+    return SongDownloadEntity(
+        id = this.id.toString(),
+        title = this.title.toString(),
+        artist = artist,
+        album = album,
+        genre = genre,
+        imageUrl = imageUrl,
+        url = url,
+        is320kbps = is320kbps
+    )
+}
+

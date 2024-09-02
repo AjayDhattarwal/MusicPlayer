@@ -84,8 +84,8 @@ class PlayerRepository @Inject constructor(
         initialValue = null
     )
 
-    private val _currentPlaylistId = MutableStateFlow<String>("")
-    val currentPlaylistId: StateFlow<String?> get() = _currentPlaylistId
+    private val _currentPlaylistId = MutableStateFlow("history")
+    val currentPlaylistId: StateFlow<String> get() = _currentPlaylistId
 
 
     private val _repeatMode = MutableLiveData(exoPlayer.repeatMode)
@@ -101,8 +101,9 @@ class PlayerRepository @Inject constructor(
     private val _isLyricsLoading = MutableStateFlow(false)
     val isLyricsLoading: StateFlow<Boolean> = _isLyricsLoading
 
-    private val _currentLyricIndex = MutableLiveData<Int>(0)
-    val currentLyricIndex: LiveData<Int> = _currentLyricIndex
+    private val _currentLyricIndex = MutableStateFlow(0)
+    val currentLyricIndex: StateFlow<Int> = _currentLyricIndex
+
 
     private val handler = Handler(Looper.getMainLooper())
     private val updateLyricsRunnable = object : Runnable {
@@ -400,7 +401,6 @@ class PlayerRepository @Inject constructor(
 
     @OptIn(UnstableApi::class)
     private fun addSongInPlaylist(song: SongResponse) {
-        _playlist.value = playlist.value.orEmpty() + song
         val artist = song.moreInfo?.artistMap?.artists?.distinctBy{it.name}?.joinToString(", "){it.name.toString()}
 
         val mediaItem = MediaItem.Builder()
@@ -421,6 +421,7 @@ class PlayerRepository @Inject constructor(
             .build()
 
         exoPlayer.addMediaItem(mediaItem)
+        _playlist.value = playlist.value.orEmpty() + song
         exoPlayer.prepare()
         exoPlayer.seekToDefaultPosition(exoPlayer.mediaItemCount - 1)
     }
@@ -431,25 +432,34 @@ class PlayerRepository @Inject constructor(
         _currentIndex.value = 0
         _currentPlaylistId.value = playlistId
 
-        val mediaItems = newPlaylist.map { song ->
-            val artist = song.moreInfo?.artistMap?.artists?.distinctBy{it.name}?.joinToString(", "){it.name.toString()}
-            MediaItem.Builder()
-                .setUri(decodeDES(
-                    song.moreInfo?.encryptedMediaUrl.toString(),
-                    song.moreInfo?.kbps320 ?: false
-                ))
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle(song.title?.perfect())
-                        .setArtworkUri(Uri.parse(song.image))
-                        .setSubtitle(song.subtitle?.perfect())
-                        .setArtist(artist?.perfect())
-                        .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
-                        .setDurationMs(song.moreInfo?.duration?.toLong())
-                        .build()
-                )
-                .build()
+        val mediaItems = newPlaylist.mapNotNull { song ->
+            song.moreInfo?.let { moreInfo ->
+                val artist = moreInfo.artistMap?.artists
+                    ?.distinctBy { it.name }
+                    ?.joinToString(", ") { it.name ?: "" }
+
+
+                MediaItem.Builder()
+                    .setUri(
+                        decodeDES(
+                            song.moreInfo.encryptedMediaUrl.toString(),
+                            song.moreInfo.kbps320 ?: false
+                        )
+                    )
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(song.title?.perfect())
+                            .setArtworkUri(Uri.parse(song.image))
+                            .setSubtitle(song.subtitle?.perfect())
+                            .setArtist(artist?.perfect())
+                            .setAlbumTitle(song.moreInfo.album?.perfect() ?: song.title?.perfect())
+                            .setDurationMs(song.moreInfo.duration?.toLong())
+                            .build()
+                    )
+                    .build()
+            }
         }
+
         exoPlayer.setMediaItems(mediaItems)
         exoPlayer.prepare()
         exoPlayer.play()
