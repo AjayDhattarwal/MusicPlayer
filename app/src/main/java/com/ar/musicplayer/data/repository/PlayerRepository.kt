@@ -73,6 +73,9 @@ class PlayerRepository @Inject constructor(
     private val _isPlaying = MutableStateFlow(exoPlayer.isPlaying)
     val isPlaying: StateFlow<Boolean> = _isPlaying
 
+    private val _isBuffering = MutableStateFlow(exoPlayer.isLoading)
+    val isBuffering: StateFlow<Boolean> = _isBuffering
+
     private val _playlist = MutableStateFlow<List<SongResponse>>(emptyList())
     val playlist: StateFlow<List<SongResponse>> get() = _playlist
 
@@ -106,17 +109,21 @@ class PlayerRepository @Inject constructor(
 
 
     private val handler = Handler(Looper.getMainLooper())
+
     private val updateLyricsRunnable = object : Runnable {
         override fun run() {
             updateLyric()
             // Schedule the next update after 0.5 second
             handler.postDelayed(this, 500L)
         }
+
     }
 
     private var isServiceStarted = false
 
-    val showBottomSheet = MutableStateFlow<Boolean>(false)
+    private val _showBottomSheet = MutableStateFlow(false)
+    val showBottomSheet: StateFlow<Boolean> = _showBottomSheet
+
 
     private val playerListener = @UnstableApi
     object : Player.Listener {
@@ -132,6 +139,7 @@ class PlayerRepository @Inject constructor(
             }
         }
 
+
         @UnstableApi
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             val newIndex = exoPlayer.currentMediaItemIndex
@@ -139,6 +147,7 @@ class PlayerRepository @Inject constructor(
             if (_currentIndex.value != newIndex) {
                 _currentIndex.value = newIndex
             }
+            updateNotification()
             if (mediaItem?.mediaMetadata?.title != null) {
                 val title = exoPlayer.currentMediaItem?.mediaMetadata?.title.toString()
                 val artistList = exoPlayer.currentMediaItem?.mediaMetadata?.artist
@@ -169,6 +178,9 @@ class PlayerRepository @Inject constructor(
                 )
                 updateLastSession()
             }
+            if(!showBottomSheet.value){
+                _showBottomSheet.value = true
+            }
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -189,12 +201,25 @@ class PlayerRepository @Inject constructor(
                 handler.removeCallbacks(updateLyricsRunnable)
             }
         }
+
+        override fun onIsLoadingChanged(isLoading: Boolean) {
+            _isBuffering.value = isLoading
+        }
+
     }
 
     init {
         exoPlayer.addListener(playerListener)
         coroutineScope.launch {
             loadLastSession()
+        }
+        coroutineScope.launch {
+            while (true) {
+               if(exoPlayer.isPlaying){
+                   _currentPosition.value = exoPlayer.currentPosition
+               }
+                delay(1000L)
+            }
         }
     }
 
@@ -256,7 +281,7 @@ class PlayerRepository @Inject constructor(
             }
             exoPlayer.setMediaItems(mediaItems, mediaItems.size - 1, 0)
             exoPlayer.prepare()
-            showBottomSheet.value = true
+            _showBottomSheet.value = true
             exoPlayer.pause()
             delay(2000)
             getRecommendations(playlist.value[currentIndex.value].id.toString())
@@ -287,7 +312,7 @@ class PlayerRepository @Inject constructor(
             }
 
             override fun onFailure(call: Call<List<SongResponse>>, t: Throwable) {
-                android.util.Log.d("reco", "${t.message}")
+                Log.d("reco", "${t.message}")
             }
         })
     }
@@ -335,6 +360,14 @@ class PlayerRepository @Inject constructor(
     private fun startForegroundService() {
         val intent = Intent(application, AudioService::class.java).apply {
             action = ACTIONS.START.toString()
+        }
+        application.startService(intent)
+    }
+
+    @UnstableApi
+    private fun updateNotification(){
+        val intent = Intent(application, AudioService::class.java).apply {
+            action = ACTIONS.UPDATE.toString()
         }
         application.startService(intent)
     }
@@ -387,9 +420,6 @@ class PlayerRepository @Inject constructor(
             }
         } else {
             addSongInPlaylist(song)
-        }
-        if(!showBottomSheet.value){
-            showBottomSheet.value = true
         }
     }
     fun makePerfectSong(song: SongResponse, onCallback: (SongResponse) -> Unit) {
@@ -496,6 +526,7 @@ class PlayerRepository @Inject constructor(
         val mediaItemCount = exoPlayer.mediaItemCount
         if (index in 0 until mediaItemCount) {
             exoPlayer.removeMediaItem(index)
+            exoPlayer.prepare()
             _currentIndex.value = exoPlayer.currentMediaItemIndex
         }
 
@@ -526,7 +557,6 @@ class PlayerRepository @Inject constructor(
         exoPlayer.addMediaItem(add,mediaItem)
         _currentIndex.value = exoPlayer.currentMediaItemIndex
 
-
         exoPlayer.prepare()
 
     }
@@ -536,6 +566,8 @@ class PlayerRepository @Inject constructor(
         val currentPosition = exoPlayer.currentPosition
         _currentLyricIndex.value = getLyricForPosition(currentPosition)
     }
+
+
 
     private fun getLyricForPosition(position: Long): Int {
         val index = lyricsData.value.indexOfLast {
@@ -580,6 +612,13 @@ class PlayerRepository @Inject constructor(
                 }
             }
         }
+
+    }
+
+    @UnstableApi
+    fun destroy(){
+        exoPlayer.release()
+        exoPlayer.removeListener(playerListener)
 
     }
 }

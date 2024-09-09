@@ -17,6 +17,8 @@
 
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
 
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -29,6 +31,7 @@
     <application
         android:name=".PlayNow"
         android:allowBackup="true"
+        android:appCategory="audio"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -38,8 +41,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPlayer"
         android:extractNativeLibs="true"
-        tools:targetApi="tiramisu"
-        android:networkSecurityConfig="@xml/network_security_config">
+        tools:targetApi="tiramisu">
+<!--        android:networkSecurityConfig="@xml/network_security_config">-->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -58,8 +61,13 @@
             android:permission="android.permission.POST_NOTIFICATIONS">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </service>
+        <meta-data android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc"/>
+
     </application>
 
 </manifest>

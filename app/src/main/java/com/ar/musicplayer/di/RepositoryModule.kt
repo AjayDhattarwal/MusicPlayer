@@ -11,6 +11,7 @@ import com.ar.musicplayer.api.ApiService
 import com.ar.musicplayer.api.LyricsByLrclib
 import com.ar.musicplayer.api.Translate
 import com.ar.musicplayer.data.models.LyricsResponse
+import com.ar.musicplayer.data.repository.GenerativeAiRepository
 import com.ar.musicplayer.data.repository.LyricRepository
 import com.ar.musicplayer.data.repository.PlayerRepository
 import com.ar.musicplayer.data.repository.PlaylistRepository
@@ -98,4 +99,10 @@ object RepositoryModule {
             lastSessionRepository = lastSessionRepository,
             songDetailsRepository =  songDetailsRepository,
         )
+
+    @Provides
+    @Singleton
+    fun provideGenerativeAiRepository(): GenerativeAiRepository {
+        return GenerativeAiRepository()
+    }
 }

@@ -60,21 +60,24 @@ import com.ar.musicplayer.components.home.LastSessionGridLayout
 import com.ar.musicplayer.data.models.HomeData
 import com.ar.musicplayer.data.models.ModulesOfHomeScreen
 import com.ar.musicplayer.navigation.InfoScreenObj
+import com.ar.musicplayer.ui.theme.WindowInfoVM
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
+    windowInfoVM: WindowInfoVM,
     listState: LazyListState,
-    homeViewModel: HomeViewModel = hiltViewModel(),
-    playerViewModel: PlayerViewModel = hiltViewModel(),
-    background: Brush,
+    homeViewModel: HomeViewModel ,
+    playerViewModel: PlayerViewModel ,
     navigateSetting: () -> Unit,
     onItemClick: (Boolean,HomeListItem) -> Unit
 
 ) {
     Log.d("recompose", "homeScreen recompose")
+
+
     val context = LocalContext.current
     val preferencesManager = remember{ PreferencesManager(context = context) }
 
@@ -105,7 +108,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .drawBehind {
-                drawRect(brush = background)
+//                drawRect(brush = background)
             }
     ){
         Scaffold(

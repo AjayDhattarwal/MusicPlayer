@@ -67,7 +67,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun FavoriteScreen(
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    background: Brush,
     onBackPressed: () -> Unit
 ) {
 
@@ -76,116 +75,107 @@ fun FavoriteScreen(
     val pagerState = rememberPagerState(initialPage = 0,pageCount = {titles.size})
 
 
-    Box(
-        modifier = Modifier.drawBehind {
-            drawRect(
-                brush = background
-            )
-        }
-
-    ){
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = "Favorite Songs", color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = { onBackPressed() }) {
-                            Icon(
-                                Icons.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                Icons.Filled.Download,
-                                contentDescription = "Download",
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(onClick = { }) {
-                            Icon(
-                                Icons.Filled.Search,
-                                contentDescription = "Search",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
-            },
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) {
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    indicator = remember {
-                        { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                modifier =
-                                Modifier
-                                    .tabIndicatorOffset(
-                                        tabPositions[pagerState.currentPage]
-                                    )
-                                    .padding(start = 15.dp, end = 15.dp)
-                                    .clip(RoundedCornerShape(50)),
-                                color = Color.LightGray,
-                            )
-                        }
-                    },
-                    containerColor = Color.Transparent,
-                    divider = {},
-                ) {
-                    titles.forEachIndexed { index, title ->
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = remember {
-                                {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                }
-                            },
-                            content = {
-                                Text(
-                                    text = title,
-                                    color = Color.LightGray,
-                                    modifier = Modifier.padding(bottom = 5.dp)
-                                )
-                            },
-                            selectedContentColor = Color.White,
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Favorite Songs", color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = { onBackPressed() }) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
                         )
                     }
-                }
-
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.Top
-                ) { page ->
-
-                    PageDisplay(
-                        page = page,
-                        onSongClick = remember {
+                },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            Icons.Filled.Download,
+                            contentDescription = "Download",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = { }) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = "Search",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+        },
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                indicator = remember {
+                    { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            modifier =
+                            Modifier
+                                .tabIndicatorOffset(
+                                    tabPositions[pagerState.currentPage]
+                                )
+                                .padding(start = 15.dp, end = 15.dp)
+                                .clip(RoundedCornerShape(50)),
+                            color = Color.LightGray,
+                        )
+                    }
+                },
+                containerColor = Color.Transparent,
+                divider = {},
+            ) {
+                titles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = remember {
                             {
-                                playerViewModel.setNewTrack(it)
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
                             }
-                        }
+                        },
+                        content = {
+                            Text(
+                                text = title,
+                                color = Color.LightGray,
+                                modifier = Modifier.padding(bottom = 5.dp)
+                            )
+                        },
+                        selectedContentColor = Color.White,
                     )
-
                 }
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.Top
+            ) { page ->
+
+                PageDisplay(
+                    page = page,
+                    onSongClick = remember {
+                        {
+                            playerViewModel.setNewTrack(it)
+                        }
+                    }
+                )
 
             }
+
         }
     }
 }

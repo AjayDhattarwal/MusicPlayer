@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -48,14 +49,14 @@ fun PlayPauseButton(
 
 @Composable
 fun PlayPauseLargeButton(
+    size : Dp = 100.dp,
     isPlaying: Boolean,
     onPlayPauseClick: () -> Unit
 ) {
     IconButton(
         onClick = onPlayPauseClick,
         modifier = Modifier
-            .size(100.dp)
-            .padding(end = 5.dp)
+            .size(size)
             .indication(remember { MutableInteractionSource() }, null)
     ) {
         Icon(

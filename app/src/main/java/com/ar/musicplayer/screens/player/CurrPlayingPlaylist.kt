@@ -46,8 +46,10 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 @OptIn(UnstableApi::class)
 @Composable
-fun CurrPlayingPlaylist(){
-    val playerViewModel: PlayerViewModel = hiltViewModel()
+fun CurrPlayingPlaylist(
+    playerViewModel: PlayerViewModel
+){
+
     val lazyListState = rememberLazyListState()
     val currentIndex by playerViewModel.currentIndex.collectAsState(0)
     val playlist by playerViewModel.playlist.collectAsState()

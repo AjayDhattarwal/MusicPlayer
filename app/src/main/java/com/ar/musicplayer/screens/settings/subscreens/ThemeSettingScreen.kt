@@ -71,11 +71,11 @@ import java.io.InputStream
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeSettingsScreen(
-    backgroundGradient: Brush,
     themeViewModel: ThemeViewModel,
     preferencesManager: PreferencesManager,
     onBackClick: () -> Unit,
 ) {
+    val backgroundGradient by themeViewModel.blackToGrayGradient.collectAsState()
     val context = LocalContext.current
     var accentColor by remember { mutableStateOf(Color(preferencesManager.getAccentColor())) }
 
@@ -134,7 +134,7 @@ fun ThemeSettingsScreen(
             )
 
         },
-        modifier = Modifier.background(backgroundGradient),
+//        modifier = Modifier.background(backgroundGradient),
         containerColor = Color.Transparent
     ) { innerPadding ->
 
@@ -143,7 +143,9 @@ fun ThemeSettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Column(modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp)) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 16.dp, end = 16.dp)) {
 
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
@@ -319,13 +321,13 @@ fun ThemeSettingsScreen(
                                             linearColors = colors.joinToString(",") { color ->
                                                 color.toArgb().toString()
                                             }
-//                                        preferencesManager.saveLinearColors(linearColors)
                                             preferencesManager.saveLinearGradientBrush(
                                                 colors,
                                                 Offset.Zero,
                                                 Offset.Infinite
                                             )
                                             val brush = preferencesManager.getLinearGradientBrush()
+                                            themeViewModel.updateBackgroundColors(colors)
                                             themeViewModel.updateGradient(brush)
                                         },
                                         onDismissRequest = { showGradientColorPicker1 = false }
@@ -366,6 +368,7 @@ fun ThemeSettingsScreen(
                                                 Offset.Infinite
                                             )
                                             val brush = preferencesManager.getLinearGradientBrush()
+                                            themeViewModel.updateBackgroundColors(colors)
                                             themeViewModel.updateGradient(brush)
                                         },
                                         onDismissRequest = { showGradientColorPicker2 = false }
@@ -406,6 +409,7 @@ fun ThemeSettingsScreen(
                                                 Offset.Infinite
                                             )
                                             val brush = preferencesManager.getLinearGradientBrush()
+                                            themeViewModel.updateBackgroundColors(colors)
                                             themeViewModel.updateGradient(brush)
                                         },
                                         onDismissRequest = { showGradientColorPicker3 = false }
@@ -517,6 +521,6 @@ fun ThemeSettingsScreenPreview() {
             colors = listOf(MaterialTheme.colorScheme.primaryContainer,Color.Black,Color.Black,Color.Black,),
             start = Offset.Zero
         )
-    ThemeSettingsScreen( blackToGrayGradient, ThemeViewModel(LocalContext.current),preferencesManager,{})
+//    ThemeSettingsScreen( ThemeViewModel(LocalContext.current),preferencesManager,{})
 }
 

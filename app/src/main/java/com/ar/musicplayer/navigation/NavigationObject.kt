@@ -66,3 +66,6 @@ object PlaylistFetchScreenObj
 
 @Serializable
 object CurrPlayingPlaylistObj
+
+@Serializable
+object LargeScreenPlayerObj

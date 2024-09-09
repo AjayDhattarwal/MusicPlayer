@@ -27,7 +27,7 @@ import coil.compose.AsyncImage
 import com.ar.musicplayer.data.models.SongResponse
 
 @Composable
-fun HistorySongItem(
+fun SimpleSongItem(
     songResponse: SongResponse,
     onTrackSelect : () -> Unit,
     onClick : () -> Unit,
@@ -36,16 +36,17 @@ fun HistorySongItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 5.dp, top = 10.dp)
-            .clickable {
-                onClick()
-            }
             .pointerInput(Unit){
                 detectTapGestures (
                     onLongPress = {
                         onTrackSelect()
                     }
                 )
+            }
+            .clickable {
+                onClick()
             },
+
         verticalAlignment = Alignment.CenterVertically
     ) {
 

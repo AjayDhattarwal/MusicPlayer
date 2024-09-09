@@ -122,7 +122,9 @@ data class Artist(
     @SerializedName("image") val image: String? = " ",
     @SerializedName("type") val type: String? = " ",
     @SerializedName("perma_url") val permaUrl: String? = " ",
-    @SerializedName("isRadioPresent") val isRadioPresent: Boolean? = false
+    @SerializedName("isRadioPresent") val isRadioPresent: Boolean? = false,
+    @SerializedName("description") val description: String? = "",
+    @SerializedName("other") val other: String? = ""
 
 ): Parcelable
 
@@ -549,3 +551,24 @@ data class TranslationResponse(
     @SerializedName("transliterated_text") val text: String ? = ""
 )
 
+@Serializable
+data class AiResponse(
+    val type: String? = null,
+    val songs: List<AiSong>? = null,
+    val artists: List<Artist>? = null,
+    val genre: String? = null,
+    val description: String? = null,
+    val other: String? = null
+)
+
+@Serializable
+data class AiSong(
+    val title: String? = null,
+    val artist: String? = null,
+    val album: String? = null,
+    val release_year: Int? = null,
+    val duration: Long? = null,
+    val genre: String? = null,
+    val description: String? = null,
+    val other: String? = null
+)

@@ -1,12 +1,34 @@
+@file:OptIn(ExperimentalMaterial3AdaptiveApi::class)
+
 package com.ar.musicplayer.navigation
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.BottomNavigation
@@ -17,15 +39,25 @@ import androidx.compose.material.BottomSheetValue.Collapsed
 import androidx.compose.material.BottomSheetValue.Expanded
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,14 +67,20 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -52,6 +90,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
+import com.ar.musicplayer.components.home.AnimatedAIFloatingActionButton
+import com.ar.musicplayer.components.modifier.shader
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.screens.settings.subscreens.DownloadSettingsScreen
 import com.ar.musicplayer.screens.settings.subscreens.LanguageSettingsScreen
@@ -61,11 +101,10 @@ import com.ar.musicplayer.screens.settings.subscreens.StorageSettingScreen
 import com.ar.musicplayer.screens.settings.subscreens.ThemeSettingsScreen
 import com.ar.musicplayer.screens.player.MusicPlayerScreen
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.InfoScreenModel
 import com.ar.musicplayer.data.models.PlaylistResponse
 import com.ar.musicplayer.data.models.toInfoScreenModel
-import com.ar.musicplayer.screens.home.HomeScreen
+import com.ar.musicplayer.screens.home.AdaptiveHomeScreen
 import com.ar.musicplayer.screens.info.ArtistInfoScreen
 import com.ar.musicplayer.screens.info.InfoScreen
 import com.ar.musicplayer.screens.library.LibraryScreen
@@ -81,68 +120,314 @@ import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
+import com.ar.musicplayer.screens.player.AdaptiveDetailsPlayer
+import com.ar.musicplayer.screens.player.AdaptiveMiniPlayer
+import com.ar.musicplayer.screens.player.CurrPlayingPlaylist
+import com.ar.musicplayer.screens.player.AdaptiveMaxPlayer
+import com.ar.musicplayer.ui.theme.WindowInfoVM
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
-import com.ar.musicplayer.ui.theme.AppTheme
 import com.ar.musicplayer.ui.theme.onPrimaryDark
 import com.ar.musicplayer.utils.events.RadioStationEvent
+import com.ar.musicplayer.viewmodel.AiViewModel
+import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 import com.ar.musicplayer.viewmodel.ThemeViewModel
+import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
+import com.google.accompanist.adaptive.TwoPane
+import com.google.accompanist.adaptive.calculateDisplayFeatures
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 
 @UnstableApi
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalSharedTransitionApi::class
+)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun App(
     navController: NavHostController,
     homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
-    modifier: Modifier = Modifier,
-    downloaderViewModel: DownloaderViewModel
+    downloaderViewModel: DownloaderViewModel,
+    windowInfoVm: WindowInfoVM
 ) {
+    val scope = rememberCoroutineScope()
+    val themeViewModel = hiltViewModel<ThemeViewModel>()
+    val backgroundBrush by themeViewModel.blackToGrayGradient.collectAsState()
+    val backgroundColors by themeViewModel.backgroundColors.collectAsState()
 
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(Collapsed)
     )
-    Log.d("recompose", " recompose called for App Function")
-    AppTheme {
-        Scaffold(
-            bottomBar = {
-                BottomNavigationBar(
-                    navController = navController,
-                    bottomSheetState = bottomSheetState,
-                    modifier = Modifier
-                        .systemBarsPadding()
-                )
-
-            },
-            modifier = modifier
-        ) { _ ->
-            AppMainScreen(
-                navController = navController,
-                homeViewModel = homeViewModel,
-                playerViewModel = playerViewModel,
-                downloaderViewModel = downloaderViewModel,
-                bottomSheetState = bottomSheetState
-            )
+    val currentFraction by remember {
+        derivedStateOf {
+            bottomSheetState.currentFraction
         }
     }
+    val paletteExtractor = remember { PaletteExtractor() }
+
+    val showBottomBar by windowInfoVm.showBottomBar.collectAsStateWithLifecycle()
+    val showPreviewScreen by windowInfoVm.showPreviewScreen.collectAsState()
+    val isMusicDetailsVisible by windowInfoVm.isMusicDetailsVisible.collectAsState()
+    val isFullScreenPlayer by windowInfoVm.isFullScreenPlayer.collectAsState()
+
+    val showPlayer by playerViewModel.showBottomSheet.collectAsState()
+
+    val context = LocalContext.current
+
+
+    val screenWidth = LocalConfiguration.current.screenWidthDp.toFloat()
+    var offsetX by remember { mutableStateOf(0.6f) }
+
+
+    Box(
+        modifier =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Modifier.shader(backgroundColors)
+            } else {
+                Modifier.drawBehind { drawRect(brush = backgroundBrush) }
+            }
+    ){
+
+        Scaffold(
+            bottomBar = {
+                if(showBottomBar){
+                    BottomNavigationBar(
+                        navController = navController,
+                        bottomSheetState = bottomSheetState,
+                        modifier = Modifier
+                            .systemBarsPadding()
+
+                    )
+                }
+            },
+            floatingActionButton = {
+                if(!showBottomBar){
+                    AnimatedAIFloatingActionButton(
+
+                        onArtistClick = remember{
+                            { artist ->
+                                val senderData = Json.encodeToString(Artist.serializer(), artist)
+                                navController.navigate(
+                                    ArtistInfoScreenObj(senderData)
+                                )
+                            }
+                        },
+
+                        onSongClick = remember {
+                            {
+                                playerViewModel.setNewTrack(it)
+                            }
+                        }
+                    )
+                }
+            },
+            containerColor = Color.Transparent,
+            contentColor = Color.Transparent,
+        ){ _ ->
+            Box(){
+                Row {
+                    if (!showBottomBar && !isFullScreenPlayer) {
+                        NavigationRailBar(navController)
+                    }
+                    TwoPane(
+                        displayFeatures = calculateDisplayFeatures(context as Activity),
+                        first = {
+                            AppMainScreen(
+                                showPlayerSheet = showBottomBar,
+                                navController = navController,
+                                homeViewModel = homeViewModel,
+                                playerViewModel = playerViewModel,
+                                downloaderViewModel = downloaderViewModel,
+                                bottomSheetState = bottomSheetState,
+                                windowInfoVm = windowInfoVm
+                            )
+                        },
+                        second = {
+                            if (showPlayer && isMusicDetailsVisible && showPreviewScreen ) {
+                                var showCurrentPlaylist by remember { mutableStateOf(false) }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(bottom = 100.dp)
+                                ) {
+                                    Box(modifier = Modifier
+                                        .width(3.dp)
+                                        .height(100.dp)
+                                        .align(Alignment.CenterVertically)
+                                        .background(Color.LightGray)
+                                        .draggable(
+                                            orientation = Orientation.Horizontal,
+                                            state = rememberDraggableState { delta ->
+                                                val newOffset =
+                                                    (offsetX + delta / screenWidth).coerceIn(
+                                                        0.4f,
+                                                        0.7f
+                                                    )
+                                                offsetX = newOffset
+                                            }
+                                        )
+                                        .pointerInput(true) {
+                                            detectTapGestures(
+                                                onTap = {
+                                                    offsetX = 0.6f
+                                                }
+                                            )
+                                        }
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .drawBehind {
+                                                drawRect(color = Color(0x1E999999))
+                                            },
+                                    ) {
+                                        if (!showCurrentPlaylist) {
+                                            AdaptiveDetailsPlayer(
+                                                playerViewModel = playerViewModel,
+                                                isAdaptive = true,
+                                                onExpand = { /*TODO*/ },
+                                                onCollapse = remember { { windowInfoVm.closeMusicPreview() } },
+                                                onQueue = { showCurrentPlaylist = true },
+                                                paletteExtractor = paletteExtractor,
+                                                downloaderViewModel = downloaderViewModel,
+                                                modifier = Modifier
+                                            )
+                                        } else {
+                                            Column {
+                                                Box {
+                                                    CenterAlignedTopAppBar(
+                                                        title = {
+                                                            Text(
+                                                                text = "Current Playing",
+                                                                color = Color.White
+                                                            )
+                                                        },
+                                                        navigationIcon = {
+                                                            IconButton(onClick = remember {
+                                                                {
+                                                                    showCurrentPlaylist = false
+                                                                }
+                                                            }) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Clear,
+                                                                    contentDescription = "Close",
+                                                                    tint = Color.White
+                                                                )
+                                                            }
+                                                        },
+                                                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                                                            containerColor = Color.Transparent
+                                                        )
+
+                                                    )
+                                                }
+                                                CurrPlayingPlaylist(playerViewModel = playerViewModel)
+                                            }
+
+                                        }
+
+                                    }
+                                }
+
+                            }
+                        },
+                        strategy = HorizontalTwoPaneStrategy(if (showPlayer && isMusicDetailsVisible && showPreviewScreen) offsetX else 1f)
+                    )
+                }
+
+                if (showPlayer && showPreviewScreen ) {
+
+                    Box(modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .systemBarsPadding()){
+                        SharedTransitionLayout {
+                            AnimatedContent(
+                                isFullScreenPlayer,
+                                label = "fullScreen_transition"
+                            ) { targetState ->
+
+                                if (!targetState) {
+                                    AdaptiveMiniPlayer(
+                                        playerViewModel = playerViewModel,
+                                        onCollapse = { /*TODO*/ },
+                                        animatedVisibilityScope = this@AnimatedContent,
+                                        sharedTransitionScope = this@SharedTransitionLayout,
+                                        paletteExtractor = paletteExtractor,
+                                        downloaderViewModel = downloaderViewModel,
+                                        modifier = Modifier.clickable {
+                                            if (!isMusicDetailsVisible)
+                                                windowInfoVm.showMusicPreview()
+                                        },
+                                        content = {
+                                            IconButton(
+                                                modifier = Modifier,
+                                                onClick = remember {
+                                                    {
+                                                        navController.navigate(LargeScreenPlayerObj)
+                                                        windowInfoVm.toFullScreen()
+                                                    }
+                                                }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.OpenInFull,
+                                                    contentDescription = "preview",
+                                                    tint = Color.White
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                                else {
+                                    AdaptiveMaxPlayer(
+                                        playerViewModel = playerViewModel,
+                                        onBack = remember{
+                                            {
+                                                navController.navigateUp()
+                                                windowInfoVm.closeFullScreen()
+                                            }
+                                        },
+                                        animatedVisibilityScope = this@AnimatedContent,
+                                        sharedTransitionScope = this@SharedTransitionLayout
+                                    )
+                                    BackHandler {
+                                        navController.navigateUp()
+                                        windowInfoVm.closeFullScreen()
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+
+
+    }
+
+
+
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun AppMainScreen(
+    showPlayerSheet: Boolean,
     navController: NavHostController,
     homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
     downloaderViewModel: DownloaderViewModel,
     bottomSheetState: BottomSheetScaffoldState,
-    localSongsViewModel: LocalSongsViewModel = hiltViewModel()
+    localSongsViewModel: LocalSongsViewModel = hiltViewModel(),
+    windowInfoVm: WindowInfoVM
 ) {
 
     val themeViewModel = hiltViewModel<ThemeViewModel>()
+    val moreInfoViewModel = hiltViewModel<MoreInfoViewModel>()
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -152,41 +437,63 @@ fun AppMainScreen(
 
     val showPlayer by playerViewModel.showBottomSheet.collectAsState()
 
+
     val paletteExtractor = remember { PaletteExtractor() }
 
 
     Log.d("recompose", " recompose called for PlayerScreenWithBottomNav Function")
 
-    BottomSheetScaffold(
-        scaffoldState = bottomSheetState,
-        sheetPeekHeight = if(showPlayer) 125.dp else 0.dp,
-        sheetContent = {
-            key(showPlayer) {
-                MusicPlayerScreen(
-                    playerViewModel = playerViewModel,
-                    bottomSheetState = bottomSheetState,
-                    onExpand = remember{
-                        {
-                            if (bottomSheetState.bottomSheetState.isCollapsed) {
-                                coroutineScope.launch { bottomSheetState.bottomSheetState.expand() }
+    if(showPlayerSheet){
+        BottomSheetScaffold(
+            scaffoldState = bottomSheetState,
+            sheetPeekHeight = if(showPlayer) 125.dp else 0.dp,
+            sheetContent = {
+                key(showPlayer) {
+                    MusicPlayerScreen(
+                        playerViewModel = playerViewModel,
+                        bottomSheetState = bottomSheetState,
+                        onExpand = remember{
+                            {
+                                if (bottomSheetState.bottomSheetState.isCollapsed) {
+                                    coroutineScope.launch { bottomSheetState.bottomSheetState.expand() }
+                                }
                             }
-                        }
-                    },
-                    onCollapse = remember{ { coroutineScope.launch { bottomSheetState.bottomSheetState.collapse() } } },
-                    paletteExtractor = paletteExtractor,
-                    downloaderViewModel = downloaderViewModel,
-                )
+                        },
+                        onCollapse = remember{ { coroutineScope.launch { bottomSheetState.bottomSheetState.collapse() } } },
+                        paletteExtractor = paletteExtractor,
+                        downloaderViewModel = downloaderViewModel,
+                    )
+                }
+            },
+            sheetBackgroundColor = Color.Transparent,
+            sheetContentColor = Color.Transparent,
+            backgroundColor = Color.Transparent,
+            modifier = Modifier.navigationBarsPadding(),
+            ) {
+                key(homeViewModel) {
+                    MainScreenContent(
+                        navController = navController,
+                        listState = listState,
+                        windowInfoVm = windowInfoVm,
+                        homeViewModel = homeViewModel,
+                        playerViewModel = playerViewModel,
+                        moreInfoViewModel = moreInfoViewModel,
+                        preferencesManager = preferencesManager,
+                        localSongsViewModel = localSongsViewModel,
+                        themeViewModel = themeViewModel
+                    )
+                }
             }
-        },
-        sheetBackgroundColor = Color.Transparent,
-        modifier = Modifier.navigationBarsPadding(),
 
-    ) {
+    } else{
         key(homeViewModel) {
             MainScreenContent(
                 navController = navController,
                 listState = listState,
+                windowInfoVm = windowInfoVm,
+                homeViewModel = homeViewModel,
                 playerViewModel = playerViewModel,
+                moreInfoViewModel = moreInfoViewModel,
                 preferencesManager = preferencesManager,
                 localSongsViewModel = localSongsViewModel,
                 themeViewModel = themeViewModel
@@ -202,7 +509,10 @@ fun AppMainScreen(
 fun MainScreenContent(
     navController: NavHostController,
     listState: LazyListState,
+    windowInfoVm: WindowInfoVM,
+    homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
+    moreInfoViewModel: MoreInfoViewModel,
     preferencesManager: PreferencesManager,
     localSongsViewModel: LocalSongsViewModel,
     themeViewModel: ThemeViewModel
@@ -210,9 +520,6 @@ fun MainScreenContent(
     val radioStationSelection = remember {
         mutableStateOf(false)
     }
-
-
-    val backgroundBrush by themeViewModel.blackToGrayGradient
 
     NavHost(
         navController = navController,
@@ -225,7 +532,7 @@ fun MainScreenContent(
         composable<HomeScreenObj> {
             val radioStationViewModel = hiltViewModel<RadioStationViewModel>()
             val radioSongResponse by radioStationViewModel.radioStation.collectAsState()
-
+            val showPreviewScreen by windowInfoVm.showPreviewScreen.collectAsStateWithLifecycle()
 
             LaunchedEffect (radioSongResponse) {
                 Log.d("radio", "is active ")
@@ -234,8 +541,13 @@ fun MainScreenContent(
                     radioStationSelection.value = false
                 }
             }
-            HomeScreen(
-                background = backgroundBrush,
+
+
+            AdaptiveHomeScreen(
+                windowInfoVM = windowInfoVm,
+                homeViewModel = homeViewModel,
+                playerViewModel = playerViewModel,
+                moreInfoViewModel = moreInfoViewModel,
                 listState = listState,
                 navigateSetting = remember {
                     {
@@ -258,8 +570,14 @@ fun MainScreenContent(
                                 ))
                             radioStationSelection.value = true
                         } else{
-                            val serializedData = Json.encodeToString(InfoScreenModel.serializer(), data.toInfoScreenModel())
-                            navController.navigate(InfoScreenObj(serializedData))
+
+                            if(!showPreviewScreen){
+                                val serializedData = Json.encodeToString(
+                                    InfoScreenModel.serializer(),
+                                    data.toInfoScreenModel()
+                                )
+                                navController.navigate(InfoScreenObj(serializedData))
+                            }
                         }
                     }
                 }
@@ -267,10 +585,20 @@ fun MainScreenContent(
 
         }
 
+        composable<LargeScreenPlayerObj> {
+//            AdaptiveMaxPlayer({
+//                showDetails = false
+//            }, this@AnimatedContent, this@SharedTransitionLayout)
+//            BackHandler {
+//                navController.navigateUp()
+//                windowInfoVm.closeFullScreen()
+//            }
+        }
+
 
         composable<SearchScreenObj> {
             SearchScreen(
-                background = backgroundBrush,
+                playerViewModel = playerViewModel,
                 onArtistClick = remember{
                     { artist ->
                         val senderData = Json.encodeToString(Artist.serializer(), artist)
@@ -293,7 +621,6 @@ fun MainScreenContent(
 
         composable<LibraryScreenObj> {
             LibraryScreen(
-                background = backgroundBrush,
                 onScreenSelect = remember {
                     { path ->
                         navController.navigate(path)
@@ -305,7 +632,6 @@ fun MainScreenContent(
 
         composable<SettingsScreenObj> {
             SettingsScreen(
-                background = backgroundBrush,
                 onBackPressed = remember {
                     { navController.navigateUp() }
                 },
@@ -323,6 +649,7 @@ fun MainScreenContent(
             val args = it.toRoute<InfoScreenObj>()
             val data = Json.decodeFromString(InfoScreenModel.serializer(), args.data)
             InfoScreen(
+                moreInfoViewModel = moreInfoViewModel,
                 data = data,
                 onBackPressed = remember {
                     { navController.navigateUp() }
@@ -333,7 +660,6 @@ fun MainScreenContent(
 
         composable<FavoriteScreenObj> {
             FavoriteScreen(
-                background = backgroundBrush,
                 onBackPressed = remember {
                     { navController.navigateUp() }
                 }
@@ -344,7 +670,6 @@ fun MainScreenContent(
 
         composable<ListeningHisScreenObj> {
             ListeningHistoryScreen(
-                background = backgroundBrush,
                 onBackPressed = remember {
                     {
                         navController.navigateUp()
@@ -357,7 +682,6 @@ fun MainScreenContent(
 
         composable<MyMusicScreenObj> {
             MyMusicScreen(
-                background = backgroundBrush,
                 onBackPressed = remember {
                     {
                         navController.navigateUp()
@@ -395,7 +719,7 @@ fun MainScreenContent(
 
         }
         composable<ThemeSettingObj> {
-            ThemeSettingsScreen(backgroundBrush, themeViewModel, preferencesManager) {
+            ThemeSettingsScreen( themeViewModel, preferencesManager) {
                 navController.navigateUp()
             }
 
@@ -439,8 +763,7 @@ fun MainScreenContent(
         }
         composable<PlaylistFetchScreenObj> {
             PlaylistFetchScreen(
-                navController = navController,
-                background = backgroundBrush
+                navController = navController
             )
 
         }
@@ -466,6 +789,7 @@ fun BottomNavigationBar(navController: NavController, bottomSheetState: BottomSh
             bottomSheetState.currentFraction
         }
     }
+
 
     BottomNavigation(
         backgroundColor = Color.Black,
@@ -508,7 +832,74 @@ fun BottomNavigationBar(navController: NavController, bottomSheetState: BottomSh
                         color =  if (isSelected) Color.White else Color.Gray,
                     )
                 },
+                modifier = Modifier.background(color = Color.Transparent)
             )
+        }
+    }
+}
+
+@Composable
+fun NavigationRailBar(
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
+    val railScreens = remember {
+        listOf(
+            BottomNavItem.Home,
+            BottomNavItem.Search,
+            BottomNavItem.Library,
+        )
+    }
+
+    NavigationRail(
+        containerColor = Color.Transparent,
+        contentColor = Color.Transparent,
+        modifier = modifier,
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+        Column(
+            modifier = Modifier.fillMaxHeight(),
+            verticalArrangement = Arrangement.Center
+        ) {
+            railScreens.forEach { screen ->
+                val isSelected = currentDestination?.hierarchy?.any { it.route == screen.obj::class.qualifiedName } == true
+                NavigationRailItem(
+                    selected = isSelected,
+                    onClick = remember {
+                        {
+                            navController.navigate(screen.obj) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = screen.icon,
+                            contentDescription = screen.label,
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = screen.label,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    },
+                    colors = NavigationRailItemDefaults.colors(
+                        unselectedIconColor = Color.Gray,
+                        unselectedTextColor = Color.Gray,
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        indicatorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 }

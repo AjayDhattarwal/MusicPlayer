@@ -1,28 +1,43 @@
 package com.ar.musicplayer.components.player
 
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun TrackSlider(
     value: Float,
-    onValueChange: (newValue: Float) -> Unit,
-//    onValueChangeFinished: () -> Unit,
-    songDuration: Float
+    bufferedProgress: Float,
+    onValueChange: (Float) -> Unit,
+    songDuration: Float,
+    onValueChangeFinished: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-//        onValueChangeFinished = onValueChangeFinished,
-        valueRange = 0f..songDuration,
-        colors = SliderDefaults.colors(
-            thumbColor = Color.White,
-            activeTrackColor = Color.White,
-            inactiveTrackColor = Color.Gray,
+
+        Slider(
+            value = value,
+            onValueChange = {
+                onValueChange(it)
+            },
+            onValueChangeFinished = {
+
+                onValueChangeFinished()
+
+            },
+            valueRange = 0f..songDuration,
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = Color.White,
+                inactiveTrackColor = Color.Gray,
+            ),
+            modifier = modifier
+
         )
-    )
 }
 
 

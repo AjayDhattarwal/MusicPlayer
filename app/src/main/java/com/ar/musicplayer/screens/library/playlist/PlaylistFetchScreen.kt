@@ -56,7 +56,6 @@ import com.ar.musicplayer.navigation.StorageSettingScreenObj
 @Composable
 fun PlaylistFetchScreen(
     navController: NavHostController,
-    background: Brush
 ){
     var showDialog by remember {
         mutableStateOf(false)
@@ -98,7 +97,6 @@ fun PlaylistFetchScreen(
             )
         },
         containerColor = Color.Transparent,
-        modifier = Modifier.background(brush = background)
     ) { innerPadding ->
 
         PlaylistDialog(
@@ -273,12 +271,6 @@ fun PlaylistFetchScreen(
 @Composable
 fun PlaylistFetchScreenPreview(){
     PlaylistFetchScreen(
-        rememberNavController(),
-        Brush.verticalGradient(
-            listOf(
-                Color(0xFF000000),
-                Color(0xFF000000)
-            )
-        )
+        rememberNavController()
     )
 }

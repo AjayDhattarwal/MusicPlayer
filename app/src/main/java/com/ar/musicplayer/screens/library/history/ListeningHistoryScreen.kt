@@ -1,7 +1,5 @@
 package com.ar.musicplayer.screens.library.history
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,13 +22,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
-import com.ar.musicplayer.screens.library.components.history.HistorySongItem
+import com.ar.musicplayer.screens.library.components.history.SimpleSongItem
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -38,64 +34,57 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 @Composable
 fun ListeningHistoryScreen(
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    background: Brush,
     onBackPressed: () -> Boolean,
 ) {
     val songResponseList by playerViewModel.listeningHistory.collectAsState()
-    Box(
-        modifier = Modifier.drawBehind {
-            drawRect(brush = background)
-        }
-    ){
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = "Recently played", color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = { onBackPressed() }) {
-                            Icon(
-                                Icons.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier.statusBarsPadding()
-                )
-            },
-            containerColor = Color.Transparent,
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                LazyColumn {
-                    items(
-                        songResponseList,
-                        key = { item -> item.second.id ?: "" }) { (id, songResponse) ->
-                        HistorySongItem(
-                            songResponse = songResponse,
-                            onTrackSelect = {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Recently played", color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = { onBackPressed() }) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier.statusBarsPadding()
+            )
+        },
+        containerColor = Color.Transparent,
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            LazyColumn {
+                items(
+                    songResponseList,
+                    key = { item -> item.second.id ?: "" }) { (id, songResponse) ->
+                    SimpleSongItem(
+                        songResponse = songResponse,
+                        onTrackSelect = {
 //                        if(id != null){
 ////                            lastSessionViewModel.onEvent(LastSessionEvent.DeleteHistoryById(id))
 //                        }
-                            },
-                            onClick = remember {
-                                { playerViewModel.setNewTrack(songResponse) }
-                            }
-                        )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(125.dp))
-                    }
+                        },
+                        onClick = remember {
+                            { playerViewModel.setNewTrack(songResponse) }
+                        }
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(125.dp))
                 }
             }
-
         }
+
     }
 }
 

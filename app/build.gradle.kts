@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -39,6 +40,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        android.buildFeatures.buildConfig = true
         compose = true
     }
     composeOptions {
@@ -53,7 +55,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -69,6 +70,11 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.lifecycle.service)
+
+    implementation("androidx.compose.material3.adaptive:adaptive:1.1.0-alpha01")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0-rc01")
+    implementation ("com.google.accompanist:accompanist-adaptive:0.35.2-beta")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -79,74 +85,76 @@ dependencies {
 
     implementation(libs.navigation.compose)
 
-    implementation (libs.androidx.material)
+    implementation(libs.androidx.material)
 
-    implementation (libs.androidx.runtime.livedata)
-    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
 
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     implementation(libs.coil.gif)
 
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.gson)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.gson)
 
-    implementation (libs.logging.interceptor)
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.okhttp)
+    implementation(libs.logging.interceptor)
+    implementation(libs.okhttp)
 
 
     // Dagger hilt
-    implementation (libs.hilt.android)
-    ksp (libs.hilt.compiler)
-    testImplementation (libs.hilt.android.testing)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    testImplementation(libs.hilt.android.testing)
     // For instrumentation tests
-    androidTestImplementation  (libs.hilt.android.testing)
-    kspAndroidTest (libs.hilt.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
 
-    ksp ("androidx.hilt:hilt-compiler:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // Extended Icons
-    implementation (libs.androidx.material.icons.extended)
+    implementation(libs.androidx.material.icons.extended)
 
     // Navigation
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.hilt.navigation.compose)
 
     //image color
-    implementation (libs.androidx.palette.ktx)
+    implementation(libs.androidx.palette.ktx)
 
     //music player
-    implementation (libs.accompanist.systemuicontroller)
-    implementation (libs.androidx.media3.exoplayer)
-    implementation (libs.androidx.media3.session)
+    implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
 
-    implementation (libs.exoplayer.core)
+    implementation(libs.exoplayer.core)
     // ExoPlayer UI module (contains PlayerNotificationManager)
-    implementation (libs.exoplayer.ui)
-    implementation (libs.androidx.media)
+    implementation(libs.exoplayer.ui)
+    implementation(libs.androidx.media)
 
 
-    implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
+    implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
 
-    implementation ("com.google.accompanist:accompanist-glide:0.10.0")
+    implementation("com.google.accompanist:accompanist-glide:0.10.0")
 
     //room database
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
     //ffmpeg
-    implementation (libs.ffmpeg.kit.full)
+    implementation(libs.ffmpeg.kit.full)
 
     // mp3 create
-    implementation (libs.mpatric.mp3agic)
+    implementation(libs.mpatric.mp3agic)
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
+
 
 //    implementation("androidx.compose.runtime:runtime-tracing:1.0.0-beta01")
 //    implementation("androidx.tracing:tracing-perfetto:1.0.0")
 //    implementation("androidx.tracing:tracing-perfetto-binary:1.0.0")
-
-
 }
+
+
+

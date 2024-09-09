@@ -1,10 +1,8 @@
 package com.ar.musicplayer.components.mix
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,7 +38,7 @@ fun ArtistsLazyColumn(songsByArtist: Map<String, List<SongResponse>>) {
     }
     LazyColumn {
         items(list){ (artist, songs) ->
-            ArtistSection(artist, songs.first().image.toString(), onClick = {})
+            ArtistItem(artist, songs.first().image.toString(), onClick = {})
         }
         item {
             Spacer(modifier = Modifier.height(125.dp))
@@ -53,7 +51,7 @@ fun ArtistsLazyColumn(songsByArtist: Map<String, List<SongResponse>>) {
 fun SearchArtistResults(artistResults: List<Artist>, onClick: (Artist) -> Unit) {
     LazyColumn {
         items(artistResults){ artist ->
-            ArtistSection(artist.name.toString(), artist.image.toString(), onClick = {onClick(artist)})
+            ArtistItem(artist.name.toString(), artist.image.toString(), onClick = {onClick(artist)})
         }
         item {
             Spacer(modifier = Modifier.height(125.dp))
@@ -63,7 +61,7 @@ fun SearchArtistResults(artistResults: List<Artist>, onClick: (Artist) -> Unit) 
 
 
 @Composable
-fun ArtistSection(artist: String, artistImage : String, onClick: () -> Unit) {
+fun ArtistItem(artist: String, artistImage : String, onClick: () -> Unit) {
     val context = LocalContext.current
     val showShimmer = remember { mutableStateOf(true) }
 

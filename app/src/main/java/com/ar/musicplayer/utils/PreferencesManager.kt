@@ -2,17 +2,10 @@ package com.ar.musicplayer.utils
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Bitmap
-import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.net.toUri
-import com.ar.musicplayer.components.settings.getHSVFromColor
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
 
 class PreferencesManager(context: Context) {
     private val sharedPreferences:
@@ -168,11 +161,20 @@ class PreferencesManager(context: Context) {
                 Brush.linearGradient(colors, start = Offset(startX, startY), end = Offset(endX, endY))
             }
             else -> {
-                // Default to a simple Linear Gradient if the type is not recognized
                 Brush.linearGradient(listOf(Color.Black, Color.White), start = Offset.Zero, end = Offset(1f, 1f))
             }
         }
     }
+
+    fun getBackgroundColors(): List<Color> {
+        val colorsString = sharedPreferences.getString(KEY_LINEAR_COLORS, null)
+
+        return colorsString?.split(",")?.map {
+            Color(it.toInt())
+        } ?: listOf(Color.Gray, Color.Black, Color.Black)
+    }
+
+
 
     fun getUsername(): String = sharedPreferences.getString(KEY_USERNAME,"UserName") ?: "UserName"
 

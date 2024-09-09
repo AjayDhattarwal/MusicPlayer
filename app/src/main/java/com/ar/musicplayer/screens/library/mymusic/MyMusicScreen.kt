@@ -57,7 +57,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun MyMusicScreen(
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    background: Brush,
     onBackPressed: () -> Boolean,
     onNavigate: (Any) -> Unit,
 ) {
@@ -80,113 +79,105 @@ fun MyMusicScreen(
             askPermission = true
         )
     }
-    Box(
-        modifier = Modifier.drawBehind {
-            drawRect(
-                brush = background
-            )
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = "My Music", color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = { onBackPressed() }) {
-                            Icon(
-                                Icons.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { onNavigate(SearchMyMusicObj) }) {
-                            Icon(
-                                Icons.Filled.Search,
-                                contentDescription = "Search",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
-
-            },
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent
-        ) { innerPadding ->
-
-
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) {
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    indicator = remember {
-                        { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                modifier =
-                                Modifier
-                                    .tabIndicatorOffset(
-                                        tabPositions[pagerState.currentPage]
-                                    )
-                                    .padding(start = 15.dp, end = 15.dp)
-                                    .clip(RoundedCornerShape(50)),
-                                color = Color.LightGray,
-                            )
-                        }
-                    },
-                    containerColor = Color.Transparent,
-                    divider = {},
-                ) {
-                    titles.forEachIndexed { index, title ->
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = remember {
-                                {
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                }
-                            },
-                            content = {
-                                Text(
-                                    text = title,
-                                    color = Color.LightGray,
-                                    modifier = Modifier.padding(bottom = 5.dp)
-                                )
-                            },
-                            selectedContentColor = Color.White,
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "My Music", color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = { onBackPressed() }) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
                         )
                     }
-                }
+                },
+                actions = {
+                    IconButton(onClick = { onNavigate(SearchMyMusicObj) }) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = "Search",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
 
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.Top
-                ) { page ->
+        },
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Transparent
+    ) { innerPadding ->
 
-                    MyMusicDisplay(
-                        page = page,
-                        onSongClick = remember {
+
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                indicator = remember {
+                    { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            modifier =
+                            Modifier
+                                .tabIndicatorOffset(
+                                    tabPositions[pagerState.currentPage]
+                                )
+                                .padding(start = 15.dp, end = 15.dp)
+                                .clip(RoundedCornerShape(50)),
+                            color = Color.LightGray,
+                        )
+                    }
+                },
+                containerColor = Color.Transparent,
+                divider = {},
+            ) {
+                titles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = remember {
                             {
-                                playerViewModel.setNewTrack(it)
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
                             }
-                        }
+                        },
+                        content = {
+                            Text(
+                                text = title,
+                                color = Color.LightGray,
+                                modifier = Modifier.padding(bottom = 5.dp)
+                            )
+                        },
+                        selectedContentColor = Color.White,
                     )
-
                 }
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.Top
+            ) { page ->
+
+                MyMusicDisplay(
+                    page = page,
+                    onSongClick = remember {
+                        {
+                            playerViewModel.setNewTrack(it)
+                        }
+                    }
+                )
 
             }
 
         }
+
     }
 
 }

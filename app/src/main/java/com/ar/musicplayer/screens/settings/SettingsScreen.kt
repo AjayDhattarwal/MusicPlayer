@@ -47,7 +47,6 @@ import com.ar.musicplayer.navigation.ThemeSettingObj
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    background: Brush,
     onBackPressed: () -> Unit,
     onNavigate: (Any) -> Unit
 ){
@@ -92,7 +91,6 @@ fun SettingsScreen(
             )
         },
         containerColor = Color.Transparent,
-        modifier = Modifier.background(brush = background)
     ) { innerPadding ->
 
         Box(modifier = Modifier
@@ -318,7 +316,6 @@ fun PreviewSettingScreen(){
             start = Offset.Zero
         )
     SettingsScreen(
-        blackToGrayGradient,
         {},
         remember {
             { path ->

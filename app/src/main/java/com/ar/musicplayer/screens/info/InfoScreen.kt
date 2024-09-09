@@ -1,13 +1,10 @@
 package com.ar.musicplayer.screens.info
 
 
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -20,9 +17,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.draw.drawBehind
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,11 +36,11 @@ private const val TAG: String = "PlayListDetail"
 @ExperimentalFoundationApi
 @Composable
 fun InfoScreen(
+    moreInfoViewModel: MoreInfoViewModel,
     data: InfoScreenModel,
     onBackPressed: () -> Unit,
 ) {
 
-    val moreInfoViewModel = hiltViewModel<MoreInfoViewModel>()
     val playlistResponse by moreInfoViewModel.playlistData.observeAsState()
     val isLoading by moreInfoViewModel.isLoading.collectAsStateWithLifecycle()
     val scrollState = rememberLazyListState()
@@ -70,7 +64,7 @@ fun InfoScreen(
     }
 
     data.image.let {
-        val shade = paletteExtractor.getColorFromSwatch(it)
+        val shade = paletteExtractor.getColorFromImg(it)
         shade.observeForever { shadeColor ->
             shadeColor?.let { col ->
                 colors.value = arrayListOf(col, Color.Black)

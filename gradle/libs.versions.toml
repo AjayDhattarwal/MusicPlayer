@@ -1,6 +1,6 @@
 [versions]
-accompanistSystemuicontroller = "0.33.2-alpha"
-agp = "8.5.2"
+accompanist = "0.33.2-alpha"
+agp = "8.6.0"
 coilBom = "2.6.0"
 converterGson = "2.9.0"
 exoplayerUi = "2.19.1"
@@ -34,14 +34,13 @@ composeNavigation = "2.8.0-beta06"
 serialization = "1.6.3"
 media3Session = "1.4.0"
 media3Ui = "1.4.0"
-composeUi = "1.6.8"
 coreAnimation = "1.0.0"
 workRuntimeKtx = "2.9.0"
 lifecycleProcess = "2.8.4"
 lifecycleService = "2.8.4"
 
 [libraries]
-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }

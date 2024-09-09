@@ -72,10 +72,6 @@ fun MiniPlayerControls(
             ) {
                 songName.let {
                     Text(
-//                    text = if (waitForPlayer) "Loading..." else it.replace(
-//                        "&quot;",
-//                        ""
-//                    ),
                         text = it.replace("&quot;", ""),
                         fontSize = 16.sp,
                         color = Color.White,

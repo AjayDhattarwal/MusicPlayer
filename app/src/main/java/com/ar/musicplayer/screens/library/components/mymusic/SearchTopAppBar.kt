@@ -63,18 +63,18 @@ fun SearchTopAppBar(
             }
 
         },
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedTextColor = Color.DarkGray,
-            unfocusedTextColor = Color.Gray,
-            focusedLeadingIconColor = Color.DarkGray,
-            unfocusedLeadingIconColor = Color.Gray,
-            focusedTrailingIconColor = Color.DarkGray,
-            unfocusedTrailingIconColor = Color.Gray,
-
-            ),
+//        colors = TextFieldDefaults.textFieldColors(
+//            containerColor = Color.Transparent,
+//            focusedIndicatorColor = Color.Transparent,
+//            unfocusedIndicatorColor = Color.Transparent,
+//            focusedTextColor = Color.DarkGray,
+//            unfocusedTextColor = Color.Gray,
+//            focusedLeadingIconColor = Color.DarkGray,
+//            unfocusedLeadingIconColor = Color.Gray,
+//            focusedTrailingIconColor = Color.DarkGray,
+//            unfocusedTrailingIconColor = Color.Gray,
+//
+//            ),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Search,

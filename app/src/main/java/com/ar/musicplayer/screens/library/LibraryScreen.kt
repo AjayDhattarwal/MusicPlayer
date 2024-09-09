@@ -37,154 +37,151 @@ import com.ar.musicplayer.navigation.SettingsScreenObj
 
 @Composable
 fun  LibraryScreen(
-    background: Brush,
     onScreenSelect :  (Any) -> Unit
 ){
-    Box(modifier = Modifier.fillMaxSize().background(background)){
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding( start = 10.dp, top = 40.dp, end = 10.dp )
-        ){
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(15.dp), verticalAlignment = Alignment.CenterVertically){
-                Text(
-                    text = "My Library",
-                    modifier = Modifier.weight(1f),
-                    color = Color.White,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize
-                )
-                IconButton(onClick = { onScreenSelect(SettingsScreenObj) }) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = Color.White
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp)
-                    .clickable {
-                        onScreenSelect(FavoriteScreenObj)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding( start = 10.dp, top = 40.dp, end = 10.dp )
+    ){
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(15.dp), verticalAlignment = Alignment.CenterVertically){
+            Text(
+                text = "My Library",
+                modifier = Modifier.weight(1f),
+                color = Color.White,
+                fontSize = MaterialTheme.typography.titleLarge.fontSize
+            )
+            IconButton(onClick = { onScreenSelect(SettingsScreenObj) }) {
                 Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = "Liked",
-                    tint = Color.White,
-                    modifier = Modifier.padding(10.dp)
-                )
-                Text(
-                    text = "Favorite Songs",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 20.dp).weight(1f)
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = Color.White
                 )
             }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Album,
-                    contentDescription = "Albums",
-                    tint = Color.White,
-                    modifier = Modifier.padding(10.dp)
-                )
-                Text(
-                    text = "Albums",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 20.dp).weight(1f)
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp)
-                    .clickable {  onScreenSelect(ListeningHisScreenObj) },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = "Last Session",
-                    tint = Color.White,
-                    modifier = Modifier.padding(10.dp)
-                )
-                Text(
-                    text = "Listening History",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 20.dp).weight(1f)
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp)
-                    .clickable {
-                        onScreenSelect(MyMusicScreenObj)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Folder,
-                    contentDescription = "My Music",
-                    tint = Color.White,
-                    modifier = Modifier.padding(10.dp)
-                )
-                Text(
-                    text = "My Music",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 20.dp).weight(1f)
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DownloadDone,
-                    contentDescription = "Downloads",
-                    tint = Color.White,
-                    modifier = Modifier.padding(10.dp)
-                )
-                Text(
-                    text = "Downloads",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 20.dp).weight(1f)
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp)
-                    .clickable {
-                       onScreenSelect(PlaylistFetchScreenObj)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlaylistPlay,
-                    contentDescription = "Playlists",
-                    tint = Color.White,
-                    modifier = Modifier.padding(10.dp)
-                )
-                Text(
-                    text = "Playlists",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(start = 20.dp).weight(1f)
-                )
-            }
-
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .clickable {
+                    onScreenSelect(FavoriteScreenObj)
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Favorite,
+                contentDescription = "Liked",
+                tint = Color.White,
+                modifier = Modifier.padding(10.dp)
+            )
+            Text(
+                text = "Favorite Songs",
+                fontSize = 16.sp,
+                color = Color.White,
+                modifier = Modifier.padding(start = 20.dp).weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Album,
+                contentDescription = "Albums",
+                tint = Color.White,
+                modifier = Modifier.padding(10.dp)
+            )
+            Text(
+                text = "Albums",
+                fontSize = 16.sp,
+                color = Color.White,
+                modifier = Modifier.padding(start = 20.dp).weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .clickable {  onScreenSelect(ListeningHisScreenObj) },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = "Last Session",
+                tint = Color.White,
+                modifier = Modifier.padding(10.dp)
+            )
+            Text(
+                text = "Listening History",
+                fontSize = 16.sp,
+                color = Color.White,
+                modifier = Modifier.padding(start = 20.dp).weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .clickable {
+                    onScreenSelect(MyMusicScreenObj)
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Folder,
+                contentDescription = "My Music",
+                tint = Color.White,
+                modifier = Modifier.padding(10.dp)
+            )
+            Text(
+                text = "My Music",
+                fontSize = 16.sp,
+                color = Color.White,
+                modifier = Modifier.padding(start = 20.dp).weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.DownloadDone,
+                contentDescription = "Downloads",
+                tint = Color.White,
+                modifier = Modifier.padding(10.dp)
+            )
+            Text(
+                text = "Downloads",
+                fontSize = 16.sp,
+                color = Color.White,
+                modifier = Modifier.padding(start = 20.dp).weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .clickable {
+                    onScreenSelect(PlaylistFetchScreenObj)
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.PlaylistPlay,
+                contentDescription = "Playlists",
+                tint = Color.White,
+                modifier = Modifier.padding(10.dp)
+            )
+            Text(
+                text = "Playlists",
+                fontSize = 16.sp,
+                color = Color.White,
+                modifier = Modifier.padding(start = 20.dp).weight(1f)
+            )
+        }
+
     }
 }
 
@@ -197,5 +194,5 @@ fun LibraryScreenPreview(){
             startY = Float.POSITIVE_INFINITY,
             endY = 0f
         )
-    LibraryScreen(blackToGrayGradient,){ _-> }
+    LibraryScreen{ _-> }
 }

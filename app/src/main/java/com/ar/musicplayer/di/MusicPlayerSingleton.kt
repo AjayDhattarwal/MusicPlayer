@@ -1,12 +1,17 @@
 package com.ar.musicplayer.di
 
 import android.content.Context
+import android.os.Bundle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionCommand
+import com.ar.musicplayer.PlayNow.Companion.SAVE_TO_FAVORITES
+import com.ar.musicplayer.R
 import com.ar.musicplayer.data.repository.FavoriteDataRepository
 import com.ar.musicplayer.utils.notification.NotificationManager
 import com.ar.musicplayer.viewmodel.ThemeViewModel
@@ -35,23 +40,17 @@ object MusicPlayerSingleton {
     fun provideExoPlayer(@ApplicationContext context: Context, audioAttributes: AudioAttributes): ExoPlayer =
         ExoPlayer.Builder(context)
             .setAudioAttributes(audioAttributes, true)
-            .setTrackSelector(DefaultTrackSelector(context))
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
+
+
     @Singleton
     @Provides
-    fun provideMediaSession(@ApplicationContext context: Context, player: ExoPlayer): MediaSession =
-        MediaSession.Builder(context, player).build()
+    fun provideNotificationManager(@ApplicationContext context: Context): NotificationManager =
+        NotificationManager(context)
 
-    @UnstableApi
-    @Singleton
-    @Provides
-    fun provideNotificationManager(@ApplicationContext context: Context, exoPlayer: ExoPlayer,favoriteDataRepository: FavoriteDataRepository): NotificationManager =
-        NotificationManager(context,favoriteDataRepository, exoPlayer)
 
-    @Provides
-    fun provideThemeViewModel(@ApplicationContext context: Context) = ThemeViewModel(context)
 
 }

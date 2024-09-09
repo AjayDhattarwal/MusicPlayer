@@ -2,7 +2,6 @@ package com.ar.musicplayer.utils.helper
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
@@ -10,7 +9,6 @@ import androidx.core.graphics.red
 import androidx.lifecycle.MutableLiveData
 import androidx.palette.graphics.Palette
 import com.ar.musicplayer.ui.theme.onBackgroundDark
-import com.ar.musicplayer.ui.theme.onSurfaceDark
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -22,7 +20,7 @@ import java.net.URL
 class PaletteExtractor() {
 
 
-    fun getColorFromSwatch(imageUrl: String): MutableLiveData<Color> {
+    fun getColorFromImg(imageUrl: String): MutableLiveData<Color> {
         val color = MutableLiveData<Color>()
         if (imageUrl.isEmpty()) {
             color.postValue(onBackgroundDark)
@@ -63,6 +61,41 @@ class PaletteExtractor() {
 
         return color
     }
+
+
+    suspend fun getColorsFromImg(imageUrl: String): List<Color> {
+        return if (imageUrl.isEmpty()) {
+            listOf(Color.Black, Color.Black, Color.Black, Color.Black)
+        } else {
+
+            withContext(Dispatchers.IO) {
+                val bitmap = getBitmapFromURL(imageUrl)
+                if (bitmap != null && !bitmap.isRecycled) {
+                    val palette: Palette = Palette.from(bitmap).generate()
+
+                    val dominant = palette.dominantSwatch?.rgb?.toColor() ?: Color.Black
+                    val vibrant = palette.vibrantSwatch?.rgb?.toColor() ?: Color.Black
+                    val muted = palette.darkMutedSwatch?.rgb?.toColor() ?: Color.Black
+                    val lightVibrant = palette.lightVibrantSwatch?.rgb?.toColor() ?: Color.Black
+
+                    listOf(vibrant, dominant, lightVibrant, muted)
+                } else {
+                    listOf(Color.Black, Color.Black, Color.Black, Color.Black)
+                }
+            }
+        }
+    }
+
+
+
+    fun Int.toColor(): Color {
+        return Color(android.graphics.Color.red(this) / 255f,
+            android.graphics.Color.green(this) / 255f,
+            android.graphics.Color.blue(this) / 255f, 1f)
+    }
+
+
+
 
     private fun getBitmapFromURL(src: String?): Bitmap? {
         return try {

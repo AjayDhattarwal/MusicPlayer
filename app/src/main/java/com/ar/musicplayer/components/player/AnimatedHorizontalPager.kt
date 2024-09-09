@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.util.lerp
@@ -44,8 +43,9 @@ import kotlin.math.absoluteValue
 @Composable
 fun AnimatedHorizontalPager(
     modifier: Modifier = Modifier,
-    playerViewModel: PlayerViewModel = hiltViewModel(),
-    bottomSheetState: BottomSheetScaffoldState,
+    isAdaptive: Boolean = false,
+    playerViewModel: PlayerViewModel,
+    bottomSheetState: BottomSheetScaffoldState?,
 ) {
     val playlist by playerViewModel.playlist.collectAsState(emptyList())
     val currentIndex by playerViewModel.currentIndex.collectAsState()
@@ -72,26 +72,34 @@ fun AnimatedHorizontalPager(
     val size by animateDpAsState(targetValue = lerp(
         70.dp,
         310.dp,
-        bottomSheetState.currentFraction
+        bottomSheetState?.currentFraction ?: 1f
     ))
 
     val dynamicImgBoxSize by animateDpAsState(targetValue = lerp(
         70.dp,
         LocalConfiguration.current.screenWidthDp.dp,
-        bottomSheetState.currentFraction
+        bottomSheetState?.currentFraction ?: 1f
     ))
+
+
+
+    val customModifier = if(isAdaptive){
+        Modifier.fillMaxSize()
+    } else{
+        Modifier.size(dynamicImgBoxSize)
+    }
 
 
     HorizontalPager(
         state = pagerState,
         beyondViewportPageCount = 2,
-        pageSize = PageSize.Fill,
-        pageSpacing = 10.dp,
         modifier = modifier
             .animateContentSize()
-            .size(dynamicImgBoxSize)
+            .then(customModifier)
             .padding(10.dp)
-            .background(Color.Transparent)
+            .background(Color.Transparent),
+        pageSize = PageSize.Fill,
+        pageSpacing = 10.dp
     ) { page ->
         if (page in playlist.indices) {
             val imageUrl = playlist[page].image.toString().replace("150x150", "350x350")
@@ -143,8 +151,3 @@ fun AnimatedHorizontalPager(
     }
 }
 
-fun getSizeBasedOnFraction(minSize: Dp, maxSize: Dp,fraction: Float): Dp {
-
-    // Linear interpolation between minSize and maxSize
-    return minSize + (maxSize - minSize) * fraction
-}

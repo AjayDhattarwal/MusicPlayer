@@ -247,3 +247,26 @@ fun SongResponse.toSongDownloadEntity(): SongDownloadEntity{
     )
 }
 
+
+fun ArtistMap.getArtistList(): List<Artist> {
+    return this.artists
+        ?.distinctBy { it.name }
+        ?.map { artist ->
+            Artist(
+                id = artist.id,
+                name = artist.name?.perfect(),
+                image = artist.image,
+                ctr = artist.ctr,
+                role = artist.role,
+                type = artist.type,
+                permaUrl = artist.permaUrl,
+                isRadioPresent = artist.isRadioPresent
+            )
+        }
+        ?.filter {
+            it.role == "music" || it.role == "singer"
+        }
+        ?: emptyList()
+}
+
+

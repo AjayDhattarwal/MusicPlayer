@@ -16,6 +16,8 @@ class PlayNow : Application(){
     companion object {
         const val CHANNEL_ID = "music_channel"
         const val NOTIFICATION_ID = 1
+        const val SAVE_TO_FAVORITES = "SAVE_TO_FAVORITES"
+        const val REMOVE_FROM_FAVORITES = "REMOVE_FROM_FAVORITES"
     }
     override fun onCreate() {
         super.onCreate()
@@ -23,7 +25,7 @@ class PlayNow : Application(){
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 this.getString(R.string.music),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Music Player Controls"
             }
@@ -32,5 +34,6 @@ class PlayNow : Application(){
             notificationManager.createNotificationChannel(channel)
         }
     }
+
 
 }

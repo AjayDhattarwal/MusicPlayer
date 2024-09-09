@@ -9,6 +9,7 @@ import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.BottomSheetState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -48,7 +48,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,11 +93,12 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 fun MusicPlayerScreen(
     playerViewModel: PlayerViewModel,
     bottomSheetState: BottomSheetScaffoldState,
-    onExpand: () -> Unit,
-    onCollapse: () -> Unit,
+    onExpand: () -> Unit ,
+    onCollapse: () -> Unit ,
     paletteExtractor: PaletteExtractor,
     downloaderViewModel: DownloaderViewModel,
-    favoriteViewModel: FavoriteViewModel = hiltViewModel()
+    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier
 ){
     val context = LocalContext.current
     Log.d("recomposeM", " recompose called for MusicPlayerScreen Function")
@@ -126,9 +126,10 @@ fun MusicPlayerScreen(
     LaunchedEffect(currentSong) {
         Log.d("launch", "called")
         currentSong?.image?.let {
-            val shade = paletteExtractor.getColorFromSwatch(it)
+            val shade = paletteExtractor.getColorFromImg(it)
             shade.observeForever { shadeColor ->
                 shadeColor?.let { col ->
+                    playerViewModel.setCurrentSongColor(col)
                     colors.value = arrayListOf(col, Color.Black)
                 }
             }
@@ -139,7 +140,7 @@ fun MusicPlayerScreen(
 
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(
                 state = state,
@@ -173,8 +174,9 @@ fun MusicPlayerScreen(
         ) {
 
             AnimatedHorizontalPager(
+                playerViewModel = playerViewModel,
                 modifier = Modifier,
-                bottomSheetState = bottomSheetState
+                bottomSheetState = bottomSheetState,
             )
 
             MiniPlayerControls(
@@ -184,6 +186,7 @@ fun MusicPlayerScreen(
                 songName = songName,
                 artistsNames = artistsNames.toString(),
             )
+
         }
         
         MaxPlayerControls(
@@ -214,6 +217,8 @@ fun MaxPlayerControls(
     val context = LocalContext.current
     
     val isPlaying by playerViewModel.isPlaying.collectAsState(false)
+    val isBuffering by playerViewModel.isBuffering.collectAsState(false)
+
     val currentPosition by playerViewModel.currentPosition.collectAsState(0L)
     val duration by playerViewModel.duration.collectAsState(0L)
 
@@ -254,20 +259,6 @@ fun MaxPlayerControls(
         }
     }
 
-
-//    LaunchedEffect(currentDownloading) {
-//        if(currentDownloading == currentSong && currentSong?.id != null){
-//            isDownloading =  true
-//            isDownloaded = true
-//            inDownloadQueue = false
-//        }
-//        if(currentDownloading == null && downloadProgress == 0 ){
-//            isDownloading = false
-//        }
-//        else if(currentDownloading != currentSong){
-//            isDownloading = false
-//        }
-//    }
     
     AnimatedVisibility(
         visible = visibility,
@@ -312,14 +303,13 @@ fun MaxPlayerControls(
                     )
                 }
                 TrackSlider(
-                    value =  2f,
+                    value = currentPosition.toFloat(),
                     onValueChange = { newValue ->
                         playerViewModel.seekTo(newValue.toLong())
                     },
-//            onValueChangeFinished = {
-//                currentPosition.longValue = sliderPosition.longValue
-//                player.seekTo(sliderPosition.longValue)
-//            },
+                    onValueChangeFinished = {
+                    },
+                    bufferedProgress = currentPosition.toFloat() + 3f,
                     songDuration = duration.toFloat()
                 )
 
@@ -376,14 +366,19 @@ fun MaxPlayerControls(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    PlayPauseLargeButton(
-                        isPlaying = isPlaying,
-                        onPlayPauseClick = remember {
-                            {
-                                playerViewModel.playPause()
+                    Box(contentAlignment = Alignment.Center){
+                        PlayPauseLargeButton(
+                            isPlaying = isPlaying,
+                            onPlayPauseClick = remember {
+                                {
+                                    playerViewModel.playPause()
+                                }
                             }
+                        )
+                        if (isBuffering) {
+                            CircularProgressIndicator()
                         }
-                    )
+                    }
 
 
                     Spacer(modifier = Modifier.width(10.dp))
@@ -439,7 +434,7 @@ fun MaxPlayerControls(
                     ) {
                         if(isDownloading){
                             CircularProgressIndicator(
-                                progress = { downloadProgress?.div(100.toFloat()) ?: 0f },
+                                progress = { downloadProgress.div(100.toFloat()) ?: 0f },
                                 modifier = Modifier,
                                 color = Color.LightGray,
                             )
@@ -479,9 +474,9 @@ fun MaxPlayerControls(
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = color,
             dragHandle = {},
-            windowInsets = WindowInsets(0,0,0,0)
+            contentWindowInsets = { WindowInsets(0,0,0,0) }
         ) {
-            CurrPlayingPlaylist()
+            CurrPlayingPlaylist(playerViewModel = playerViewModel)
         }
     }
 }

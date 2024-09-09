@@ -34,6 +34,7 @@ import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.perfect
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 
@@ -49,62 +50,82 @@ fun SongsLazyColumn(
     LazyColumn {
         items(songResponse) { songResponse ->
             val artistName = songResponse.moreInfo?.artistMap?.artists?.distinctBy { it.name }?.joinToString(", "){it.name.toString()}
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 5.dp, top = 10.dp)
-                    .clickable {
-                        onSongClick(songResponse)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                AsyncImage(
-                    model = songResponse.image,
-                    contentDescription = "image",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    onSuccess = { showShimmer.value = false },
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.Center
-                )
-
-                Column(
-                    modifier = Modifier
-                        .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
-                        .weight(1f)
-
-                ) {
-                    Text(
-                        text = songResponse.title ?: "null",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
-                        modifier = Modifier.padding(bottom = 2.dp),
-                        maxLines = 1,
-                        softWrap = true,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = artistName?: "unknown",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
-                        maxLines = 1,
-                        softWrap = true,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            SongItem(
+                songResponse = songResponse,
+                onSongClick = onSongClick
+            )
+        }
+    }
+}
 
 
-                IconButton(onClick = { /* Handle menu button click */ }) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "Menu",
-                        tint = Color.White
-                    )
-                }
-            }
+@androidx.annotation.OptIn(UnstableApi::class)
+@Composable
+fun SongItem(
+    songResponse: SongResponse,
+    onSongClick: (SongResponse) -> Unit,
+) {
+    val artistName = songResponse.moreInfo
+        ?.artistMap?.artists
+        ?.distinctBy { it.name }
+        ?.joinToString(", ")
+        {it.name.toString()}
+        ?.perfect()
+
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp, end = 5.dp, top = 10.dp)
+            .clickable {
+                onSongClick(songResponse)
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        AsyncImage(
+            model = songResponse.image,
+            contentDescription = "image",
+            modifier = Modifier
+                .size(50.dp)
+                .padding(4.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.Center
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
+                .weight(1f)
+
+        ) {
+            Text(
+                text = songResponse.title ?: "null",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 2.dp),
+                maxLines = 1,
+                softWrap = true,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = artistName ?: "unknown",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                maxLines = 1,
+                softWrap = true,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+
+        IconButton(onClick = { /* Handle menu button click */ }) {
+            Icon(
+                Icons.Default.MoreVert,
+                contentDescription = "Menu",
+                tint = Color.White
+            )
         }
     }
 }
