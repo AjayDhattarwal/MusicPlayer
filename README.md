@@ -42,21 +42,7 @@ Music App is an open-source music player designed to offer a comprehensive liste
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
-
-
-## Demo
-
-Insert gif or link to demo
-
-
-## Contributing
-
-Contributions are always welcome!
-
-See `contributing.md` for ways to get started.
-
-Please adhere to this project's `code of conduct`.
+[MIT](https://github.com/ajay577/MusicPlayer/blob/master/LICENSE)
 
 
 ## 🔗 Links
