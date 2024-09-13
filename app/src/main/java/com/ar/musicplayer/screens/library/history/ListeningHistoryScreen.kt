@@ -34,7 +34,7 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 @Composable
 fun ListeningHistoryScreen(
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    onBackPressed: () -> Boolean,
+    onBackPressed: () -> Unit,
 ) {
     val songResponseList by playerViewModel.listeningHistory.collectAsState()
     Scaffold(
@@ -42,7 +42,7 @@ fun ListeningHistoryScreen(
             TopAppBar(
                 title = { Text(text = "Recently played", color = Color.White) },
                 navigationIcon = {
-                    IconButton(onClick = { onBackPressed() }) {
+                    IconButton(onClick = onBackPressed) {
                         Icon(
                             Icons.Filled.ArrowBack,
                             contentDescription = "Back",

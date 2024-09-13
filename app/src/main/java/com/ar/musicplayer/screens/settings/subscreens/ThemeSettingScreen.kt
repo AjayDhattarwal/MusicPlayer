@@ -60,6 +60,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ar.musicplayer.components.settings.FullScreenColorPickerDialog
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.helper.saveImageToInternalStorage
@@ -71,17 +73,19 @@ import java.io.InputStream
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeSettingsScreen(
-    themeViewModel: ThemeViewModel,
-    preferencesManager: PreferencesManager,
+    themeViewModel: ThemeViewModel ,
     onBackClick: () -> Unit,
 ) {
-    val backgroundGradient by themeViewModel.blackToGrayGradient.collectAsState()
     val context = LocalContext.current
+
+    val preferencesManager = remember {  PreferencesManager(context) }
+
+    val backgroundGradient by themeViewModel.blackToGrayGradient.collectAsStateWithLifecycle()
+
     var accentColor by remember { mutableStateOf(Color(preferencesManager.getAccentColor())) }
 
     var isSystemTheme by remember { mutableStateOf(false) }
-    var isImageAsBackGround by remember { mutableStateOf(preferencesManager.isImageAsBackground()) }
-    val backgroundBitmap by themeViewModel.imageBackground.collectAsState()
+
 
     var linearColors by remember { mutableStateOf(preferencesManager.getLinearColors()) }
     val fetchedColors by remember {
@@ -93,7 +97,7 @@ fun ThemeSettingsScreen(
                     colorString.toIntOrNull()?.let { Color(it) }
                 }
                 ?.takeIf { it.isNotEmpty() }
-                ?: listOf(Color.Black, Color.White) // Fallback to default colors
+                ?: listOf(Color.Black, Color.White)
         }
     }
 
@@ -104,25 +108,13 @@ fun ThemeSettingsScreen(
     var expanded by remember { mutableStateOf(false) }
     val density = LocalDensity.current
 
-    var selectedImageUri by remember { mutableStateOf(preferencesManager.getBackgroundImagePath()) }
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        val inputStream: InputStream? = uri?.let { context.contentResolver.openInputStream(it) }
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        val imagePath = saveImageToInternalStorage(context,bitmap)
-        themeViewModel.updateBackgroundImage(bitmap)
-        imagePath?.let { preferencesManager.saveBackgroundImagePath(it) }
-        selectedImageUri = uri.toString()
-    }
-
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(text = "Theme", color = Color.White) },
                 navigationIcon = {
-                    IconButton(onClick = { onBackClick() }) {
+                    IconButton(onClick = onBackClick ) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
@@ -316,19 +308,22 @@ fun ThemeSettingsScreen(
                                 if (showGradientColorPicker1) {
                                     FullScreenColorPickerDialog(
                                         selectedColor = colors[0],
-                                        onColorSelected = {
-                                            colors[0] = it
-                                            linearColors = colors.joinToString(",") { color ->
-                                                color.toArgb().toString()
+                                        onColorSelected = remember{
+                                            {
+                                                colors[0] = it
+                                                linearColors = colors.joinToString(",") { color ->
+                                                    color.toArgb().toString()
+                                                }
+                                                preferencesManager.saveLinearGradientBrush(
+                                                    colors,
+                                                    Offset.Zero,
+                                                    Offset.Infinite
+                                                )
+                                                val brush =
+                                                    preferencesManager.getLinearGradientBrush()
+                                                themeViewModel.updateBackgroundColors(colors)
+                                                themeViewModel.updateGradient(brush)
                                             }
-                                            preferencesManager.saveLinearGradientBrush(
-                                                colors,
-                                                Offset.Zero,
-                                                Offset.Infinite
-                                            )
-                                            val brush = preferencesManager.getLinearGradientBrush()
-                                            themeViewModel.updateBackgroundColors(colors)
-                                            themeViewModel.updateGradient(brush)
                                         },
                                         onDismissRequest = { showGradientColorPicker1 = false }
                                     )
@@ -356,20 +351,22 @@ fun ThemeSettingsScreen(
                                 if (showGradientColorPicker2) {
                                     FullScreenColorPickerDialog(
                                         selectedColor = colors[1],
-                                        onColorSelected = {
-                                            colors[1] = it
-                                            linearColors = colors.joinToString(",") { color ->
-                                                color.toArgb().toString()
+                                        onColorSelected = remember{
+                                            {
+                                                colors[1] = it
+                                                linearColors = colors.joinToString(",") { color ->
+                                                    color.toArgb().toString()
+                                                }
+                                                preferencesManager.saveLinearGradientBrush(
+                                                    colors,
+                                                    Offset.Zero,
+                                                    Offset.Infinite
+                                                )
+                                                val brush =
+                                                    preferencesManager.getLinearGradientBrush()
+                                                themeViewModel.updateBackgroundColors(colors)
+                                                themeViewModel.updateGradient(brush)
                                             }
-//                                        preferencesManager.saveLinearColors(linearColors)
-                                            preferencesManager.saveLinearGradientBrush(
-                                                colors,
-                                                Offset.Zero,
-                                                Offset.Infinite
-                                            )
-                                            val brush = preferencesManager.getLinearGradientBrush()
-                                            themeViewModel.updateBackgroundColors(colors)
-                                            themeViewModel.updateGradient(brush)
                                         },
                                         onDismissRequest = { showGradientColorPicker2 = false }
                                     )
@@ -397,20 +394,23 @@ fun ThemeSettingsScreen(
                                 if (showGradientColorPicker3) {
                                     FullScreenColorPickerDialog(
                                         selectedColor = colors[2],
-                                        onColorSelected = {
-                                            colors[2] = it
-                                            linearColors = colors.joinToString(",") { color ->
-                                                color.toArgb().toString()
+                                        onColorSelected = remember{
+                                            {
+                                                colors[2] = it
+                                                linearColors = colors.joinToString(",") { color ->
+                                                    color.toArgb().toString()
+                                                }
+
+                                                preferencesManager.saveLinearGradientBrush(
+                                                    colors,
+                                                    Offset.Zero,
+                                                    Offset.Infinite
+                                                )
+                                                val brush =
+                                                    preferencesManager.getLinearGradientBrush()
+                                                themeViewModel.updateBackgroundColors(colors)
+                                                themeViewModel.updateGradient(brush)
                                             }
-//                                        preferencesManager.saveLinearColors(linearColors)
-                                            preferencesManager.saveLinearGradientBrush(
-                                                colors,
-                                                Offset.Zero,
-                                                Offset.Infinite
-                                            )
-                                            val brush = preferencesManager.getLinearGradientBrush()
-                                            themeViewModel.updateBackgroundColors(colors)
-                                            themeViewModel.updateGradient(brush)
                                         },
                                         onDismissRequest = { showGradientColorPicker3 = false }
                                     )
@@ -423,75 +423,7 @@ fun ThemeSettingsScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ){
-//                    Column(modifier = Modifier.weight(1f)) {
-//                        Text(
-//                            "Set Custom Background Image",
-//                            style = MaterialTheme.typography.titleMedium,
-//                            color = MaterialTheme.colorScheme.onPrimary
-//                        )
-//                        Spacer(modifier = Modifier.height(4.dp))
-//                        Text(
-//                            text = "Let Pick You Own Epic Background",
-//                            style = MaterialTheme.typography.bodySmall,
-//                            color = MaterialTheme.colorScheme.onSurfaceVariant
-//                        )
-//                    }
-//                    Switch(
-//                        checked = isImageAsBackGround,
-//                        onCheckedChange = {
-//                            isImageAsBackGround = it
-//                            preferencesManager.setImageAsBackGround(it)
-//                        },
-//                        modifier = Modifier.padding(start = 16.dp),
-//                        colors = SwitchDefaults.colors(
-//                            uncheckedThumbColor = Color.White,
-//                            uncheckedTrackColor = Color.LightGray,
-//                            checkedThumbColor = Color.LightGray,
-//                            checkedBorderColor = Color(preferencesManager.getAccentColor()),
-//                            checkedTrackColor = Color(preferencesManager.getAccentColor())
-//                        )
-//                    )
-//                }
-//
-//                AnimatedVisibility(
-//                    visible = isImageAsBackGround,
-//                    enter = slideInVertically {
-//                        with(density) { -40.dp.roundToPx() }
-//                    } + expandVertically (
-//                        expandFrom = Alignment.Top
-//                    ) + fadeIn(
-//                        initialAlpha = 0.3f
-//                    ),
-//                    exit = slideOutVertically() + shrinkVertically() + fadeOut()
-//                ) {
-//
-//
-//                    Column(modifier = Modifier.fillMaxWidth(), ){
-//
-//                        Box(
-//                            modifier = Modifier
-//                                .size(30.dp)
-//                                .clickable {imagePickerLauncher.launch("image/*")}
-//                        ) {
-//                            Text("Pick an Image", color = Color.White)
-//                        }
-//                        if(selectedImageUri != "" ){
-//                            Image(
-//                                bitmap = backgroundBitmap.asImageBitmap(),
-//                                contentDescription = null,
-//                                modifier = Modifier.size(150.dp),
-//                                contentScale = ContentScale.Crop
-//                            )
-//
-//                        }
-//                    }
-//                }
 
-                Spacer(modifier = Modifier.height(20.dp))
 
 
             }

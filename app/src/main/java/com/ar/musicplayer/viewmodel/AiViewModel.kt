@@ -12,6 +12,7 @@ import com.ar.musicplayer.data.models.toArtist
 import com.ar.musicplayer.data.repository.GenerativeAiRepository
 import com.ar.musicplayer.data.repository.SearchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,6 +29,8 @@ class AiViewModel @Inject constructor(
 
     private val _aiSongResults = MutableStateFlow<List<SongResponse>>(emptyList())
     val aiSongResults = _aiSongResults.asStateFlow()
+
+    private var currentJob: Job? = null
 
     private val _aiArtistResults = MutableStateFlow<List<Artist>>(emptyList())
     val aiArtistResults = _aiArtistResults.asStateFlow()
@@ -47,8 +50,11 @@ class AiViewModel @Inject constructor(
     private val _loading = MutableStateFlow(false)
     val isLoading = _loading.asStateFlow()
 
-
-    fun getAiResponse(prompt: String) {
+    fun startLoading(){
+        _loading.value = true
+    }
+    fun clearResponse(){
+        currentJob?.cancel()
         _aiSongResults.value = emptyList()
         _aiArtistResults.value = emptyList()
         _description.value = ""
@@ -56,17 +62,26 @@ class AiViewModel @Inject constructor(
         _type.value = ""
         _genre.value = ""
 
-        _loading.value = true
-        viewModelScope.launch {
+    }
+
+    fun getAiResponse(prompt: String) {
+
+        clearResponse()
+
+        currentJob = viewModelScope.launch {
+            _loading.value = true
 
             val result = repository.getAiResponse(prompt)
-            val jsonText = result?.text
-                ?.replace("```json","")
-                ?.replace("```","").toString()
+            val jsonText = result?.text?.trimIndent()
 
-            val aiResponse =  parseJsonToAiResponse(jsonText)
+            val aiResponse = jsonText?.let { parseJsonToAiResponse(it) }
 
-            if(aiResponse.type == "song"){
+            _description.value = aiResponse?.description.toString()
+            _other.value = aiResponse?.other.toString()
+            _type.value = aiResponse?.type.toString()
+            _genre.value = aiResponse?.genre.toString()
+
+            if(aiResponse?.type == "song"){
                 aiResponse.songs?.forEach { song ->
                     if(song.title != null || song.title != ""){
                         getSearchResult(
@@ -78,7 +93,7 @@ class AiViewModel @Inject constructor(
                     }
                 }
             }else{
-                aiResponse.artists?.forEach { artist ->
+                aiResponse?.artists?.forEach { artist ->
                     if(artist.name != null || artist.name != ""){
                         getSearchResult(
                             call = "search.getArtistResults",
@@ -90,16 +105,22 @@ class AiViewModel @Inject constructor(
                 }
             }
 
-            _description.value = aiResponse.description.toString()
-            _other.value = aiResponse.other.toString()
-            _type.value = aiResponse.type.toString()
-            _genre.value = aiResponse.type.toString()
 
+            if(aiResponse?.type == "question"){
+                _loading.value = false
+            }
         }
     }
 
-    private fun parseJsonToAiResponse(jsonString: String): AiResponse {
-        return Json.decodeFromString(jsonString)
+    private fun parseJsonToAiResponse(jsonString: String): AiResponse? {
+        try {
+            val response = Json.decodeFromString<AiResponse>(jsonString)
+            println("Parsed Response: $response")
+            return response
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
     }
 
     private fun getSearchResult(call: String, query: String, page: String, totalResults: String) {

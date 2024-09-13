@@ -1,10 +1,8 @@
 package com.ar.musicplayer.utils.download
 
 import android.content.Context
-import android.os.Environment
 import com.ar.musicplayer.data.models.SongResponse
-import com.ar.musicplayer.data.models.perfect
-import com.ar.musicplayer.data.models.toSongDownloadEntity
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +42,7 @@ class MusicDownloadRepository @Inject constructor(
         val artist = songResponse.moreInfo?.artistMap?.artists
             ?.distinctBy { it.name }
             ?.joinToString ( "," ) {it.name.toString()}
-            ?.perfect()
+            ?.sanitizeString()
             .toString()
         val file = File(getFilePath(songResponse.title.toString(), artist))
         if (file.exists()) {

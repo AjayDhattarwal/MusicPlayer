@@ -53,9 +53,11 @@ import com.ar.musicplayer.utils.PreferencesManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DownloadSettingsScreen(preferencesManager: PreferencesManager, onBackClick: () -> Boolean){
+fun DownloadSettingsScreen(onBackClick: () -> Boolean){
 
     val context = LocalContext.current
+    val preferencesManager = remember {  PreferencesManager(context) }
+
     var downloadQuality by remember { mutableStateOf(preferencesManager.getDownloadQuality()) }
     var downloadQualitySelector by remember { mutableStateOf(false) }
 
@@ -64,6 +66,7 @@ fun DownloadSettingsScreen(preferencesManager: PreferencesManager, onBackClick: 
     val defaultMusicDirectory by remember {
         mutableStateOf( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC))
     }
+
     Log.d("uri","default uri is  ${defaultMusicDirectory}")
 
     val musicDirectoryPicker = rememberLauncherForActivityResult(

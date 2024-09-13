@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -47,22 +48,27 @@ fun PermissionHandler(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = {
-            result(it)
-            viewModel.onResult(it)
+        onResult = { permissions ->
+            Log.d("PermissionHandler", "Permissions result: $permissions")
+            result(permissions)
+            viewModel.onResult(permissions)
         }
     )
-    LaunchedEffect(key1 = state.askPermission, block = {
+
+    LaunchedEffect(key1 = state.askPermission) {
         if (state.askPermission) {
+            Log.d("PermissionHandler", "Requesting permissions: ${state.permissions}")
             permissionLauncher.launch(state.permissions.toTypedArray())
         }
-    })
-    LaunchedEffect(key1 = state.navigateToSetting, block = {
+    }
+
+    LaunchedEffect(key1 = state.navigateToSetting) {
         if (state.navigateToSetting) {
+            Log.d("PermissionHandler", "Navigating to settings")
             activity.openAppSetting()
             viewModel.onPermissionRequested()
         }
-    })
+    }
 
     AnimatedVisibility(
         visible = state.showRational,
@@ -87,9 +93,9 @@ fun PermissionHandler(
                 )
             }
             Spacer(modifier = Modifier.padding(vertical = 4.dp))
-            state.rationals.forEachIndexed {index,item->
+            state.rationals.forEachIndexed { index, item ->
                 Text(
-                    text = "${index+1}) $item",
+                    text = "${index + 1}) $item",
                     modifier = Modifier.padding(vertical = 8.dp),
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -103,12 +109,9 @@ fun PermissionHandler(
             ) {
                 Text(text = "Grant Permission", modifier = Modifier.padding(vertical = 4.dp))
             }
-
         }
     }
-
 }
-
 
 private fun Activity.openAppSetting() {
     Intent(
@@ -116,5 +119,3 @@ private fun Activity.openAppSetting() {
         Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
 }
-
-

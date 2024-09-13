@@ -1,6 +1,5 @@
 package com.ar.musicplayer.data.repository
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -10,21 +9,21 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
-import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.data.models.SongResponse
-import com.ar.musicplayer.data.models.perfect
+import com.ar.musicplayer.data.models.getArtistsNameList
+import com.ar.musicplayer.data.models.getArtistsString
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.notification.ACTIONS
 import com.ar.musicplayer.utils.notification.AudioService
-import dagger.hilt.android.internal.Contexts.getApplication
-import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,16 +31,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.switchMap
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import timber.log.Timber
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.regex.Pattern
@@ -49,7 +45,9 @@ import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.DESKeySpec
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PlayerRepository @Inject constructor(
     private val application: Context,
     private val exoPlayer: ExoPlayer,
@@ -57,8 +55,12 @@ class PlayerRepository @Inject constructor(
     private val lastSessionRepository: LastSessionRepository,
     private val songDetailsRepository: SongDetailsRepository,
 ) {
+    private val MAX_PLAYLIST_SIZE = 100
+
     private var job: Job? = null
+
     val coroutineScope = CoroutineScope(Dispatchers.Main)
+
     val preferencesManager = PreferencesManager(application)
 
     private val _currentPosition = MutableStateFlow(exoPlayer.currentPosition)
@@ -76,8 +78,8 @@ class PlayerRepository @Inject constructor(
     private val _isBuffering = MutableStateFlow(exoPlayer.isLoading)
     val isBuffering: StateFlow<Boolean> = _isBuffering
 
-    private val _playlist = MutableStateFlow<List<SongResponse>>(emptyList())
-    val playlist: StateFlow<List<SongResponse>> get() = _playlist
+    private val mutablePlaylist = MutableStateFlow<List<SongResponse>>(emptyList())
+    val playlist: StateFlow<List<SongResponse>> get() = mutablePlaylist
 
     val currentSong: StateFlow<SongResponse?> = combine(currentIndex, playlist) { index, songs ->
         songs.getOrNull(index)
@@ -150,10 +152,7 @@ class PlayerRepository @Inject constructor(
             updateNotification()
             if (mediaItem?.mediaMetadata?.title != null) {
                 val title = exoPlayer.currentMediaItem?.mediaMetadata?.title.toString()
-                val artistList = exoPlayer.currentMediaItem?.mediaMetadata?.artist
-                    ?.split(",", "&amp;", "with", "&quot;")
-                    ?.map { it.trim() }
-                    ?: listOf()
+                val artistList = exoPlayer.getArtistsNameList()
 
                 val albumName = exoPlayer.currentMediaItem?.mediaMetadata?.albumTitle.toString()
                 val duration = exoPlayer.currentMediaItem?.mediaMetadata?.durationMs
@@ -166,12 +165,10 @@ class PlayerRepository @Inject constructor(
                     albumName = albumName,
                     duration = duration?.toInt() ?: 0,
                     onSuccess = {
-                        Log.d("lyrics", "Lyrics ::::::    ${it}")
                         _lyricsData.value = it
                         _isLyricsLoading.value = false
                     },
                     onError = {
-                        Log.d("lyrics", "${it.message}")
                         _lyricsData.value = emptyList()
                         _isLyricsLoading.value = false
                     }
@@ -186,7 +183,7 @@ class PlayerRepository @Inject constructor(
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _isPlaying.value = isPlaying
             if (isPlaying) {
-                if (!isServiceStarted && (playlist.value?.size ?: 0) > 0) {
+                if (!isServiceStarted && (playlist.value.isNotEmpty()) ) {
                     startForegroundService()
                     isServiceStarted = true
                 }
@@ -206,6 +203,11 @@ class PlayerRepository @Inject constructor(
             _isBuffering.value = isLoading
         }
 
+        override fun onPlayerError(error: PlaybackException) {
+            super.onPlayerError(error)
+            Timber.tag("playerError").d("ExoPlayer error: ${error.message}")
+        }
+
     }
 
     init {
@@ -215,9 +217,9 @@ class PlayerRepository @Inject constructor(
         }
         coroutineScope.launch {
             while (true) {
-               if(exoPlayer.isPlaying){
-                   _currentPosition.value = exoPlayer.currentPosition
-               }
+                if(exoPlayer.isPlaying){
+                    _currentPosition.value = exoPlayer.currentPosition
+                }
                 delay(1000L)
             }
         }
@@ -242,13 +244,23 @@ class PlayerRepository @Inject constructor(
         _shuffleModeEnabled.postValue(newShuffleMode)
     }
 
-    fun addMediaItems(mediaItems: List<MediaItem>, startIndex: Int = 0) {
-        exoPlayer.setMediaItems(mediaItems, startIndex, 0)
-        exoPlayer.prepare()
-    }
 
-    fun clearMediaItems() {
-        exoPlayer.clearMediaItems()
+    @OptIn(UnstableApi::class)
+    private fun createMediaItem(song: SongResponse): MediaItem {
+        val artist = song.getArtistsString()
+        val mediaMetadata = MediaMetadata.Builder()
+            .setTitle(song.title?.sanitizeString())
+            .setArtworkUri(Uri.parse(song.image))
+            .setSubtitle(song.subtitle?.sanitizeString())
+            .setArtist(artist)
+            .setAlbumTitle(song.moreInfo?.album?.sanitizeString() ?: song.title?.sanitizeString() )
+            .setDurationMs(song.moreInfo?.duration?.toLong())
+            .build()
+
+        return MediaItem.Builder()
+            .setUri(decodeDES(song.moreInfo?.encryptedMediaUrl.toString(), song.moreInfo?.kbps320 ?: false))
+            .setMediaMetadata(mediaMetadata)
+            .build()
     }
 
 
@@ -257,27 +269,9 @@ class PlayerRepository @Inject constructor(
         val lastSession = lastSessionRepository.getLastSessionForPlaying()
         if (lastSession.isNotEmpty()) {
             _currentPlaylistId.value = "history"
-            _playlist.value = lastSession.reversed().map { (_, songResponse) -> songResponse }
+            mutablePlaylist.value = lastSession.reversed().map { (_, songResponse) -> songResponse }
             val mediaItems = lastSession.reversed().map { (_, song) ->
-                val artist = song.moreInfo?.artistMap?.artists?.distinctBy{it.name}?.joinToString(", "){it.name.toString()}
-                MediaItem.Builder()
-                    .setUri(
-                        decodeDES(
-                            song.moreInfo?.encryptedMediaUrl.toString(),
-                            song.moreInfo?.kbps320 ?: false
-                        )
-                    )
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(song.title?.perfect())
-                            .setArtworkUri(Uri.parse(song.image))
-                            .setSubtitle(song.subtitle?.perfect())
-                            .setArtist(artist?.perfect())
-                            .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
-                            .setDurationMs(song.moreInfo?.duration?.toLong())
-                            .build()
-                    )
-                    .build()
+                createMediaItem(song)
             }
             exoPlayer.setMediaItems(mediaItems, mediaItems.size - 1, 0)
             exoPlayer.prepare()
@@ -288,10 +282,9 @@ class PlayerRepository @Inject constructor(
         }
     }
 
-    fun getRecommendations(id: String, call: String = "reco.getreco") {
+    fun getRecommendations(id: String) {
         val client = ApiConfig.getApiService().getRecoSongs(
-            pid = id,
-            call = call
+            pid = id
         )
 
         client.enqueue(object : Callback<List<SongResponse>> {
@@ -303,7 +296,7 @@ class PlayerRepository @Inject constructor(
                 if (response.isSuccessful) {
 
                     response.body()?.forEach { song ->
-                        if (playlist.value?.any { it.id == song.id } == false) {
+                        if (!playlist.value.any { it.id == song.id }) {
                             addRecoSongInPlaylist(song)
                         }
                     }
@@ -320,41 +313,239 @@ class PlayerRepository @Inject constructor(
     @UnstableApi
     private fun addRecoSongInPlaylist(song: SongResponse) {
 
-        if(_playlist.value.size > 100){
-            _playlist.value = _playlist.value.takeLast(100)
-            val lastIndex = exoPlayer.mediaItemCount - _playlist.value.size
-            exoPlayer.removeMediaItems(0, lastIndex)
-            exoPlayer.prepare()
-            _currentIndex.value = exoPlayer.currentMediaItemIndex
+        if(mutablePlaylist.value.size > MAX_PLAYLIST_SIZE){
+
+            mutablePlaylist.value =
+                mutablePlaylist.value
+                    .subList(
+                        mutablePlaylist.value.size - MAX_PLAYLIST_SIZE,
+                        mutablePlaylist.value.size
+                    ).toMutableList()
+
+            val itemsToRemove = exoPlayer.mediaItemCount - mutablePlaylist.value.size
+            if (itemsToRemove > 0) {
+                exoPlayer.removeMediaItems(0, itemsToRemove)
+                exoPlayer.prepare()
+            }
         }
 
-        _playlist.value  = playlist.value.plus(song).distinct()
+        mutablePlaylist.value  = playlist.value.plus(song).distinct()
 
-        val artist = song.moreInfo?.artistMap?.artists?.distinctBy{it.name}?.joinToString(", "){it.name.toString()}
 
-        val mediaItem = MediaItem.Builder()
-            .setUri(
-                decodeDES(
-                    song.moreInfo?.encryptedMediaUrl.toString(),
-                    song.moreInfo?.kbps320 ?: false
-                )
-            )
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(song.title?.perfect())
-                    .setArtworkUri(Uri.parse(song.image))
-                    .setSubtitle(song.subtitle?.perfect())
-                    .setArtist(artist?.perfect())
-                    .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
-                    .setDurationMs(song.moreInfo?.duration?.toLong())
-                    .build()
-            )
-            .build()
+        val mediaItem = createMediaItem(song)
 
         exoPlayer.addMediaItem(mediaItem)
+        _currentIndex.value = exoPlayer.currentMediaItemIndex
 
-        android.util.Log.d("testcase", "playlist size ${_playlist.value!!.size}, ,,  player current index ${exoPlayer.currentMediaItemIndex} ,,,, current Index ${currentIndex.value}")
+        Timber.d(
+            "Added song to playlist: ${song.title}," +
+                    " Playlist size: ${mutablePlaylist.value.size}," +
+                    " Player index: ${exoPlayer.currentMediaItemIndex}"
+        )
+
     }
+
+    fun setNewTrack(song: SongResponse) {
+        if(currentPlaylistId.value != "history"){
+            mutablePlaylist.value = emptyList()
+            exoPlayer.clearMediaItems()
+            _currentPlaylistId.value = "history"
+        }
+        if (song.moreInfo?.encryptedMediaUrl.isNullOrEmpty()) {
+            makePerfectSong(song) { perfectSong ->
+                addSongInPlaylist(perfectSong)
+            }
+        } else {
+            addSongInPlaylist(song)
+        }
+    }
+
+    fun makePerfectSong(song: SongResponse, onCallback: (SongResponse) -> Unit) {
+        coroutineScope.launch {
+            val perfectSong = songDetailsRepository.fetchSongDetails(song.id.toString())
+            onCallback(perfectSong)
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun addSongInPlaylist(song: SongResponse) {
+
+        if (song in playlist.value) {
+            val index = playlist.value.indexOf(song)
+            removeTrack(index)
+        }
+        Timber.d("mediaItems count:   ${exoPlayer.mediaItemCount}   ${exoPlayer.currentMediaItemIndex}  ")
+        if (mutablePlaylist.value.isNotEmpty()) {
+            mutablePlaylist.value = mutablePlaylist.value
+                .subList(0, exoPlayer.currentMediaItemIndex + 1)
+
+            exoPlayer.removeMediaItems(exoPlayer.currentMediaItemIndex + 1, exoPlayer.mediaItemCount)
+        }
+
+        Timber.d("mediaItems count after remove:   ${exoPlayer.mediaItemCount}   ${exoPlayer.currentMediaItemIndex}  ")
+
+        exoPlayer.prepare()
+        updatePlaylist { currentPlaylist -> currentPlaylist + song }
+        addSongToPlayer(song)
+
+        exoPlayer.seekToDefaultPosition(exoPlayer.mediaItemCount - 1)
+
+    }
+
+    private fun updatePlaylist(update: (List<SongResponse>) -> List<SongResponse>) {
+        mutablePlaylist.value = update(mutablePlaylist.value)
+    }
+
+    private fun addSongToPlayer(song: SongResponse) {
+        val mediaItem = createMediaItem(song)
+        exoPlayer.addMediaItem(mediaItem)
+        if (exoPlayer.playbackState == Player.STATE_IDLE) {
+            exoPlayer.prepare()
+        }
+        exoPlayer.play()
+    }
+
+    @OptIn(UnstableApi::class)
+    fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
+        mutablePlaylist.value = newPlaylist
+        _currentIndex.value = 0
+        _currentPlaylistId.value = playlistId
+
+        val mediaItems = newPlaylist.mapNotNull { song ->
+            song.moreInfo?.let { moreInfo ->
+                createMediaItem(song)
+            }
+        }
+
+        exoPlayer.setMediaItems(mediaItems)
+        exoPlayer.prepare()
+        exoPlayer.play()
+    }
+
+    fun changeSong(index: Int) {
+        playlist.value.let { playlist ->
+            if (index >= 0 && index < playlist.size) {
+                _currentIndex.value = index
+                exoPlayer.seekToDefaultPosition(index)
+                seekTo(0)
+                exoPlayer.play()
+            }
+        }
+    }
+
+    fun skipNext() {
+        exoPlayer.seekToNextMediaItem()
+    }
+
+    fun skipPrevious() {
+        exoPlayer.seekToPreviousMediaItem()
+    }
+
+    fun removeTrack(index: Int) {
+        val currentList = playlist.value
+
+        if (index in currentList.indices) {
+            mutablePlaylist.value = currentList.toMutableList().also { it.removeAt(index) }
+        }
+
+        val mediaItemCount = exoPlayer.mediaItemCount
+        if (index in 0 until mediaItemCount) {
+            exoPlayer.removeMediaItem(index)
+
+            if (index <= exoPlayer.currentMediaItemIndex) {
+                exoPlayer.prepare()
+            }
+
+            if (index < _currentIndex.value) {
+                _currentIndex.value = exoPlayer.currentMediaItemIndex
+            }
+        }
+
+    }
+
+
+    fun replaceIndex(add: Int, remove: Int) {
+        val mediaItem = exoPlayer.getMediaItemAt(remove)
+        var currentList = mutablePlaylist.value
+        val track = currentList[remove]
+
+        if (remove in currentList.indices) {
+            val updatedList = currentList.toMutableList().apply {
+                removeAt(remove)
+            }
+            currentList = updatedList
+        }
+
+
+        val newList = currentList.toMutableList().apply {
+            if (add in 0..size) {
+                add(add, track)
+            }
+        }
+        mutablePlaylist.value = newList.distinct()
+
+        exoPlayer.removeMediaItem(remove)
+        exoPlayer.addMediaItem(add,mediaItem)
+        _currentIndex.value = exoPlayer.currentMediaItemIndex
+
+        exoPlayer.prepare()
+
+    }
+
+
+    private fun updateLyric() {
+        val currentPosition = exoPlayer.currentPosition
+        _currentLyricIndex.value = getLyricForPosition(currentPosition)
+    }
+
+
+    private fun getLyricForPosition(position: Long): Int {
+        val index = lyricsData.value.indexOfLast {
+            it.first <= position
+        }
+        return index
+    }
+
+
+    private fun updateLastSession(){
+        job?.cancel()
+        val playStartTime = System.currentTimeMillis()
+        job = coroutineScope.launch(Dispatchers.IO) {
+
+            currentSong.value?.let {
+                lastSessionRepository.insertLastSession(
+                    songResponse = it,
+                    playCount = 0,
+                    skipCount = 1
+                )
+            }
+            delay(20000)
+            val elapsedTime = System.currentTimeMillis() - playStartTime
+            val playCount = if (elapsedTime >= 20000) 1 else 0
+            val skipCount = -1
+            Timber.d( "Elapsed time: $elapsedTime, playCount: $playCount, skipCount: $skipCount")
+
+            currentSong.value?.let {
+                lastSessionRepository.insertLastSession(
+                    songResponse = it,
+                    playCount = playCount,
+                    skipCount = skipCount
+                )
+            }
+
+            if(currentPlaylistId.value == "history"){
+                try {
+                    getRecommendations(playlist.value[currentIndex.value].id.toString())
+                    job?.cancel()
+                } catch (e: Exception) {
+                    android.util.Log.d("reco", "${e.message}")
+                }
+            }
+        }
+
+    }
+
+
 
     @UnstableApi
     private fun startForegroundService() {
@@ -371,6 +562,7 @@ class PlayerRepository @Inject constructor(
         }
         application.startService(intent)
     }
+
 
     private fun decodeDES(input: String, kbps320: Boolean): String {
 
@@ -407,218 +599,7 @@ class PlayerRepository @Inject constructor(
         return decoded
     }
 
-
-    fun setNewTrack(song: SongResponse) {
-        if(currentPlaylistId.value != "history"){
-            _playlist.value = emptyList()
-            exoPlayer.clearMediaItems()
-            _currentPlaylistId.value = "history"
-        }
-        if (song.moreInfo?.encryptedMediaUrl.isNullOrEmpty()) {
-            makePerfectSong(song) { perfectSong ->
-                addSongInPlaylist(perfectSong)
-            }
-        } else {
-            addSongInPlaylist(song)
-        }
-    }
-    fun makePerfectSong(song: SongResponse, onCallback: (SongResponse) -> Unit) {
-        coroutineScope.launch {
-            val perfectSong = songDetailsRepository.fetchSongDetails(song.id.toString())
-            onCallback(perfectSong)
-        }
-    }
-
-    @OptIn(UnstableApi::class)
-    private fun addSongInPlaylist(song: SongResponse) {
-        val artist = song.moreInfo?.artistMap?.artists?.distinctBy{it.name}?.joinToString(", "){it.name.toString()}
-
-        val mediaItem = MediaItem.Builder()
-            .setUri(decodeDES(
-                song.moreInfo?.encryptedMediaUrl.toString(),
-                song.moreInfo?.kbps320 ?: false
-            ))
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(song.title?.perfect())
-                    .setArtworkUri(Uri.parse(song.image))
-                    .setSubtitle(song.subtitle?.perfect())
-                    .setArtist(artist?.perfect())
-                    .setAlbumTitle(song.moreInfo?.album?.perfect() ?: song.title?.perfect() )
-                    .setDurationMs(song.moreInfo?.duration?.toLong())
-                    .build()
-            )
-            .build()
-
-        exoPlayer.addMediaItem(mediaItem)
-        _playlist.value = playlist.value.orEmpty() + song
-        exoPlayer.prepare()
-        exoPlayer.seekToDefaultPosition(exoPlayer.mediaItemCount - 1)
-    }
-
-    @OptIn(UnstableApi::class)
-    fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
-        _playlist.value = newPlaylist
-        _currentIndex.value = 0
-        _currentPlaylistId.value = playlistId
-
-        val mediaItems = newPlaylist.mapNotNull { song ->
-            song.moreInfo?.let { moreInfo ->
-                val artist = moreInfo.artistMap?.artists
-                    ?.distinctBy { it.name }
-                    ?.joinToString(", ") { it.name ?: "" }
-
-
-                MediaItem.Builder()
-                    .setUri(
-                        decodeDES(
-                            song.moreInfo.encryptedMediaUrl.toString(),
-                            song.moreInfo.kbps320 ?: false
-                        )
-                    )
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(song.title?.perfect())
-                            .setArtworkUri(Uri.parse(song.image))
-                            .setSubtitle(song.subtitle?.perfect())
-                            .setArtist(artist?.perfect())
-                            .setAlbumTitle(song.moreInfo.album?.perfect() ?: song.title?.perfect())
-                            .setDurationMs(song.moreInfo.duration?.toLong())
-                            .build()
-                    )
-                    .build()
-            }
-        }
-
-        exoPlayer.setMediaItems(mediaItems)
-        exoPlayer.prepare()
-        exoPlayer.play()
-    }
-
-    fun changeSong(index: Int) {
-        _playlist.value.let { playlist ->
-            if (index >= 0 && index < playlist.size) {
-                _currentIndex.value = index
-                exoPlayer.seekToDefaultPosition(index)
-                seekTo(0)
-                exoPlayer.play()
-            }
-        }
-    }
-    fun skipNext() {
-        exoPlayer.seekToNextMediaItem()
-    }
-
-    fun skipPrevious() {
-        exoPlayer.seekToPreviousMediaItem()
-    }
-
-    fun removeTrack(index: Int) {
-        val currentList = playlist.value
-
-        if (index in currentList.indices) {
-            val updatedList = currentList.toMutableList().apply {
-                removeAt(index)
-            }
-            _playlist.value = updatedList
-        }
-
-        val mediaItemCount = exoPlayer.mediaItemCount
-        if (index in 0 until mediaItemCount) {
-            exoPlayer.removeMediaItem(index)
-            exoPlayer.prepare()
-            _currentIndex.value = exoPlayer.currentMediaItemIndex
-        }
-
-    }
-
-
-    fun replaceIndex(add: Int, remove: Int) {
-        val mediaItem = exoPlayer.getMediaItemAt(remove)
-        var currentList = _playlist.value
-        val track = currentList[remove]
-
-        if (remove in currentList.indices) {
-            val updatedList = currentList.toMutableList().apply {
-                removeAt(remove)
-            }
-            currentList = updatedList
-        }
-
-
-        val newList = currentList.toMutableList().apply {
-            if (add in 0..size) {
-                add(add, track)
-            }
-        }
-        _playlist.value = newList.distinct()
-
-        exoPlayer.removeMediaItem(remove)
-        exoPlayer.addMediaItem(add,mediaItem)
-        _currentIndex.value = exoPlayer.currentMediaItemIndex
-
-        exoPlayer.prepare()
-
-    }
-
-
-    private fun updateLyric() {
-        val currentPosition = exoPlayer.currentPosition
-        _currentLyricIndex.value = getLyricForPosition(currentPosition)
-    }
-
-
-
-    private fun getLyricForPosition(position: Long): Int {
-        val index = lyricsData.value.indexOfLast {
-            it.first <= position
-        }
-        return index
-    }
-
-
-    private fun updateLastSession(){
-        job?.cancel()
-        val playStartTime = System.currentTimeMillis()
-        job = coroutineScope.launch(Dispatchers.IO) {
-
-            currentSong.value?.let {
-                lastSessionRepository.insertLastSession(
-                    songResponse = it,
-                    playCount = 0,
-                    skipCount = 1
-                )
-            }
-            delay(20000)
-            val elapsedTime = System.currentTimeMillis() - playStartTime
-            val playCount = if (elapsedTime >= 20000) 1 else 0
-            val skipCount = -1
-            android.util.Log.d("LastSessionService", "Elapsed time: $elapsedTime, playCount: $playCount, skipCount: $skipCount")
-
-            currentSong.value?.let {
-                lastSessionRepository.insertLastSession(
-                    songResponse = it,
-                    playCount = playCount,
-                    skipCount = skipCount
-                )
-            }
-
-            if(currentPlaylistId.value == "history"){
-                try {
-                    getRecommendations(playlist.value[currentIndex.value].id.toString())
-                    job?.cancel()
-                } catch (e: Exception) {
-                    android.util.Log.d("reco", "${e.message}")
-                }
-            }
-        }
-
-    }
-
-    @UnstableApi
     fun destroy(){
-        exoPlayer.release()
         exoPlayer.removeListener(playerListener)
-
     }
 }

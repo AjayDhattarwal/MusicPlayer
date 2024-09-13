@@ -1,8 +1,5 @@
 package com.ar.musicplayer.components.home
 
-import android.util.Log
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,23 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import coil.size.Size
 import com.ar.musicplayer.data.models.HomeListItem
-import com.ar.musicplayer.data.models.SongResponse
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import kotlinx.serialization.json.Json
 
 
 @Composable
@@ -72,13 +61,14 @@ fun HomeScreenRow(
                 }
 
                 HomeScreenRowCard(
+                    item = item,
                     isRadio = radioOrNot,
                     subtitle = subtitle.toString(),
                     cornerRadius = cornerRadius,
                     imageUrl = item.image.toString(),
                     title = item.title.toString(),
                     size = size,
-                    onClick = { onCardClicked(it, item) }
+                    onClick = onCardClicked
                 )
             }
 
@@ -87,7 +77,7 @@ fun HomeScreenRow(
 }
 
 @Composable
-fun HomeScreenRowCard(
+fun <T> HomeScreenRowCard(
     modifier: Modifier = Modifier,
     isRadio: Boolean,
     subtitle: String,
@@ -95,7 +85,8 @@ fun HomeScreenRowCard(
     imageUrl: String,
     title: String,
     size: Int,
-    onClick: (Boolean) -> Unit
+    onClick: (Boolean, T) -> Unit,
+    item: T
 ) {
 
 
@@ -106,7 +97,7 @@ fun HomeScreenRowCard(
         Card(
             modifier = modifier
                 .size((size).dp)
-                .clickable { onClick(isRadio) },
+                .clickable { onClick(isRadio, item) },
             shape = RoundedCornerShape(percent = cornerRadius)
         ) {
             AsyncImage(

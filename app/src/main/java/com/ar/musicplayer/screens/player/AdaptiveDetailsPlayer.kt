@@ -1,4 +1,6 @@
-@file:kotlin.OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@file:kotlin.OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class,
+    ExperimentalLayoutApi::class
+)
 
 package com.ar.musicplayer.screens.player
 
@@ -12,6 +14,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,8 +30,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -71,7 +77,7 @@ import com.ar.musicplayer.components.player.AnimatedHorizontalPager
 import com.ar.musicplayer.components.player.LyricsCard
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.getArtistList
-import com.ar.musicplayer.data.models.perfect
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.screens.library.mymusic.toPx
 import com.ar.musicplayer.utils.download.DownloadEvent
 import com.ar.musicplayer.utils.download.DownloadStatus
@@ -79,8 +85,9 @@ import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
+import kotlin.random.Random
 
-@OptIn(UnstableApi::class, )
+@OptIn(UnstableApi::class )
 @Composable
 fun AdaptiveDetailsPlayer(
     modifier: Modifier = Modifier,
@@ -97,21 +104,16 @@ fun AdaptiveDetailsPlayer(
     val currentSong by playerViewModel.currentSong.collectAsState()
 
 
-    val songName = currentSong?.title.toString().perfect()
+    val songName = currentSong?.title.toString().sanitizeString()
     val artistMap = currentSong?.moreInfo?.artistMap
     val artistsNames = artistMap?.artists
         ?.distinctBy { it.name }
         ?.joinToString(", ") { it.name.toString() }
-        ?.perfect()
+        ?.sanitizeString()
 
 
     val artistList = artistMap?.getArtistList()
-    val gridHeight = (artistList?.let {
-        calculateStaggeredGridHeight(
-            items = it,
-            minItemWidth = 300.dp
-        )
-    } ?: 0.dp) + 70.dp
+        ?.sortedBy { it.name?.replace(" ", "")?.length }
 
 
     val colors = remember {
@@ -120,7 +122,6 @@ fun AdaptiveDetailsPlayer(
 
 
     LaunchedEffect(currentSong) {
-        Log.d("launch", "called")
         currentSong?.image?.let {
             val shade = paletteExtractor.getColorFromImg(it)
             shade.observeForever { shadeColor ->
@@ -163,157 +164,143 @@ fun AdaptiveDetailsPlayer(
                 )
             },
     ) {
-        LazyColumn {
-            item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
 
-                        AnimatedHorizontalPager(
-                            modifier = Modifier,
-                            isAdaptive = true,
-                            bottomSheetState = null,
-                            playerViewModel = playerViewModel
-                        )
-                    }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AnimatedHorizontalPager(
+                    modifier = Modifier,
+                    isAdaptive = true,
+                    bottomSheetState = null,
+                    playerViewModel = playerViewModel
+                )
             }
 
-            item {
-                Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
-                    Column(
-                        modifier = Modifier
-                            .padding(
-                                bottom = 20.dp,
-                                start = 20.dp,
-                                end = 20.dp
-                            )
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-
-                        Text(
-                            text = songName,
-                            modifier = Modifier.basicMarquee(
-                                animationMode = MarqueeAnimationMode.Immediately,
-                                repeatDelayMillis = 2000,
-                                initialDelayMillis = 2000
-                            ),
-                            color = Color.White,
-                            fontSize = 30.sp,
-                            maxLines = 1
+            Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(
+                            bottom = 20.dp,
+                            start = 20.dp,
+                            end = 20.dp
                         )
-                        Text(
-                            text = artistsNames.toString(),
-                            modifier = Modifier.basicMarquee(
-                                animationMode = MarqueeAnimationMode.Immediately,
-                                repeatDelayMillis = 2000,
-                                initialDelayMillis = 2000
-                            ),
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            maxLines = 1
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = songName,
+                        modifier = Modifier.basicMarquee(
+                            animationMode = MarqueeAnimationMode.Immediately,
+                            repeatDelayMillis = 2000,
+                            initialDelayMillis = 2000
+                        ),
+                        color = Color.White,
+                        fontSize = 30.sp,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = artistsNames.toString(),
+                        modifier = Modifier.basicMarquee(
+                            animationMode = MarqueeAnimationMode.Immediately,
+                            repeatDelayMillis = 2000,
+                            initialDelayMillis = 2000
+                        ),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        maxLines = 1
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(
+                        onClick = { onQueue() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                            contentDescription = "CurrentPlaylist",
+                            tint = Color.White
                         )
                     }
 
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    IconButton(
+                        onClick = remember {
+                            {
+                                if (!isDownloaded) {
+                                    downloaderViewModel.onEvent(
+                                        DownloadEvent.downloadSong(
+                                            currentSong!!
+                                        )
+                                    )
+                                    inDownloadQueue = true
+                                }
+                            }
+                        }
                     ) {
-
-                        IconButton(
-                            onClick = { onQueue() }
-                        ) {
+                        if (isDownloading) {
+                            CircularProgressIndicator(
+                                progress = { downloadProgress.div(100.toFloat()) ?: 0f },
+                                modifier = Modifier,
+                                color = Color.LightGray,
+                            )
+                            Text(
+                                text = "${downloadProgress}%",
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                        } else {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.QueueMusic,
-                                contentDescription = "CurrentPlaylist",
+                                modifier = Modifier.weight(1f),
+                                imageVector = if (isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
+                                contentDescription = "Download",
                                 tint = Color.White
                             )
                         }
-
-                        IconButton(
-                            onClick = remember {
-                                {
-                                    if (!isDownloaded) {
-                                        downloaderViewModel.onEvent(
-                                            DownloadEvent.downloadSong(
-                                                currentSong!!
-                                            )
-                                        )
-                                        inDownloadQueue = true
-                                    }
-                                }
-                            }
-                        ) {
-                            if (isDownloading) {
-                                CircularProgressIndicator(
-                                    progress = { downloadProgress.div(100.toFloat()) ?: 0f },
-                                    modifier = Modifier,
-                                    color = Color.LightGray,
-                                )
-                                Text(
-                                    text = "${downloadProgress}%",
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                            } else {
-                                Icon(
-                                    modifier = Modifier.weight(1f),
-                                    imageVector = if (isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
-                                    contentDescription = "Download",
-                                    tint = Color.White
-                                )
-                            }
-                        }
-
-                    }
-
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item{
-
-                LazyVerticalStaggeredGrid(
-                    columns = StaggeredGridCells.Adaptive(300.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(gridHeight),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalItemSpacing = 16.dp
-                ){
-                    items(artistList ?: emptyList()) { artist ->
-                        ArtistListItem(
-                            color = colors.value[0],
-                            artist = artist,
-                            onFollowClick = {  }
-                        )
                     }
                 }
             }
 
-            item {
-                LyricsCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 400.dp ),
-                    background = colors.value[0],
-                )
-            }
-            item {
-                Spacer(Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Artists
+            FlowRow(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                maxItemsInEachRow = 2,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                artistList?.forEach { artist ->
+                    ArtistListItem(
+                        color = colors.value[0],
+                        artist = artist,
+                        onFollowClick = { },
+                        modifier = Modifier.widthIn(max = 500.dp)
+                    )
+                }
             }
 
+            // Lyrics Card
+            LyricsCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 400.dp),
+                background = colors.value[0],
+            )
+
+            Spacer(Modifier.height(30.dp))
         }
+
 
         IconButton(
             onClick =  onCollapse,
@@ -335,40 +322,6 @@ fun AdaptiveDetailsPlayer(
 
 
 @Composable
-fun calculateStaggeredGridHeight(
-    items: List<Artist>,
-    minItemWidth: Dp,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(16.dp),
-    verticalItemSpacing: Dp = 16.dp
-): Dp {
-    val density = LocalDensity.current.density // Get density for conversion
-    var totalHeight by remember { mutableStateOf(0.dp) }
-
-        BoxWithConstraints {
-            val columnCount = (maxWidth / minItemWidth).toInt()
-            val itemWidthPx = minItemWidth.toPx()
-            val columnHeights = FloatArray(columnCount) { 0f } // Heights of each column
-
-            if(columnCount > 0){
-                items.forEachIndexed { index, _ ->
-                    val columnIndex = index % columnCount
-                    val itemHeightPx = 100.dp.toPx() // Placeholder for item height, calculate as needed
-                    val top = columnHeights[columnIndex]
-
-                    columnHeights[columnIndex] = top + itemHeightPx + verticalItemSpacing.toPx()
-                }
-            }
-
-            val maxHeight = columnHeights.maxOrNull() ?: 0f
-            totalHeight = with(LocalDensity.current) { maxHeight.toDp() }
-        }
-
-        return totalHeight
-
-}
-
-
-@Composable
 fun ArtistListItem(
     color: Color,
     artist: Artist,
@@ -377,8 +330,6 @@ fun ArtistListItem(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .widthIn(min = 200.dp)
             .padding(8.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
@@ -387,7 +338,6 @@ fun ArtistListItem(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -402,7 +352,7 @@ fun ArtistListItem(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
             ) {
                 Text(
                     text = artist.name ?: "",

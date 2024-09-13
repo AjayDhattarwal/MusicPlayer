@@ -128,6 +128,7 @@ import com.ar.musicplayer.ui.theme.WindowInfoVM
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import com.ar.musicplayer.ui.theme.onPrimaryDark
 import com.ar.musicplayer.utils.events.RadioStationEvent
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.AiViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 import com.ar.musicplayer.viewmodel.ThemeViewModel
@@ -149,6 +150,7 @@ fun App(
     homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
     downloaderViewModel: DownloaderViewModel,
+    favoriteViewModel: FavoriteViewModel,
     windowInfoVm: WindowInfoVM
 ) {
     val scope = rememberCoroutineScope()
@@ -159,11 +161,7 @@ fun App(
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(Collapsed)
     )
-    val currentFraction by remember {
-        derivedStateOf {
-            bottomSheetState.currentFraction
-        }
-    }
+
     val paletteExtractor = remember { PaletteExtractor() }
 
     val showBottomBar by windowInfoVm.showBottomBar.collectAsStateWithLifecycle()
@@ -239,6 +237,7 @@ fun App(
                                 homeViewModel = homeViewModel,
                                 playerViewModel = playerViewModel,
                                 downloaderViewModel = downloaderViewModel,
+                                favoriteViewModel = favoriteViewModel,
                                 bottomSheetState = bottomSheetState,
                                 windowInfoVm = windowInfoVm
                             )
@@ -423,16 +422,18 @@ fun AppMainScreen(
     downloaderViewModel: DownloaderViewModel,
     bottomSheetState: BottomSheetScaffoldState,
     localSongsViewModel: LocalSongsViewModel = hiltViewModel(),
-    windowInfoVm: WindowInfoVM
+    windowInfoVm: WindowInfoVM,
+    favoriteViewModel: FavoriteViewModel
 ) {
 
     val themeViewModel = hiltViewModel<ThemeViewModel>()
     val moreInfoViewModel = hiltViewModel<MoreInfoViewModel>()
-
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    val preferencesManager = PreferencesManager(LocalContext.current)
+    val context = LocalContext.current
+
+    val preferencesManager = remember {  PreferencesManager(context)}
 
 
     val showPlayer by playerViewModel.showBottomSheet.collectAsState()
@@ -462,43 +463,40 @@ fun AppMainScreen(
                         onCollapse = remember{ { coroutineScope.launch { bottomSheetState.bottomSheetState.collapse() } } },
                         paletteExtractor = paletteExtractor,
                         downloaderViewModel = downloaderViewModel,
+                        favoriteViewModel = favoriteViewModel
                     )
                 }
             },
             sheetBackgroundColor = Color.Transparent,
             sheetContentColor = Color.Transparent,
             backgroundColor = Color.Transparent,
-            modifier = Modifier.navigationBarsPadding(),
-            ) {
-                key(homeViewModel) {
-                    MainScreenContent(
-                        navController = navController,
-                        listState = listState,
-                        windowInfoVm = windowInfoVm,
-                        homeViewModel = homeViewModel,
-                        playerViewModel = playerViewModel,
-                        moreInfoViewModel = moreInfoViewModel,
-                        preferencesManager = preferencesManager,
-                        localSongsViewModel = localSongsViewModel,
-                        themeViewModel = themeViewModel
-                    )
-                }
-            }
-
-    } else{
-        key(homeViewModel) {
+            modifier = Modifier.navigationBarsPadding()
+        ) {
             MainScreenContent(
                 navController = navController,
                 listState = listState,
                 windowInfoVm = windowInfoVm,
                 homeViewModel = homeViewModel,
-                playerViewModel = playerViewModel,
+//                playerViewModel = playerViewModel,
                 moreInfoViewModel = moreInfoViewModel,
                 preferencesManager = preferencesManager,
                 localSongsViewModel = localSongsViewModel,
                 themeViewModel = themeViewModel
             )
         }
+
+    } else{
+        MainScreenContent(
+            navController = navController,
+            listState = listState,
+            windowInfoVm = windowInfoVm,
+            homeViewModel = homeViewModel,
+//            playerViewModel = playerViewModel,
+            moreInfoViewModel = moreInfoViewModel,
+            preferencesManager = preferencesManager,
+            localSongsViewModel = localSongsViewModel,
+            themeViewModel = themeViewModel
+        )
     }
 }
 
@@ -511,7 +509,7 @@ fun MainScreenContent(
     listState: LazyListState,
     windowInfoVm: WindowInfoVM,
     homeViewModel: HomeViewModel,
-    playerViewModel: PlayerViewModel,
+    playerViewModel: PlayerViewModel = hiltViewModel(),
     moreInfoViewModel: MoreInfoViewModel,
     preferencesManager: PreferencesManager,
     localSongsViewModel: LocalSongsViewModel,
@@ -535,7 +533,6 @@ fun MainScreenContent(
             val showPreviewScreen by windowInfoVm.showPreviewScreen.collectAsStateWithLifecycle()
 
             LaunchedEffect (radioSongResponse) {
-                Log.d("radio", "is active ")
                 if (radioSongResponse.isNotEmpty() && radioStationSelection.value) {
                     playerViewModel.setPlaylist(radioSongResponse, "radio")
                     radioStationSelection.value = false
@@ -548,7 +545,7 @@ fun MainScreenContent(
                 homeViewModel = homeViewModel,
                 playerViewModel = playerViewModel,
                 moreInfoViewModel = moreInfoViewModel,
-                listState = listState,
+//                listState = listState,
                 navigateSetting = remember {
                     {
                         navController.navigate(SettingsScreenObj)
@@ -612,7 +609,7 @@ fun MainScreenContent(
                         val senderData = Json.encodeToString(InfoScreenModel.serializer(), infoScreenModel)
                         navController.navigate(InfoScreenObj(senderData))
                     }
-                }
+                },
 
             )
 
@@ -719,16 +716,17 @@ fun MainScreenContent(
 
         }
         composable<ThemeSettingObj> {
-            ThemeSettingsScreen( themeViewModel, preferencesManager) {
-                navController.navigateUp()
-            }
-
+            ThemeSettingsScreen(
+                themeViewModel = themeViewModel,
+                onBackClick = remember{ { navController.navigateUp() } }
+            )
         }
         composable<DownloadSettingsScreenObj> {
             DownloadSettingsScreen(
-                preferencesManager = preferencesManager,
-                onBackClick = {
-                    navController.navigateUp()
+                onBackClick = remember {
+                    {
+                        navController.navigateUp()
+                    }
                 }
             )
 
@@ -748,19 +746,32 @@ fun MainScreenContent(
 
         }
         composable<StorageSettingScreenObj> {
-            StorageSettingScreen(onBackClick = { navController.navigateUp() })
-
+            StorageSettingScreen(onBackClick = remember{ { navController.navigateUp() } })
         }
         composable<ArtistInfoScreenObj> {
             val args = it.toRoute<ArtistInfoScreenObj>()
             val artistInfo = Json.decodeFromString(Artist.serializer(), args.artistInfo)
             ArtistInfoScreen(
-                artistInfo = artistInfo
-            ) {
-                navController.navigateUp()
-            }
+                artistInfo = artistInfo,
+                onArtistClick = remember { { _,_ ->
+
+                }},
+                onPlaylistClick = remember { { _,_ ->
+
+                } },
+                onAlbumClick =  remember { { _,_ ->
+
+                } },
+                onSongClick = remember { { song ->
+                    playerViewModel.setNewTrack(song)
+                } },
+                onBackPressed = remember { {
+                    navController.navigateUp()
+                } }
+            )
 
         }
+
         composable<PlaylistFetchScreenObj> {
             PlaylistFetchScreen(
                 navController = navController
@@ -796,14 +807,17 @@ fun BottomNavigationBar(navController: NavController, bottomSheetState: BottomSh
         modifier =  modifier
             .graphicsLayer {
                 translationY = size.height * currentFraction
-                onPrimaryDark
+//                onPrimaryDark
             }
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
         bottomScreens.forEach { screen ->
-            val isSelected = currentDestination?.hierarchy?.any { it.route == screen.obj::class.qualifiedName } == true
+            val isSelected = currentDestination?.hierarchy?.any {
+                it.route == screen.obj::class.qualifiedName
+            } == true
+
             BottomNavigationItem(
                 selected = isSelected,
                 onClick = remember {

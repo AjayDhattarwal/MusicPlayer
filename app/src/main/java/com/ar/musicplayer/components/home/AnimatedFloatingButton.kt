@@ -1,10 +1,13 @@
 package com.ar.musicplayer.components.home
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,13 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animation
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
@@ -41,7 +41,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -52,11 +51,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imeAnimationSource
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,39 +61,31 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.max
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ar.musicplayer.components.mix.ArtistItem
-import com.ar.musicplayer.components.mix.SongItem
 import com.ar.musicplayer.data.models.Artist
-import com.ar.musicplayer.data.models.ArtistResponse
 import com.ar.musicplayer.data.models.SongResponse
-import com.ar.musicplayer.data.models.toArtist
 import com.ar.musicplayer.screens.library.components.history.SimpleSongItem
+import com.ar.musicplayer.utils.permission.PermissionHandler
+import com.ar.musicplayer.utils.permission.PermissionModel
 import com.ar.musicplayer.viewmodel.AiViewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun AnimatedAIFloatingActionButton(
@@ -105,29 +93,13 @@ fun AnimatedAIFloatingActionButton(
     onSongClick: (SongResponse) -> Unit,
     onArtistClick: (Artist) -> Unit
 ) {
+    val context = LocalContext.current
 
-    val songResponseList by aiViewModel.aiSongResults.collectAsState()
-    val artistResponseList by aiViewModel.aiArtistResults.collectAsState()
-    val description by aiViewModel.description.collectAsState()
-    val type by aiViewModel.type.collectAsState()
-    val other by aiViewModel.other.collectAsState()
-    val genre by aiViewModel.genre.collectAsState()
     val isLoading by aiViewModel.isLoading.collectAsState()
 
-    val expandInfo by remember {
-        derivedStateOf {
-            songResponseList.isNotEmpty()
-                    || artistResponseList.isNotEmpty()
-                    || description.isNotEmpty()
-                    || type.isNotEmpty()
-                    || other.isNotEmpty()
-        }
-    }
+    var maxExpanded by remember { mutableStateOf( false ) }
+    var wantPermission by remember { mutableStateOf(false) }
 
-    var maxExpanded by remember(expandInfo) { mutableStateOf( expandInfo ) }
-
-
-    val context = LocalContext.current
     var isListening by remember { mutableStateOf(false) }
     var musicPreference by remember { mutableStateOf("") }
     var partialText by remember { mutableStateOf("") }
@@ -139,7 +111,7 @@ fun AnimatedAIFloatingActionButton(
         override fun onResults(results: Bundle?) {
             val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
             if (!matches.isNullOrEmpty()) {
-                musicPreference = matches[0]  // Update the music preference with final recognized text
+                musicPreference = matches[0]
 //                aiViewModel.getAiResponse(musicPreference)
             }
             isListening = false
@@ -148,13 +120,12 @@ fun AnimatedAIFloatingActionButton(
         override fun onPartialResults(partialResults: Bundle?) {
             val partialMatches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
             if (!partialMatches.isNullOrEmpty()) {
-                partialText = partialMatches[0]  // Update with the partial recognized text
+                musicPreference = partialMatches[0]
             }
         }
 
         override fun onError(error: Int) {
             isListening = false
-            partialText = "" // Clear partial text on error
         }
 
         override fun onReadyForSpeech(params: Bundle?) {}
@@ -178,12 +149,10 @@ fun AnimatedAIFloatingActionButton(
     val focusRequester = remember { FocusRequester() }
 
 
-    // Initialize SpeechRecognizer
     LaunchedEffect(Unit) {
         speechRecognizer.setRecognitionListener(recognizerListener)
     }
 
-    // Size Animation for the Floating Action Button
     val isImeVisible by keyboardAsState()
 
     val width = LocalConfiguration.current.screenWidthDp/4
@@ -215,6 +184,19 @@ fun AnimatedAIFloatingActionButton(
         }
 
     val imeBottom = (WindowInsets.ime.getBottom(LocalDensity.current).dp / 2) + 100.dp
+//    if(wantPermission){
+//        PermissionHandler(
+//            permissions = listOf(
+//                PermissionModel(
+//                    permission = "android.permission.",
+//                    maxSDKVersion = Int.MAX_VALUE,
+//                    minSDKVersion = 33,
+//                    rational = "To Access Ai Functionality"
+//                ),
+//            ),
+//            askPermission = true
+//        )
+//    }
 
     Box(
         modifier = modifier
@@ -224,14 +206,17 @@ fun AnimatedAIFloatingActionButton(
     ) {
 
 
+
         FloatingActionButton(
             onClick = {
                 if (isListening) {
                     speechRecognizer.stopListening()
-                } else  {
-                    if(!expanded){
-                        speechRecognizer.startListening(micIntent)
-                        isListening = true
+                } else {
+                    if (!expanded) {
+                        if (!maxExpanded) {
+                            speechRecognizer.startListening(micIntent)
+                            isListening = true
+                        }
                         expanded = true
                     }
                 }
@@ -248,132 +233,136 @@ fun AnimatedAIFloatingActionButton(
                 visible = expanded,
                 modifier = Modifier.align(Alignment.Center)
             ) {
-                AnimatedVisibility(
-                    visible = !maxExpanded,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Box{
-                        Column{
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.inverseOnSurface)
-                                    .padding(5.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "Gemini Icon",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "What's your vibe?",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier
-                                        .padding(start = 5.dp)
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                IconButton(
-                                    onClick = { }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.VerifiedUser,
-                                        contentDescription = "keyBoard",
-                                        tint = Color.Black
-                                    )
-                                }
-                            }
-
-                            TextField(
-                                value =  musicPreference ,
-                                onValueChange = { musicPreference = it },
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                textStyle = MaterialTheme.typography.headlineSmall,
-                                placeholder = {
-                                    Text(
-                                        text = "Type or talk your music request...",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Color.Gray
-                                    )
-                                },
-                                colors = TextFieldDefaults.colors(
-                                    focusedPlaceholderColor = MaterialTheme.colorScheme.surface,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
-                            )
-                        }
-
+                Box{
+                    Column{
                         Row(
                             modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(5.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(MaterialTheme.colorScheme.primary),
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.inverseOnSurface)
+                                .padding(5.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                        ){
-                            IconButton(
-                                onClick = {
-                                    speechRecognizer.stopListening()
-                                    keyboardController?.show()
-                                    focusRequester.requestFocus()
-                                },
-                                modifier = Modifier
-                                    .focusRequester(focusRequester)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Keyboard,
-                                    contentDescription = "keyBoard",
-                                    tint = Color.White
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    speechRecognizer.startListening(micIntent)
-                                    isListening = true
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Mic,
-                                    contentDescription = "keyBoard",
-                                    tint = Color.White
-                                )
-                            }
-                        }
-
-
-                        IconButton(
-                            onClick = {
-                                aiViewModel.getAiResponse(musicPreference)
-                                speechRecognizer.stopListening()
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                                maxExpanded = true
-
-                            },
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(5.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "keyBoard",
-                                tint = MaterialTheme.colorScheme.primary,
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Gemini Icon",
+                                tint = MaterialTheme.colorScheme.primary
                             )
+                            Text(
+                                text = "What's your vibe?",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier
+                                    .padding(start = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            IconButton(
+                                onClick = { }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.VerifiedUser,
+                                    contentDescription = "keyBoard",
+                                    tint = Color.Black
+                                )
+                            }
                         }
 
+                        TextField(
+                            value =  musicPreference ,
+                            onValueChange = { musicPreference = it },
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            textStyle = MaterialTheme.typography.headlineSmall,
+                            placeholder = {
+                                Text(
+                                    text = "Type or talk your music request...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Gray
+                                )
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.surface,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            )
+                        )
                     }
+
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(5.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ){
+                        IconButton(
+                            onClick = {
+                                speechRecognizer.stopListening()
+                                keyboardController?.show()
+                                focusRequester.requestFocus()
+                            },
+                            modifier = Modifier
+                                .focusRequester(focusRequester)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Keyboard,
+                                contentDescription = "keyBoard",
+                                tint = Color.White
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                focusManager.clearFocus()
+                                speechRecognizer.startListening(micIntent)
+                                isListening = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Mic,
+                                contentDescription = "keyBoard",
+                                tint = Color.White
+                            )
+                        }
+                    }
+
+
+                    IconButton(
+                        onClick = {
+                            aiViewModel.startLoading()
+                            maxExpanded = true
+                            keyboardController?.hide()
+                            aiViewModel.getAiResponse(musicPreference)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(5.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "keyBoard",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
                 }
+
 
                 AnimatedVisibility(
                     visible = maxExpanded,
                     enter = fadeIn(),
-                    exit = fadeOut()
+                    exit = fadeOut(),
+                    modifier = Modifier.background(Color.White)
                 ) {
-                    if(!isLoading){
+
+                    if(isLoading){
+                        AiLoadingAnimation(
+                            onBackClick = remember {
+                                {
+                                    maxExpanded = false
+                                    aiViewModel.clearResponse()
+                                }
+                            }
+                        )
+                    } else{
                         AiResponseDisplay(
                             aiViewModel = aiViewModel,
                             onArtistClick = onArtistClick,
@@ -384,12 +373,13 @@ fun AnimatedAIFloatingActionButton(
                                 }
                             }
                         )
-                    } else{
-                        AiLoadingAnimation()
                     }
+
+
                 }
             }
         }
+
 
     }
 }
@@ -432,76 +422,86 @@ fun AiResponseDisplay(
                 .fillMaxSize()
         ) {
             item {
-                Row {
-                    Text(
-                        text = "Description: ",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
+                if(description.isNotBlank()){
+                    Row(verticalAlignment = Alignment.Top) {
+                        if(songResponseList.isNotEmpty() || artistResponseList.isNotEmpty()){
+                            Text(
+                                text = "Description: ",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = Color.White
+                            )
+                        }
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
             item {
-                Row( verticalAlignment = Alignment.CenterVertically){
-                    Text(
-                        text = "Genre: ",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
-                    Text(
-                        text = genre,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
+                if(genre.isNotBlank()){
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Genre: ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                        Text(
+                            text = genre,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
 
 
             item {
-                Row( verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Other: ",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
-                    Text(
-                        text = other,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
+                if(other.isNotEmpty()) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Text(
+                            text = "Other: ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                        Text(
+                            text = other,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
             item {
-                Row( verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Type: ",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
-                    Text(
-                        text = type,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
-                    )
+                if(type.isNotEmpty()){
+                    Row( verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Type: ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                        Text(
+                            text = type,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color.White
+                        )
+                    }
                 }
 
             }
@@ -541,13 +541,25 @@ fun AiResponseDisplay(
 
 
 @Composable
-fun AiLoadingAnimation(){
+fun AiLoadingAnimation(
+    onBackClick: () -> Unit
+){
     Column(
         modifier = Modifier
             .padding(20.dp)
             .fillMaxSize(),
         verticalArrangement = Arrangement.Top
     ) {
+        Box(modifier = Modifier.fillMaxWidth()){
+            IconButton(
+                onClick = onBackClick
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "back"
+                )
+            }
+        }
         Spacer(
             Modifier
                 .fillMaxWidth()
@@ -617,7 +629,7 @@ fun shimmerEffect(showShimmer: Boolean = true, targetValue: Float = 1000f, durat
             initialValue = 0f,
             targetValue = targetValue,
             animationSpec = infiniteRepeatable(
-                animation = tween(duration, easing = LinearOutSlowInEasing, ), repeatMode = RepeatMode.Restart
+                animation = tween(duration, easing = LinearOutSlowInEasing), repeatMode = RepeatMode.Restart
             ), label = ""
         )
 

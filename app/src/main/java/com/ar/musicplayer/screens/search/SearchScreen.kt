@@ -73,10 +73,10 @@ import kotlinx.serialization.json.Json
 @SuppressLint("ClickableViewAccessibility")
 @Composable
 fun SearchScreen(
-    playerViewModel: PlayerViewModel,
+    playerViewModel: PlayerViewModel = hiltViewModel(),
     onArtistClick: (Artist) -> Unit,
     onPlaylistClick: (InfoScreenModel) -> Unit,
-    searchViewModel: SearchResultViewModel = hiltViewModel()
+    searchViewModel: SearchResultViewModel = hiltViewModel(),
 ){
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current

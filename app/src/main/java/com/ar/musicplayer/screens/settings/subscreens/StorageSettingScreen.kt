@@ -74,7 +74,7 @@ fun StorageSettingScreen(onBackClick: () -> Unit){
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = { onBackClick() }
+                        onClick = onBackClick
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,

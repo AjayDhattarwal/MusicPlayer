@@ -17,9 +17,12 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.permission.PermissionHandler
 import com.ar.musicplayer.utils.permission.PermissionModel
 import com.ar.musicplayer.navigation.App
+import com.ar.musicplayer.screens.testing.PhoneAuthScreen
 import com.ar.musicplayer.ui.theme.AppTheme
 import com.ar.musicplayer.ui.theme.WindowInfoVM
 import com.ar.musicplayer.utils.download.DownloaderViewModel
+import com.ar.musicplayer.utils.notification.AudioService
+import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 
 import com.ar.musicplayer.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,6 +34,8 @@ class MainActivity  : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val intent = Intent(this, AudioService::class.java)
+        startService(intent)
         enableEdgeToEdge()
         setContent {
             val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -41,6 +46,7 @@ class MainActivity  : ComponentActivity() {
             val playerViewModel = hiltViewModel<PlayerViewModel>()
             val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
             val windowInfoVm = viewModel<WindowInfoVM>()
+            val favoriteViewModel = hiltViewModel<FavoriteViewModel>()
 
             windowInfoVm.updateWindowWidthSizeClass(windowSizeClass.windowWidthSizeClass)
 
@@ -50,9 +56,15 @@ class MainActivity  : ComponentActivity() {
                         PermissionModel(
                             permission = "android.permission.POST_NOTIFICATIONS",
                             maxSDKVersion = Int.MAX_VALUE,
-                            minSDKVersion = 33,
+                            minSDKVersion = 31,
                             rational = "Access to Notification is required"
                         ),
+                        PermissionModel(
+                            permission = "android.permission.RECORD_AUDIO",
+                            maxSDKVersion = Int.MAX_VALUE,
+                            minSDKVersion = 33,
+                            rational = "To Access Ai Functionality"
+                        )
                     ),
                     askPermission = true
                 )
@@ -62,23 +74,15 @@ class MainActivity  : ComponentActivity() {
                     homeViewModel = homeViewModel,
                     playerViewModel = playerViewModel,
                     downloaderViewModel = downloaderViewModel,
-                    windowInfoVm = windowInfoVm
+                    windowInfoVm = windowInfoVm,
+                    favoriteViewModel = favoriteViewModel
                 )
             }
 
+//            PhoneAuthScreen( activity = this)
         }
-
-
     }
 
-}
-
-
-fun Activity.openAppSettings(){
-    Intent(
-        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-        android.net.Uri.fromParts("package", packageName, null)
-    ).also(::startActivity)
 }
 
 

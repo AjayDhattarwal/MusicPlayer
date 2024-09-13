@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import com.ar.musicplayer.data.models.MoreInfoResponse
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.getArtistList
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.FavSongResponseEntity
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavDao
 import com.google.gson.Gson
@@ -121,7 +122,7 @@ class FavoriteDataRepository @Inject constructor(
     private fun groupSongsByArtist() {
         val groupedByArtist = favSongsStateFlow.value
             .flatMap { song ->
-                song.moreInfo?.artistMap?.artists?.mapNotNull { artist ->
+                song.moreInfo?.artistMap?.getArtistList()?.mapNotNull { artist ->
                     artist.name?.let { it to song }
                 } ?: emptyList()
             }

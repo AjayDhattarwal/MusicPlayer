@@ -1,5 +1,6 @@
 package com.ar.musicplayer.data.models
 
+import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.HomeDataEntity
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import com.google.gson.Gson
@@ -201,7 +202,7 @@ fun <T> List<T>.permutations(): Sequence<List<T>> = sequence {
 }
 
 
-fun String.perfect(): String{
+fun String.sanitizeString(): String{
     return this
         .replace("&quot;", "")
         .replace("&amp;", ",")
@@ -226,7 +227,7 @@ fun SongResponse.toSongDownloadEntity(): SongDownloadEntity{
     val artist = this.moreInfo?.artistMap?.artists
         ?.distinctBy { it.name }
         ?.joinToString ( "," ) {it.name.toString()}
-        ?.perfect()
+        ?.sanitizeString()
         .toString()
 
     val album = this.moreInfo?.album ?: ""
@@ -254,7 +255,7 @@ fun ArtistMap.getArtistList(): List<Artist> {
         ?.map { artist ->
             Artist(
                 id = artist.id,
-                name = artist.name?.perfect(),
+                name = artist.name?.sanitizeString(),
                 image = artist.image,
                 ctr = artist.ctr,
                 role = artist.role,
@@ -269,4 +270,17 @@ fun ArtistMap.getArtistList(): List<Artist> {
         ?: emptyList()
 }
 
+
+fun SongResponse.getArtistsString(): String? {
+    return this.moreInfo?.artistMap?.artists
+        ?.distinctBy { it.name }
+        ?.joinToString(", ") { it.name.toString() }?.sanitizeString()
+}
+
+fun ExoPlayer.getArtistsNameList(): List<String> {
+    return this.currentMediaItem?.mediaMetadata?.artist
+        ?.split(",", "&amp;", "with", "&quot;")
+        ?.map { it.trim() }
+        ?: listOf()
+}
 

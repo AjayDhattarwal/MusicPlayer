@@ -24,6 +24,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+
     }
 
     buildTypes {
@@ -74,6 +78,7 @@ dependencies {
     implementation("androidx.compose.material3.adaptive:adaptive:1.1.0-alpha01")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0-rc01")
     implementation ("com.google.accompanist:accompanist-adaptive:0.35.2-beta")
+    implementation(libs.firebase.auth.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -149,6 +154,11 @@ dependencies {
     implementation(libs.mpatric.mp3agic)
 
     implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
+    implementation ("com.jakewharton.timber:timber:5.0.1")
+
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    implementation("com.google.firebase:firebase-analytics")
+
 
 
 //    implementation("androidx.compose.runtime:runtime-tracing:1.0.0-beta01")

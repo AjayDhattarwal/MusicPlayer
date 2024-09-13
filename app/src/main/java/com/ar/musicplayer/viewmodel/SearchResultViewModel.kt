@@ -20,9 +20,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,7 +30,7 @@ class SearchResultViewModel @Inject constructor(
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
 
-    private val _isSearching = MutableStateFlow(repository.isSearching.value)
+    private val _isSearching = repository._isSearching
     val isSearching = _isSearching.asStateFlow()
 
     val trendingSearchResults = repository.trendingSearchResults

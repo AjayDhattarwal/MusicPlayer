@@ -553,22 +553,22 @@ data class TranslationResponse(
 
 @Serializable
 data class AiResponse(
-    val type: String? = null,
+    val type: String? = "",
     val songs: List<AiSong>? = null,
     val artists: List<Artist>? = null,
-    val genre: String? = null,
-    val description: String? = null,
-    val other: String? = null
+    val genre: String? = "",
+    val description: String? = "",
+    val other: String? = ""
 )
 
 @Serializable
 data class AiSong(
-    val title: String? = null,
-    val artist: String? = null,
-    val album: String? = null,
-    val release_year: Int? = null,
-    val duration: Long? = null,
-    val genre: String? = null,
-    val description: String? = null,
-    val other: String? = null
+    val title: String ? = "",
+    val artist: String ? = "",
+    val album: String ? = "",
+    val release_year: Int ?= 0,
+    val duration: Float ?= 0f,
+    val genre: String ? = "",
+    val description: String ? = "",
+    val other: String ? = ""
 )

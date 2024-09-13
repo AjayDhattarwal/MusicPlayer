@@ -45,9 +45,9 @@ fun AlbumsLazyVGrid(songsByAlbum: Map<String, List<SongResponse>> ) {
         }
     }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2) ,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        columns = GridCells.Adaptive(minSize = 180.dp) ,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(8.dp),
     ) {
         items(list){ (title,songs) ->
@@ -72,9 +72,9 @@ fun SearchAlbumsLazyVGrid(albumList: List<Album>, onClick: (InfoScreenModel) -> 
     Column(modifier = Modifier.fillMaxSize()) {
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2) ,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            columns = GridCells.Adaptive(minSize = 180.dp) ,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(8.dp),
         ) {
             items(albumList){
@@ -98,9 +98,9 @@ fun SearchPlaylistLazyVGrid(playlistList: List<PlaylistResponse>, onClick: (Info
     Column(modifier = Modifier.fillMaxSize()) {
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2) ,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            columns = GridCells.Adaptive(minSize = 180.dp) ,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(8.dp),
         ) {
             items(playlistList){
@@ -129,7 +129,6 @@ fun VGridItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 10.dp, end = 10.dp, top = 10.dp)
             .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
 
@@ -140,7 +139,6 @@ fun VGridItem(
             contentDescription = "image",
             modifier = Modifier
                 .size(150.dp)
-
                 .clip(RoundedCornerShape(5)),
             contentScale = ContentScale.Crop,
             alignment = Alignment.Center

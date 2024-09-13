@@ -1,5 +1,6 @@
 package com.ar.musicplayer.di
 
+import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import androidx.media3.exoplayer.ExoPlayer
@@ -13,6 +14,7 @@ import com.ar.musicplayer.api.Translate
 import com.ar.musicplayer.data.models.LyricsResponse
 import com.ar.musicplayer.data.repository.GenerativeAiRepository
 import com.ar.musicplayer.data.repository.LyricRepository
+import com.ar.musicplayer.data.repository.PhoneAuthRepository
 import com.ar.musicplayer.data.repository.PlayerRepository
 import com.ar.musicplayer.data.repository.PlaylistRepository
 import com.ar.musicplayer.utils.download.MusicDownloadRepository
@@ -20,9 +22,12 @@ import com.ar.musicplayer.utils.helper.NetworkConnectivityObserver
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavDao
 import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDataDao
 import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDao
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -31,6 +36,23 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
+
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
+    }
+
+
+    @Provides
+    @Singleton
+    fun providePhoneAuthRepository(
+        firebaseAuth: FirebaseAuth,
+    ): PhoneAuthRepository {
+        return PhoneAuthRepository(firebaseAuth)
+    }
+
     @Provides
     fun provideContentResolver(
         @ApplicationContext context: Context
@@ -38,8 +60,8 @@ object RepositoryModule {
         return context.contentResolver
     }
 
-    @Provides
     @Singleton
+    @Provides
     fun provideHomeDataRepository(
         apiService: ApiService,
         homeDataDao: HomeDataDao
@@ -47,11 +69,11 @@ object RepositoryModule {
         return HomeDataRepository(apiService, homeDataDao)
     }
 
-    @Provides
     @Singleton
+    @Provides
     fun provideMusicDownloaderRepository(@ApplicationContext context: Context) = MusicDownloadRepository(context)
 
-
+    @Singleton
     @Provides
     fun provideNetworkConnectivityObserver(@ApplicationContext context: Context): NetworkConnectivityObserver {
         return NetworkConnectivityObserver(context)

@@ -75,7 +75,7 @@ import com.ar.musicplayer.components.player.MiniPlayerControls
 import com.ar.musicplayer.components.player.PlayPauseLargeButton
 import com.ar.musicplayer.components.player.TrackSlider
 import com.ar.musicplayer.components.player.convertToText
-import com.ar.musicplayer.data.models.perfect
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.navigation.currentFraction
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.download.DownloadEvent
@@ -97,7 +97,7 @@ fun MusicPlayerScreen(
     onCollapse: () -> Unit ,
     paletteExtractor: PaletteExtractor,
     downloaderViewModel: DownloaderViewModel,
-    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
+    favoriteViewModel: FavoriteViewModel,
     modifier: Modifier = Modifier
 ){
     val context = LocalContext.current
@@ -108,11 +108,11 @@ fun MusicPlayerScreen(
 
     
 
-    val songName = currentSong?.title.toString().perfect()
+    val songName = currentSong?.title.toString().sanitizeString()
     val artistsNames = currentSong?.moreInfo?.artistMap?.artists
         ?.distinctBy { it.name }
         ?.joinToString(", ") { it.name.toString() }
-        ?.perfect()
+        ?.sanitizeString()
 
 
 

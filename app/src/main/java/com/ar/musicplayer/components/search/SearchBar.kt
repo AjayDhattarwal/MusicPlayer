@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ar.musicplayer.viewmodel.SearchResultViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun SearchBar(
     modifier: Modifier,
@@ -80,18 +80,6 @@ fun SearchBar(
                     )
                 }
             },
-//            colors = TextFieldDefaults.textFieldColors(
-//                containerColor = Color.Transparent,
-//                focusedIndicatorColor = Color.Transparent,
-//                unfocusedIndicatorColor = Color.Transparent,
-//                focusedTextColor = Color.DarkGray,
-//                unfocusedTextColor = Color.Gray,
-//                focusedLeadingIconColor = Color.DarkGray,
-//                unfocusedLeadingIconColor = Color.Gray,
-//                focusedTrailingIconColor = Color.DarkGray,
-//                unfocusedTrailingIconColor = Color.Gray,
-//
-//                ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Search,

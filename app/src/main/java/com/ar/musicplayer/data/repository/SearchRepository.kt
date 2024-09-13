@@ -24,8 +24,7 @@ class SearchRepository @Inject constructor(
 
 ) {
 
-    private val _isSearching = MutableStateFlow(false)
-    val isSearching = _isSearching.asStateFlow()
+    val _isSearching = MutableStateFlow(false)
 
     private val _trendingSearchResults = MutableStateFlow<List<BasicSongInfo>>(emptyList())
     val trendingSearchResults = _trendingSearchResults.asStateFlow()

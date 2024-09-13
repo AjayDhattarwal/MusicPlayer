@@ -14,10 +14,11 @@ import com.ar.musicplayer.data.models.Album
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.Playlist
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.toInfoScreenModel
 
 
 @Composable
-fun ArtistPlaylistLazyRow(title: String,playlist: List<Playlist>) {
+fun ArtistPlaylistLazyRow(title: String, playlist: List<Playlist>, onItemClick : (Boolean, Playlist) -> Unit) {
 
     Column(Modifier) {
 
@@ -36,7 +37,8 @@ fun ArtistPlaylistLazyRow(title: String,playlist: List<Playlist>) {
                     imageUrl = item.image.toString(),
                     title = item.title.toString(),
                     size = 170,
-                    onClick = { }
+                    onClick = onItemClick,
+                    item = item
                 )
             }
         }
@@ -45,7 +47,7 @@ fun ArtistPlaylistLazyRow(title: String,playlist: List<Playlist>) {
 
 
 @Composable
-fun ArtistAlbumLazyRow(title: String, albumList: List<Album>){
+fun ArtistAlbumLazyRow(title: String, albumList: List<Album>, onItemClick : (Boolean, Album) -> Unit){
     Column(Modifier) {
 
         Heading(title = title)
@@ -62,7 +64,8 @@ fun ArtistAlbumLazyRow(title: String, albumList: List<Album>){
                     imageUrl = album.image.toString(),
                     title = album.title.toString(),
                     size = 170,
-                    onClick = { }
+                    onClick = onItemClick ,
+                    item = album
                 )
             }
         }
@@ -70,7 +73,7 @@ fun ArtistAlbumLazyRow(title: String, albumList: List<Album>){
 }
 
 @Composable
-fun ArtistsLazyRow(title: String, artistList: List<Artist> ){
+fun ArtistsLazyRow(title: String, artistList: List<Artist>, onItemClick : (Boolean, Artist) -> Unit ){
     Column(Modifier) {
 
         Heading(title = title)
@@ -87,7 +90,8 @@ fun ArtistsLazyRow(title: String, artistList: List<Artist> ){
                     imageUrl = artist.image.toString(),
                     title = artist.name.toString(),
                     size = 170,
-                    onClick = { }
+                    onClick = onItemClick,
+                    item = artist
                 )
             }
         }
@@ -96,7 +100,7 @@ fun ArtistsLazyRow(title: String, artistList: List<Artist> ){
 
 
 @Composable
-fun ArtistSinglesLazyRow(title: String, singlesList: List<SongResponse>){
+fun ArtistSinglesLazyRow(title: String, singlesList: List<SongResponse>, onItemClick : (Boolean, SongResponse) -> Unit){
     Column(Modifier) {
 
         Heading(title = title)
@@ -113,7 +117,8 @@ fun ArtistSinglesLazyRow(title: String, singlesList: List<SongResponse>){
                     imageUrl = single.image.toString(),
                     title = single.title.toString(),
                     size = 170,
-                    onClick = { }
+                    onClick = onItemClick,
+                    item = single
                 )
             }
         }

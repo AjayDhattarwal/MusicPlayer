@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
@@ -78,7 +79,10 @@ import com.ar.musicplayer.components.info.artistInfo.ArtistPlaylistLazyRow
 import com.ar.musicplayer.components.info.artistInfo.ArtistSinglesLazyRow
 import com.ar.musicplayer.components.info.artistInfo.ArtistsLazyRow
 import com.ar.musicplayer.components.mix.AnimatedTopBar
+import com.ar.musicplayer.data.models.Album
 import com.ar.musicplayer.data.models.Artist
+import com.ar.musicplayer.data.models.Playlist
+import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.screens.library.mymusic.toPx
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 
@@ -87,7 +91,11 @@ import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 fun ArtistInfoScreen(
     artistInfo : Artist,
     lazyListState: LazyListState = rememberLazyListState(),
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onSongClick: (SongResponse) -> Unit,
+    onPlaylistClick: (Boolean, Playlist) -> Unit,
+    onArtistClick: (Boolean, Artist) -> Unit,
+    onAlbumClick: (Boolean, Album) -> Unit
 ) {
 
     val defaultImg = listOf(
@@ -107,7 +115,7 @@ fun ArtistInfoScreen(
     val clampedDarkness = (currentImgSize / maxImgSize.toPx() + 0.2f).coerceIn(0f, 1f)
 
     // Calculate the blended color
-    val blackishColor = Color.Black.copy(1f- clampedDarkness)
+//    val blackishColor = Color.Black.copy(1f- clampedDarkness)
 
     val nestedScrollConnection = remember {
 
@@ -150,24 +158,19 @@ fun ArtistInfoScreen(
             call = "webapi.get"
         )
     }
-    Log.d("artistData","default ${artistInfo}")
-    Log.d("artistData","${artistData}")
 
 
 
     Box(
         modifier = Modifier
             .nestedScroll(nestedScrollConnection)
-            .background(Color.Black)
     ){
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Black)
                 .graphicsLayer {
                     alpha = clampedDarkness
-                    shape = SlopedShape(slopeHeight = 100f)
                     clip = true
 
                 }
@@ -180,8 +183,9 @@ fun ArtistInfoScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .graphicsLayer {
-                        alpha = if (isDefaultImg) 0.5f else 1f
+                        alpha = if (isDefaultImg) 0.5f else clampedDarkness - 0.4f
                     }
+//                    .alpha()
                     .scale(animatedScale)
                     .fillMaxSize()
             ) {
@@ -206,9 +210,12 @@ fun ArtistInfoScreen(
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().statusBarsPadding()
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
         ){
 
+            if(lazyListState.firstVisibleItemIndex < 1) {
                 IconButton(
                     onClick = { onBackPressed() },
                     modifier = Modifier
@@ -229,22 +236,24 @@ fun ArtistInfoScreen(
 
                 }
 
-            IconButton(
-                onClick = { },
-                modifier = Modifier
-                    .drawBehind {
-                        drawCircle(
-                            color = Color.Black.copy(0.3f),
-                        )
-                    }
-                    .padding(start = 8.dp, end = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert, tint = Color.White,
-                    contentDescription = "back",
-                    modifier = Modifier
 
-                )
+                IconButton(
+                    onClick = { },
+                    modifier = Modifier
+                        .drawBehind {
+                            drawCircle(
+                                color = Color.Black.copy(0.3f),
+                            )
+                        }
+                        .padding(start = 8.dp, end = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert, tint = Color.White,
+                        contentDescription = "back",
+                        modifier = Modifier
+
+                    )
+                }
             }
         }
         if(isLoading){
@@ -254,7 +263,6 @@ fun ArtistInfoScreen(
                 state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(blackishColor)
                     .offset {
                         IntOffset(0, currentImgSize.toInt())
                     },
@@ -352,7 +360,11 @@ fun ArtistInfoScreen(
                     if(artistData?.featuredPlaylist?.isNotEmpty() != false) {
                         artistData?.featuredPlaylist?.let {
                             Spacer(Modifier.height(10.dp))
-                            ArtistPlaylistLazyRow(title = "Featured In", it)
+                            ArtistPlaylistLazyRow(
+                                title = "Featured In",
+                                playlist = it,
+                                onItemClick = onPlaylistClick
+                            )
                         }
                     }
                 }
@@ -362,7 +374,12 @@ fun ArtistInfoScreen(
                         artistData?.singles?.let {
                             ArtistSinglesLazyRow(
                                 title = "Singles",
-                                singlesList = it
+                                singlesList = it,
+                                onItemClick = remember{
+                                    { _, song ->
+                                        onSongClick(song)
+                                    }
+                                }
                             )
                         }
                     }
@@ -437,7 +454,8 @@ fun ArtistInfoScreen(
                             Spacer(Modifier.height(10.dp))
                             ArtistAlbumLazyRow(
                                 title = "Top Albums",
-                                albumList = it
+                                albumList = it,
+                                onItemClick = onAlbumClick
                             )
                         }
                     }
@@ -448,7 +466,8 @@ fun ArtistInfoScreen(
                         artistData?.dedicatedPlaylist!!.let {
                             ArtistPlaylistLazyRow(
                                 title = "Just ${artistData?.name.toString()}",
-                                playlist = it
+                                playlist = it,
+                                onItemClick = onPlaylistClick
                             )
                         }
                     }
@@ -459,7 +478,8 @@ fun ArtistInfoScreen(
                         artistData?.similarArtist?.let {
                             ArtistsLazyRow(
                                 title = "Similar Artist",
-                                artistList = it
+                                artistList = it,
+                                onItemClick = onArtistClick
                             )
                         }
                     }
@@ -475,7 +495,7 @@ fun ArtistInfoScreen(
             title = artistInfo.name.toString(),
             scrollState = lazyListState,
             skip = true,
-            color = Color.Black.copy(0.95f),
+            color = Color.Black.copy(0.5f),
             onBackPressed = onBackPressed
         )
     }

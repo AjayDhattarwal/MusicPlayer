@@ -16,7 +16,6 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -57,15 +56,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -76,7 +72,7 @@ import com.ar.musicplayer.components.player.SeDisplayName
 import com.ar.musicplayer.components.player.SharedElementPager
 import com.ar.musicplayer.components.player.TrackSlider
 import com.ar.musicplayer.components.player.convertToText
-import com.ar.musicplayer.data.models.perfect
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
@@ -144,11 +140,11 @@ fun AdaptiveMaxPlayer(
         mutableStateOf(listOf(Color.Black, Color.Black, Color.Black, Color.Black))
     }
 
-    val trackName = currentSong?.title.toString().perfect()
+    val trackName = currentSong?.title.toString().sanitizeString()
     val artistName = currentSong?.moreInfo?.artistMap?.artists
         ?.distinctBy { it.name }
         ?.joinToString(", ") { it.name.toString() }
-        ?.perfect().toString()
+        ?.sanitizeString().toString()
 
     val isPlaying by playerViewModel.isPlaying.collectAsState()
     val isBuffering by playerViewModel.isBuffering.collectAsState()
