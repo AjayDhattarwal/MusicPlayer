@@ -1,5 +1,6 @@
 package com.ar.musicplayer.api
 
+import com.ar.musicplayer.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
@@ -11,8 +12,8 @@ import java.io.IOException
 import java.util.Base64
 
 object SpotifyAuth {
-    private const val CLIENT_ID = "2b3ad64a3b62454890041ce6f47c2110"
-    private const val CLIENT_SECRET = "284cb31a426f4a4db4368a6284841d4e"
+    private const val CLIENT_ID = BuildConfig.CLIENT_ID
+    private const val CLIENT_SECRET = BuildConfig.CLIENT_SECRET
     private const val TOKEN_URL = "https://accounts.spotify.com/api/token"
 
     private val client = OkHttpClient.Builder()

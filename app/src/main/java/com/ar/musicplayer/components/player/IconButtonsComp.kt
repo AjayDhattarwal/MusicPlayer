@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +51,7 @@ fun PlayPauseButton(
 @Composable
 fun PlayPauseLargeButton(
     size : Dp = 100.dp,
-    isPlaying: Boolean,
+    isPlaying: State<Boolean>,
     onPlayPauseClick: () -> Unit
 ) {
     IconButton(
@@ -60,7 +61,7 @@ fun PlayPauseLargeButton(
             .indication(remember { MutableInteractionSource() }, null)
     ) {
         Icon(
-            if (isPlaying) Icons.Filled.PauseCircle else Icons.Default.PlayCircle,
+            if (isPlaying.value) Icons.Filled.PauseCircle else Icons.Default.PlayCircle,
             contentDescription = "Play/Pause",
             modifier = Modifier.size((100 / 1.5f).dp),
             tint = Color.White

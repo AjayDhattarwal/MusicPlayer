@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
@@ -17,6 +18,7 @@ import com.ar.musicplayer.MainActivity
 import com.ar.musicplayer.PlayNow.Companion.CHANNEL_ID
 import com.ar.musicplayer.PlayNow.Companion.NOTIFICATION_ID
 import com.ar.musicplayer.R
+import com.ar.musicplayer.data.repository.PlayerRepository
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,7 +29,6 @@ enum class ACTIONS {
     STOP
 }
 
-@UnstableApi
 @AndroidEntryPoint
 class AudioService : MediaSessionService() {
 
@@ -41,38 +42,29 @@ class AudioService : MediaSessionService() {
     private lateinit var wakeLock: PowerManager.WakeLock
 
 
+    @UnstableApi
     override fun onCreate() {
         super.onCreate()
-
+        Timber.tag("service").d( "service onCreate called")
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        mediaSession = MediaSession
-            .Builder(this, player)
-            .build()
-
+        mediaSession = MediaSession.Builder(this, player).build()
 
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = powerManager.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK,
-            "MyApp:AudioPlayback"
-        )
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp:AudioPlayback")
 
-        if (!this::player.isInitialized || player.isReleased) {
-            initializePlayer()
-        }
+        startForeground(NOTIFICATION_ID, createNotification(mediaSession))
     }
 
 
+    @UnstableApi
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         when(intent?.action) {
             ACTIONS.START.toString() -> {
-                initializePlayer()
                 startForeground(NOTIFICATION_ID, createNotification(mediaSession))
                 wakeLock.acquire()
             }
             ACTIONS.UPDATE.toString() -> {
-                initializePlayer()
                 updateMediaStyleNotification(mediaSession)
             }
             ACTIONS.STOP.toString() -> {
@@ -84,6 +76,7 @@ class AudioService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+//        playerRepository.destroy()
         mediaSession.apply {
             player.stop()
             player.release()
@@ -93,13 +86,22 @@ class AudioService : MediaSessionService() {
             wakeLock.release()
         }
         Timber.tag("service").d("service onDestroy called")
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopForeground(STOP_FOREGROUND_DETACH)
         super.onDestroy()
     }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Timber.tag("service").d("service taskRemoved called")
+        stopSelf()
+    }
+
+
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession = mediaSession
 
 
+    @UnstableApi
     fun createNotification(mediaSession: MediaSession): Notification {
 
         val openAppIntent = Intent(this, MainActivity::class.java).apply {
@@ -123,37 +125,11 @@ class AudioService : MediaSessionService() {
             .build()
     }
 
+    @UnstableApi
     fun updateMediaStyleNotification(mediaSession: MediaSession) {
 
         val notification = createNotification(mediaSession)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
-
-    private fun initializePlayer() {
-
-        if (!this::player.isInitialized || player.isReleased) {
-            player = ExoPlayer.Builder(this)
-                .build().apply {
-                    setAudioAttributes(audioAttributes, true)
-                    setHandleAudioBecomingNoisy(true)
-                    setWakeMode(C.WAKE_MODE_NETWORK)
-                }
-
-            mediaSession = MediaSession
-                .Builder(this, player)
-                .build()
-
-            notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "MyApp:AudioPlayback"
-            )
-        }
-
-    }
-
-
 
 }

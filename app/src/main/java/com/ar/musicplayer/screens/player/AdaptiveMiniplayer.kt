@@ -11,6 +11,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
@@ -86,24 +87,19 @@ import kotlinx.coroutines.delay
 fun AdaptiveMiniPlayer(
     modifier: Modifier = Modifier,
     playerViewModel: PlayerViewModel,
-    onCollapse: () -> Unit,
+    onExpand: () -> Unit,
     paletteExtractor: PaletteExtractor,
-    downloaderViewModel: DownloaderViewModel,
-    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
     content: @Composable () -> Unit,
     animatedVisibilityScope: AnimatedContentScope,
     sharedTransitionScope: SharedTransitionScope
 ){
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val currentSong by playerViewModel.currentSong.collectAsState()
 
-
-
     val songName = currentSong?.title.toString().sanitizeString()
-    val artistsNames = currentSong?.moreInfo?.artistMap?.artists
+    val artistsNames =  currentSong?.moreInfo?.artistMap?.artists
         ?.distinctBy { it.name }
         ?.joinToString(", ") { it.name.toString() }
         ?.sanitizeString().toString()
@@ -115,7 +111,6 @@ fun AdaptiveMiniPlayer(
     }
 
     LaunchedEffect(currentSong) {
-        Log.d("launch", "called")
         currentSong?.image?.let {
             val shade = paletteExtractor.getColorFromImg(it)
             shade.observeForever { shadeColor ->
@@ -127,21 +122,11 @@ fun AdaptiveMiniPlayer(
         }
     }
 
-    val state = rememberScrollState()
 
-    val isPlaying by playerViewModel.isPlaying.collectAsState()
+    val isPlaying = playerViewModel.isPlaying.collectAsState()
     val isBuffering by playerViewModel.isBuffering.collectAsState()
-    val position by playerViewModel.currentPosition.collectAsState(0L)
 
-    var sliderPosition by remember(position) {
-        mutableLongStateOf(position)
-    }
-    val currentPosition by remember(sliderPosition) {
-        derivedStateOf{
-            sliderPosition
-        }
-    }
-
+    val currentPosition = playerViewModel.currentPosition.collectAsState(0L)
 
     val duration by playerViewModel.duration.collectAsState(0L)
 
@@ -149,31 +134,11 @@ fun AdaptiveMiniPlayer(
     val shuffleModeEnabled by playerViewModel.shuffleModeEnabled.observeAsState(false)
 
 
-    var isDownloaded by remember { mutableStateOf(false) }
-    var isDownloading by remember { mutableStateOf(false) }
-
-    val downloadProgress by downloaderViewModel.songProgress.collectAsState()
-    val currentDownloading by downloaderViewModel.currentDownloading.collectAsState()
-    val songDownloadStatus by downloaderViewModel.songDownloadStatus.observeAsState()
-
-    var inDownloadQueue by remember { mutableStateOf(false) }
-
-    var showCurrentPlaylist by remember { mutableStateOf(false) }
-
     val preferencesManager = remember {
         PreferencesManager(context)
     }
 
-    LaunchedEffect( key1 = currentDownloading, key2 = isDownloading) {
-        val status = downloaderViewModel.getSongStatus(currentSong?.id ?: "")
-        when(status){
-            DownloadStatus.NOT_DOWNLOADED -> isDownloaded = false
-            DownloadStatus.WAITING -> inDownloadQueue = true
-            DownloadStatus.DOWNLOADING -> isDownloading = true
-            DownloadStatus.DOWNLOADED -> isDownloaded = true
-            DownloadStatus.PAUSED -> isDownloading = true
-        }
-    }
+
     var swipeEnded by remember { mutableStateOf(false) }
 
     LaunchedEffect(swipeEnded) {
@@ -195,6 +160,9 @@ fun AdaptiveMiniPlayer(
                         )
                     )
                 }
+                .clickable {
+                    onExpand()
+                }
                 .sharedBounds(
                     rememberSharedContentState(key = "bounds"),
                     animatedVisibilityScope = animatedVisibilityScope,
@@ -212,8 +180,8 @@ fun AdaptiveMiniPlayer(
             Box(modifier = Modifier.size(90.dp)) {
                 SharedElementPager(
                     playerViewModel = playerViewModel,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    sharedTransitionScope = sharedTransitionScope
+//                    animatedVisibilityScope = animatedVisibilityScope,
+//                    sharedTransitionScope = sharedTransitionScope
                 )
             }
 
@@ -223,8 +191,6 @@ fun AdaptiveMiniPlayer(
                 SeDisplayName(
                     trackName = songName,
                     artistName = artistsNames,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    sharedTransitionScope = sharedTransitionScope,
                     textStyle = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.width(width.dp)
                 )
@@ -314,7 +280,7 @@ fun AdaptiveMiniPlayer(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = currentPosition.convertToText(),
+                        text = currentPosition.value.convertToText(),
                         color = Color.White,
                         style = TextStyle(fontWeight = FontWeight.Bold),
                         modifier = Modifier
@@ -322,16 +288,14 @@ fun AdaptiveMiniPlayer(
                     )
 
                     TrackSlider(
-                        modifier = Modifier.weight(1f),
-                        bufferedProgress = currentPosition.toFloat() + 10f,
-                        value = currentPosition.toFloat(),
+                        value = currentPosition,
                         onValueChange = { newValue ->
-                            sliderPosition = newValue.toLong()
+                            playerViewModel.seekTo(newValue.toLong())
                         },
                         onValueChangeFinished = {
-                            playerViewModel.seekTo(sliderPosition)
                         },
-                        songDuration = duration.toFloat()
+                        songDuration = duration.toFloat(),
+                        modifier = Modifier.weight(0.8f)
                     )
 
                     Text(

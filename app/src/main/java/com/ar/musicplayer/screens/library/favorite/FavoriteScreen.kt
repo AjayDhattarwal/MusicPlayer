@@ -1,7 +1,6 @@
 package com.ar.musicplayer.screens.library.favorite
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -43,15 +41,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ar.musicplayer.components.mix.AlbumsLazyVGrid
@@ -59,14 +53,14 @@ import com.ar.musicplayer.components.mix.ArtistsLazyColumn
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.SongResponse
-import com.ar.musicplayer.ui.theme.backgroundDark
 import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoriteScreen(
-    playerViewModel: PlayerViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel,
+    favViewModel: FavoriteViewModel,
     onBackPressed: () -> Unit
 ) {
 
@@ -74,6 +68,9 @@ fun FavoriteScreen(
     val titles = listOf("Songs", "Albums", "Artists", "Genres")
     val pagerState = rememberPagerState(initialPage = 0,pageCount = {titles.size})
 
+    val songResponseList by favViewModel.favSongList.collectAsState()
+    val songByArtist by favViewModel.songsByArtist.collectAsState()
+    val songByAlbum by favViewModel.songsByAlbum.collectAsState()
 
     Scaffold(
         topBar = {
@@ -167,11 +164,15 @@ fun FavoriteScreen(
 
                 PageDisplay(
                     page = page,
+                    songResponseList = songResponseList,
+                    songByAlbum = songByAlbum,
+                    songByArtist = songByArtist,
+//                    favViewModel = favViewModel,
                     onSongClick = remember {
                         {
                             playerViewModel.setNewTrack(it)
                         }
-                    }
+                    },
                 )
 
             }
@@ -183,13 +184,14 @@ fun FavoriteScreen(
 @Composable
 fun PageDisplay(
     page: Int,
-    favViewModel: FavoriteViewModel = hiltViewModel(),
-    onSongClick: (SongResponse) -> Unit
+//    favViewModel: FavoriteViewModel,
+    onSongClick: (SongResponse) -> Unit,
+    songResponseList: List<SongResponse>,
+    songByAlbum: Map<String, List<SongResponse>>,
+    songByArtist: Map<String, List<SongResponse>>
 ){
 
-    val songResponseList by favViewModel.favSongList.collectAsState()
-    val songByArtist by favViewModel.songsByArtist.collectAsState()
-    val songByAlbum by favViewModel.songsByAlbum.collectAsState()
+
 
     when (page) {
         0 -> SongsScreen(songResponseList, onSongClick = onSongClick)

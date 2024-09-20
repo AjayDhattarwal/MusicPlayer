@@ -35,6 +35,9 @@ android {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        create("customDebugType") {
+            isDebuggable = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -75,8 +78,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.lifecycle.service)
 
-    implementation("androidx.compose.material3.adaptive:adaptive:1.1.0-alpha01")
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0-rc01")
+    implementation("androidx.compose.material3.adaptive:adaptive:1.1.0-alpha02")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0")
     implementation ("com.google.accompanist:accompanist-adaptive:0.35.2-beta")
     implementation(libs.firebase.auth.ktx)
 
@@ -133,9 +136,6 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
 
-    implementation(libs.exoplayer.core)
-    // ExoPlayer UI module (contains PlayerNotificationManager)
-    implementation(libs.exoplayer.ui)
     implementation(libs.androidx.media)
 
 
@@ -158,6 +158,9 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
     implementation("com.google.firebase:firebase-analytics")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+
 
 
 

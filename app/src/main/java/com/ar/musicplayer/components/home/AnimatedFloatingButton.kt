@@ -83,8 +83,6 @@ import com.ar.musicplayer.components.mix.ArtistItem
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.screens.library.components.history.SimpleSongItem
-import com.ar.musicplayer.utils.permission.PermissionHandler
-import com.ar.musicplayer.utils.permission.PermissionModel
 import com.ar.musicplayer.viewmodel.AiViewModel
 
 @Composable
@@ -98,11 +96,9 @@ fun AnimatedAIFloatingActionButton(
     val isLoading by aiViewModel.isLoading.collectAsState()
 
     var maxExpanded by remember { mutableStateOf( false ) }
-    var wantPermission by remember { mutableStateOf(false) }
 
     var isListening by remember { mutableStateOf(false) }
     var musicPreference by remember { mutableStateOf("") }
-    var partialText by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
 
@@ -184,19 +180,7 @@ fun AnimatedAIFloatingActionButton(
         }
 
     val imeBottom = (WindowInsets.ime.getBottom(LocalDensity.current).dp / 2) + 100.dp
-//    if(wantPermission){
-//        PermissionHandler(
-//            permissions = listOf(
-//                PermissionModel(
-//                    permission = "android.permission.",
-//                    maxSDKVersion = Int.MAX_VALUE,
-//                    minSDKVersion = 33,
-//                    rational = "To Access Ai Functionality"
-//                ),
-//            ),
-//            askPermission = true
-//        )
-//    }
+
 
     Box(
         modifier = modifier

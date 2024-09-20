@@ -20,6 +20,7 @@ import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.getArtistsNameList
 import com.ar.musicplayer.data.models.getArtistsString
 import com.ar.musicplayer.data.models.sanitizeString
+import com.ar.musicplayer.data.models.toLargeImg
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.notification.ACTIONS
 import com.ar.musicplayer.utils.notification.AudioService
@@ -127,7 +128,8 @@ class PlayerRepository @Inject constructor(
     val showBottomSheet: StateFlow<Boolean> = _showBottomSheet
 
 
-    private val playerListener = @UnstableApi
+    private val playerListener =
+    @UnstableApi
     object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             val newPosition = exoPlayer.currentPosition
@@ -180,6 +182,7 @@ class PlayerRepository @Inject constructor(
             }
         }
 
+        @UnstableApi
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _isPlaying.value = isPlaying
             if (isPlaying) {
@@ -226,7 +229,11 @@ class PlayerRepository @Inject constructor(
     }
 
     fun playPause() {
-        if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+        if (exoPlayer.isPlaying)
+            exoPlayer.pause()
+        else
+            exoPlayer.play()
+
     }
 
     fun seekTo(position: Long) {
@@ -250,7 +257,7 @@ class PlayerRepository @Inject constructor(
         val artist = song.getArtistsString()
         val mediaMetadata = MediaMetadata.Builder()
             .setTitle(song.title?.sanitizeString())
-            .setArtworkUri(Uri.parse(song.image))
+            .setArtworkUri(Uri.parse(song.image?.toLargeImg()))
             .setSubtitle(song.subtitle?.sanitizeString())
             .setArtist(artist)
             .setAlbumTitle(song.moreInfo?.album?.sanitizeString() ?: song.title?.sanitizeString() )
@@ -264,7 +271,6 @@ class PlayerRepository @Inject constructor(
     }
 
 
-    @OptIn(UnstableApi::class)
     private suspend fun loadLastSession() {
         val lastSession = lastSessionRepository.getLastSessionForPlaying()
         if (lastSession.isNotEmpty()) {
@@ -310,7 +316,6 @@ class PlayerRepository @Inject constructor(
         })
     }
 
-    @UnstableApi
     private fun addRecoSongInPlaylist(song: SongResponse) {
 
         if(mutablePlaylist.value.size > MAX_PLAYLIST_SIZE){
@@ -367,7 +372,6 @@ class PlayerRepository @Inject constructor(
         }
     }
 
-    @OptIn(UnstableApi::class)
     private fun addSongInPlaylist(song: SongResponse) {
 
         if (song in playlist.value) {
@@ -405,7 +409,6 @@ class PlayerRepository @Inject constructor(
         exoPlayer.play()
     }
 
-    @OptIn(UnstableApi::class)
     fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
         mutablePlaylist.value = newPlaylist
         _currentIndex.value = 0
@@ -546,7 +549,6 @@ class PlayerRepository @Inject constructor(
     }
 
 
-
     @UnstableApi
     private fun startForegroundService() {
         val intent = Intent(application, AudioService::class.java).apply {
@@ -600,6 +602,11 @@ class PlayerRepository @Inject constructor(
     }
 
     fun destroy(){
+        val context = application
         exoPlayer.removeListener(playerListener)
+        Intent(context, AudioService::class.java).also {
+            it.action = ACTIONS.STOP.toString()
+            context.stopService(it)
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.ar.musicplayer.data.models
 
 import android.os.Parcelable
+import androidx.compose.ui.graphics.Color
 import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 import kotlinx.serialization.Serializable
@@ -571,4 +572,10 @@ data class AiSong(
     val genre: String ? = "",
     val description: String ? = "",
     val other: String ? = ""
+)
+
+data class SongInfo(
+    val title: String ? = "",
+    val artist: String ? = "",
+    val color: Color ? = Color.Black.copy(0.5f)
 )

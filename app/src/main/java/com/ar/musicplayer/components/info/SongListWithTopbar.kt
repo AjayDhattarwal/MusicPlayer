@@ -68,6 +68,7 @@ import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 
@@ -190,22 +191,6 @@ fun SongListWithTopBar(
                     )
                 )
             }
-//            AsyncImage(
-//                model = mainImage,
-//                contentDescription = "image",
-//                modifier = Modifier
-//                    .statusBarsPadding()
-//                    .size(
-//                        currentImgSize
-//                            .toDp()
-//                            .coerceIn(50.dp, 250.dp)
-//                    )
-//                    .alpha(imageAlpha)
-//                    .clip(RoundedCornerShape(2))
-//                    .align(Alignment.Center),
-//                contentScale = ContentScale.Crop,
-//                alignment = Alignment.Center
-//            )
 
             Row(
                 horizontalArrangement = Arrangement.Absolute.Right,
@@ -230,9 +215,6 @@ fun SongListWithTopBar(
         ){
             LazyColumn (
                 modifier = Modifier,
-//                    .offset {
-//                        IntOffset(x = 0, currentImgSize.toDp().toPx().toInt())
-//                    },
                 state = scrollState
             ) {
                 item {
@@ -261,14 +243,14 @@ fun SongListWithTopBar(
 
                 item{
                     Text(
-                        text = data?.title.toString(),
+                        text = data?.title.toString().sanitizeString(),
                         style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                         color = Color.White,
                         maxLines = 1,
                         softWrap = true,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
-                            .padding(4.dp)
+                            .padding(top = 4.dp, start = 16.dp)
                             .fillMaxWidth(1f)
                             .basicMarquee()
                     )
@@ -281,7 +263,8 @@ fun SongListWithTopBar(
                         softWrap = true,
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 10.sp,
-                        modifier = Modifier.padding(4.dp),
+                        modifier = Modifier
+                            .padding(top = 4.dp, start = 16.dp,)
                     )
                 }
                 item{
@@ -341,7 +324,6 @@ fun PlaylistPlayPauseButton(playerViewModel: PlayerViewModel, data: PlaylistResp
         onPlayPauseToggle  = remember {
             {
                 if (currentPlaylistId == data?.id) {
-                    Log.d("play", "id is same clicked")
                     playerViewModel.playPause()
                 } else {
                     data?.list?.let {

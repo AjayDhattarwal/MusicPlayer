@@ -50,8 +50,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchMyMusic(
-    playerViewModel: PlayerViewModel = hiltViewModel(),
-    localSongsViewModel: LocalSongsViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel,
+    localSongsViewModel: LocalSongsViewModel,
     onBackPressed: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -189,11 +189,3 @@ fun searchSongs(songs: List<SongResponse>, query: String): List<SongResponse> {
 }
 
 
-@UnstableApi
-@Preview(showBackground = true)
-@Composable
-fun SearchMyMusicPreview() {
-    SearchMyMusic(){
-
-    }
-}

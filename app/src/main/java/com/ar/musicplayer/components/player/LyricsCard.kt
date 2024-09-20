@@ -2,7 +2,6 @@ package com.ar.musicplayer.components.player
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,11 +14,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -31,13 +28,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.ar.musicplayer.components.CircularProgress
@@ -56,33 +50,30 @@ import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.helper.darkenColor
 import com.ar.musicplayer.utils.helper.isColorLight
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 
 @OptIn(UnstableApi::class)
 @Composable
 fun LyricsCard(
     modifier: Modifier = Modifier,
-    background: Color,
-    playerViewModel: PlayerViewModel = hiltViewModel(),
+    preferencesManager: PreferencesManager,
+    colors: MutableState<ArrayList<Color>>,
+    isLyricsLoading: State<Boolean>,
+    lyricsData: State<List<Pair<Int, String>>>,
+    lazyListState: LazyListState = rememberLazyListState(),
+    onLyricsClick: (Int) -> Unit,
+    currentLyricIndex: State<Int>
 ) {
 
-    val isLyricsLoading by playerViewModel.isLyricsLoading.collectAsState()
-    val lyricsData by playerViewModel.lyricsData.collectAsState()
+
     val perfectBackground =
-        if(background.isColorLight()){
-            background.darkenColor(0.7f)
+        if(colors.value[0].isColorLight()){
+            colors.value[0].darkenColor(0.7f)
         } else{
-            background
+            colors.value[0]
         }
 
 
     val context = LocalContext.current
-    val preferencesManager =  remember{ PreferencesManager(context) }
-
-    val color = Color(preferencesManager.getAccentColor())
-    val lazyListState = rememberLazyListState()
-
 
     Card(
         modifier = modifier
@@ -99,17 +90,17 @@ fun LyricsCard(
                 .background(perfectBackground)
         ) {
 
-            if(isLyricsLoading){
+            if(isLyricsLoading.value){
                 CircularProgress(background = Color.Transparent)
             } else{
-                if(lyricsData.isNotEmpty()){
+                if(lyricsData.value.isNotEmpty()){
                     LyricsContent(
-                        accentColor = color,
-                        playerViewModel = playerViewModel,
-                        lazyListState = lazyListState
-                    ){
-                        playerViewModel.seekTo(it.toLong())
-                    }
+                        lazyListState = lazyListState,
+                        currentLyricIndex = currentLyricIndex,
+                        lyricsData = lyricsData,
+                        onLyricsClick = onLyricsClick,
+                        preferencesManager = preferencesManager
+                    )
                 }
                 else{
                     Box(
@@ -173,23 +164,22 @@ fun LyricsCard(
 @OptIn(UnstableApi::class)
 @Composable
 fun LyricsContent(
-    accentColor: Color,
-    playerViewModel: PlayerViewModel,
+    lyricsData: State<List<Pair<Int, String>>>,
+    currentLyricIndex: State<Int>,
     lazyListState: LazyListState,
-    onLyricsClick: (Int) -> Unit
+    onLyricsClick: (Int) -> Unit,
+    preferencesManager: PreferencesManager
 ) {
 
+    val accentColor = Color(preferencesManager.getAccentColor())
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        val lyricsData by playerViewModel.lyricsData.collectAsState()
-        val currentLyricIndex by playerViewModel.currentLyricIndex.collectAsState(0)
 
-
-        LaunchedEffect(currentLyricIndex) {
-            if (currentLyricIndex >= 0) {
-                lazyListState.animateScrollToItem(index = currentLyricIndex, scrollOffset = - 150)
+        LaunchedEffect(currentLyricIndex.value) {
+            if (currentLyricIndex.value >= 0) {
+                lazyListState.animateScrollToItem(index = currentLyricIndex.value, scrollOffset = - 150)
             } else {
                 lazyListState.scrollToItem(0)
             }
@@ -202,25 +192,40 @@ fun LyricsContent(
             item {
                 Spacer(Modifier.height(30.dp))
             }
-            itemsIndexed(lyricsData, key = { index, _ -> index }) { index, (duration, lyrics) ->
-                val isHighlighted = currentLyricIndex == index
+            itemsIndexed(lyricsData.value, key = { index, _ -> index }) { index, (duration, lyrics) ->
+                val isHighlighted = currentLyricIndex.value == index
                 val textColor = if (isHighlighted) accentColor else Color.LightGray
 
-                Text(
+                LyricsText(
+                    duration = duration,
                     text = lyrics.trim(),
                     color = textColor,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onLyricsClick(duration)
-                        },
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Start,
-                    softWrap = true,
-                    maxLines = 3,
+                    onLyricsClick = onLyricsClick
                 )
                 Spacer(Modifier.height(6.dp))
             }
         }
     }
+}
+
+@Composable
+fun LyricsText(
+    duration: Int,
+    text: String,
+    color: Color,
+    onLyricsClick: (Int) -> Unit,
+){
+    Text(
+        text = text,
+        color = color,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onLyricsClick(duration)
+            },
+        style = MaterialTheme.typography.headlineMedium,
+        textAlign = TextAlign.Start,
+        softWrap = true,
+        maxLines = 3,
+    )
 }

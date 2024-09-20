@@ -1,5 +1,6 @@
 package com.ar.musicplayer.navigation
 
+import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 
 @Serializable

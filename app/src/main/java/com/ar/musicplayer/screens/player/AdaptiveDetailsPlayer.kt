@@ -4,7 +4,6 @@
 
 package com.ar.musicplayer.screens.player
 
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MarqueeAnimationMode
@@ -12,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -26,10 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,7 +50,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,27 +63,25 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import coil.compose.rememberImagePainter
-import com.ar.musicplayer.components.player.AnimatedHorizontalPager
+import com.ar.musicplayer.components.player.AnimatedPager
 import com.ar.musicplayer.components.player.LyricsCard
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.getArtistList
 import com.ar.musicplayer.data.models.sanitizeString
-import com.ar.musicplayer.screens.library.mymusic.toPx
+import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.download.DownloadEvent
 import com.ar.musicplayer.utils.download.DownloadStatus
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import kotlin.random.Random
+import kotlinx.collections.immutable.toPersistentList
 
 @OptIn(UnstableApi::class )
 @Composable
@@ -97,11 +93,23 @@ fun AdaptiveDetailsPlayer(
     onCollapse: () -> Unit,
     paletteExtractor: PaletteExtractor,
     downloaderViewModel: DownloaderViewModel,
-    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
+    favoriteViewModel: FavoriteViewModel,
     onQueue: () -> Unit
 ){
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
 
     val currentSong by playerViewModel.currentSong.collectAsState()
+    val currentIndex by playerViewModel.currentIndex.collectAsState()
+    val playlist by playerViewModel.playlist.collectAsState()
+
+    val persistentList = remember{
+        derivedStateOf{
+            playlist.toPersistentList()
+        }
+    }
+
+    val pagerState = rememberPagerState(pageCount = {persistentList.value.size})
 
 
     val songName = currentSong?.title.toString().sanitizeString()
@@ -120,6 +128,15 @@ fun AdaptiveDetailsPlayer(
         mutableStateOf(arrayListOf<Color>(Color.Black,Color.Black))
     }
 
+    LaunchedEffect(persistentList) {
+        pagerState.scrollToPage(currentIndex)
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        if (currentIndex != pagerState.currentPage) {
+            playerViewModel.changeSong(pagerState.currentPage)
+        }
+    }
 
     LaunchedEffect(currentSong) {
         currentSong?.image?.let {
@@ -131,25 +148,63 @@ fun AdaptiveDetailsPlayer(
                 }
             }
         }
+        if (currentIndex != pagerState.currentPage) {
+            pagerState.scrollToPage(currentIndex)
+        }
     }
+
+    val lazyListState = rememberLazyListState()
+    val isLyricsLoading = playerViewModel.isLyricsLoading.collectAsState()
+    val lyricsData = playerViewModel.lyricsData.collectAsState()
+    val currentLyricIndex = playerViewModel.currentLyricIndex.collectAsState()
 
     var isDownloaded by remember { mutableStateOf(false) }
     var isDownloading by remember { mutableStateOf(false) }
-
     val downloadProgress by downloaderViewModel.songProgress.collectAsState()
-    val currentDownloading by downloaderViewModel.currentDownloading.collectAsState()
+
+    val songDownloadStatus by downloaderViewModel.songDownloadStatus.observeAsState(emptyMap())
+
+    val status =
+        songDownloadStatus[currentSong?.id.toString()] ?: DownloadStatus.NOT_DOWNLOADED
 
     var inDownloadQueue by remember { mutableStateOf(false) }
 
 
-    LaunchedEffect( key1 = currentDownloading, key2 = isDownloading) {
-        val status = downloaderViewModel.getSongStatus(currentSong?.id ?: "")
-        when(status){
-            DownloadStatus.NOT_DOWNLOADED -> isDownloaded = false
-            DownloadStatus.WAITING -> inDownloadQueue = true
-            DownloadStatus.DOWNLOADING -> isDownloading = true
-            DownloadStatus.DOWNLOADED -> isDownloaded = true
-            DownloadStatus.PAUSED -> isDownloading = true
+    LaunchedEffect(status) {
+        when (status) {
+            DownloadStatus.NOT_DOWNLOADED -> {
+                isDownloaded = false
+                inDownloadQueue = false
+                isDownloading = false
+            }
+            DownloadStatus.WAITING -> {
+                isDownloaded = false
+                inDownloadQueue = true
+                isDownloading = false
+            }
+            DownloadStatus.DOWNLOADING -> {
+                isDownloaded = false
+                inDownloadQueue = true
+                isDownloading = true
+            }
+            DownloadStatus.DOWNLOADED -> {
+                isDownloaded = true
+                inDownloadQueue = false
+                isDownloading = false
+            }
+            DownloadStatus.PAUSED -> {
+                isDownloaded = false
+                inDownloadQueue = true
+                isDownloading = false
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = currentSong?.id) {
+        if(currentSong?.id != ""){
+            downloaderViewModel.onEvent(DownloadEvent.isDownloaded(currentSong!!) {
+                isDownloaded = it
+            })
         }
     }
 
@@ -175,11 +230,9 @@ fun AdaptiveDetailsPlayer(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AnimatedHorizontalPager(
-                    modifier = Modifier,
-                    isAdaptive = true,
-                    bottomSheetState = null,
-                    playerViewModel = playerViewModel
+                AnimatedPager(
+                    pagerState = pagerState,
+                    items = persistentList
                 )
             }
 
@@ -290,12 +343,20 @@ fun AdaptiveDetailsPlayer(
                 }
             }
 
-            // Lyrics Card
+
             LyricsCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 400.dp),
-                background = colors.value[0],
+                    .height(400.dp),
+                preferencesManager = preferencesManager,
+                colors = colors,
+                isLyricsLoading = isLyricsLoading,
+                lazyListState = lazyListState,
+                lyricsData = lyricsData,
+                currentLyricIndex = currentLyricIndex,
+                onLyricsClick = remember { {
+                    playerViewModel.seekTo(it.toLong())
+                } }
             )
 
             Spacer(Modifier.height(30.dp))

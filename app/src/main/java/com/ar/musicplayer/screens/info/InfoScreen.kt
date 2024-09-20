@@ -25,18 +25,21 @@ import com.ar.musicplayer.components.CircularProgress
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.components.info.SongListWithTopBar
 import com.ar.musicplayer.data.models.InfoScreenModel
+import com.ar.musicplayer.data.models.toLargeImg
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 
-private const val TAG: String = "PlayListDetail"
 
 @OptIn(UnstableApi::class)
 @ExperimentalFoundationApi
 @Composable
 fun InfoScreen(
+    playerViewModel: PlayerViewModel,
     moreInfoViewModel: MoreInfoViewModel,
+    favViewModel: FavoriteViewModel,
+    downloaderViewModel: DownloaderViewModel,
     data: InfoScreenModel,
     onBackPressed: () -> Unit,
 ) {
@@ -86,15 +89,13 @@ fun InfoScreen(
         if(isLoading){
             CircularProgress(background = Color.Transparent)
         } else{
-            val favViewModel = hiltViewModel<FavoriteViewModel>()
-            val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
-            val playerViewModel = hiltViewModel<PlayerViewModel>()
+            val image = data.image.toLargeImg()
             AnimatedVisibility(
                 visible = playlistResponse?.list?.isNotEmpty() == true,
                 enter = fadeIn()
             ) {
                 SongListWithTopBar(
-                    mainImage  = data.image,
+                    mainImage  = image,
                     scrollState = scrollState,
                     color = colors.value[0],
                     subtitle =

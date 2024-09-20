@@ -28,6 +28,7 @@
 
 
 
+
     <application
         android:name=".PlayNow"
         android:allowBackup="true"

@@ -3,24 +3,20 @@ package com.ar.musicplayer.components.player
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun TrackSlider(
-    value: Float,
-    bufferedProgress: Float,
+    value: State<Long>,
     onValueChange: (Float) -> Unit,
     songDuration: Float,
     onValueChangeFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
         Slider(
-            value = value,
+            value = value.value.toFloat(),
             onValueChange = {
                 onValueChange(it)
             },

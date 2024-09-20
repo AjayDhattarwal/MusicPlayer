@@ -9,7 +9,6 @@ import android.content.IntentFilter
 import android.graphics.RuntimeShader
 import android.media.AudioManager
 import android.os.Build
-import android.util.Log
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -61,8 +60,8 @@ import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.components.player.ControlButton
@@ -119,17 +118,13 @@ val CUSTOM_SHADER = """
 """.trimIndent()
 
 
-
-
-val black = Color(0xFFB40EFC)
-
-
 @UnstableApi
 @Composable
 fun AdaptiveMaxPlayer(
     onBack: () -> Unit,
+    height: Dp,
     playerViewModel : PlayerViewModel,
-    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
+    favoriteViewModel: FavoriteViewModel,
     animatedVisibilityScope: AnimatedContentScope,
     sharedTransitionScope: SharedTransitionScope
 ) {
@@ -146,7 +141,7 @@ fun AdaptiveMaxPlayer(
         ?.joinToString(", ") { it.name.toString() }
         ?.sanitizeString().toString()
 
-    val isPlaying by playerViewModel.isPlaying.collectAsState()
+    val isPlaying = playerViewModel.isPlaying.collectAsState()
     val isBuffering by playerViewModel.isBuffering.collectAsState()
     val position by playerViewModel.currentPosition.collectAsState(0L)
     val duration by playerViewModel.duration.collectAsState(0L)
@@ -155,7 +150,7 @@ fun AdaptiveMaxPlayer(
     var sliderPosition by remember(position) {
         mutableLongStateOf(position)
     }
-    val currentPosition by remember(sliderPosition) {
+    val currentPosition = remember(sliderPosition) {
         derivedStateOf{
             sliderPosition
         }
@@ -164,8 +159,6 @@ fun AdaptiveMaxPlayer(
     val repeatMode by playerViewModel.repeatMode.observeAsState(Player.REPEAT_MODE_OFF)
     val shuffleModeEnabled by playerViewModel.shuffleModeEnabled.observeAsState(false)
 
-    var isDownloaded by remember { mutableStateOf(false) }
-    var isDownloading by remember { mutableStateOf(false) }
 
     val preferencesManager = remember {
         PreferencesManager(context)
@@ -181,7 +174,6 @@ fun AdaptiveMaxPlayer(
 
 
     LaunchedEffect(currentSong) {
-        Log.d("launch", "called")
         currentSong?.image?.let { image ->
 
             val shadeLiveData = paletteExtractor.getColorsFromImg(image)
@@ -249,44 +241,53 @@ fun AdaptiveMaxPlayer(
                     exit = fadeOut(),
                     resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds()
                 ),
-            contentAlignment = Alignment.BottomCenter
+            contentAlignment = Alignment.BottomStart
         ) {
-            Column(){
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier
-                        .height(400.dp)
-                        .width(350.dp)) {
-                        SharedElementPager(
-                            modifier = Modifier,
-                            playerViewModel = playerViewModel,
-                            animatedVisibilityScope = animatedVisibilityScope,
-                            sharedTransitionScope = sharedTransitionScope
-                        )
-                    }
-                    SeDisplayName(
-                        trackName = trackName,
-                        artistName = artistName,
-                        animatedVisibilityScope = animatedVisibilityScope,
-                        sharedTransitionScope = sharedTransitionScope,
-                        textStyle = MaterialTheme.typography.headlineLarge,
-                    )
+                Column(
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ){
                     Spacer(
                         modifier = Modifier
-                            .width(1.dp)
+                            .height(10.dp)
                             .weight(1f)
                     )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
 
-                }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(height)
+                                .width(350.dp)
+                        ) {
+                            SharedElementPager(
+                                modifier = Modifier,
+                                playerViewModel = playerViewModel,
+//                                animatedVisibilityScope = animatedVisibilityScope,
+//                                sharedTransitionScope = sharedTransitionScope
+                            )
+                        }
+                        SeDisplayName(
+                            trackName = trackName,
+                            artistName = artistName,
+                            textStyle = MaterialTheme.typography.headlineLarge,
+                        )
+                        Spacer(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .weight(1f)
+                        )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 76.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 76.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                     Text(
-                        text = currentPosition.convertToText(),
+                        text = currentPosition.value.convertToText(),
                         color = Color.White,
                         style = TextStyle(fontWeight = FontWeight.Bold),
                         modifier = Modifier
@@ -295,8 +296,7 @@ fun AdaptiveMaxPlayer(
 
                     TrackSlider(
                         modifier = Modifier.weight(1f),
-                        bufferedProgress = currentPosition.toFloat() + 10f,
-                        value = currentPosition.toFloat(),
+                        value = currentPosition,
                         onValueChange = { newValue ->
                             sliderPosition = newValue.toLong()
                         },
@@ -316,120 +316,122 @@ fun AdaptiveMaxPlayer(
 
                 }
 
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp, start = 20.dp, end = 20.dp)
+                    ) {
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 5.dp, start = 20.dp, end = 20.dp)
-                ) {
-
-                    FavToggleButton(
-                        isFavorite = isFavourite,
-                        onFavClick = remember {
-                            {
-                                if (currentSong?.id != "") {
-                                    favoriteViewModel.onEvent(FavoriteSongEvent.ToggleFavSong(songResponse = currentSong!!))
-                                }
-                            }
-                        }
-                    )
-
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.align(Alignment.Center)
-                    ){
-                        ControlButton(
-                            icon = Icons.Default.Shuffle,
-                            size = 30.dp,
-                            onClick = remember {
+                        FavToggleButton(
+                            isFavorite = isFavourite,
+                            onFavClick = remember {
                                 {
-                                    playerViewModel.toggleShuffleMode()
-                                }
-                            },
-                            tint = if (shuffleModeEnabled) Color(preferencesManager.getAccentColor()) else Color.LightGray
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        ControlButton(
-                            icon = Icons.Default.SkipPrevious,
-                            size = 40.dp,
-                            onClick = remember {
-                                {
-                                    playerViewModel.skipPrevious()
+                                    if (currentSong?.id != "") {
+                                        favoriteViewModel.onEvent(
+                                            FavoriteSongEvent.ToggleFavSong(
+                                                songResponse = currentSong!!
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
 
-                        Box(contentAlignment = Alignment.Center) {
-                            PlayPauseLargeButton(
-                                size = 50.dp,
-                                isPlaying = isPlaying,
-                                onPlayPauseClick = remember {
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            ControlButton(
+                                icon = Icons.Default.Shuffle,
+                                size = 30.dp,
+                                onClick = remember {
                                     {
-                                        playerViewModel.playPause()
+                                        playerViewModel.toggleShuffleMode()
+                                    }
+                                },
+                                tint = if (shuffleModeEnabled) Color(preferencesManager.getAccentColor()) else Color.LightGray
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            ControlButton(
+                                icon = Icons.Default.SkipPrevious,
+                                size = 40.dp,
+                                onClick = remember {
+                                    {
+                                        playerViewModel.skipPrevious()
                                     }
                                 }
                             )
-                            if (isBuffering) {
-                                CircularProgressIndicator()
-                            }
-                        }
+                            Spacer(modifier = Modifier.width(10.dp))
 
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        ControlButton(
-                            icon = Icons.Default.SkipNext,
-                            size = 40.dp,
-                            onClick = remember {
-                                {
-                                    playerViewModel.skipNext()
+                            Box(contentAlignment = Alignment.Center) {
+                                PlayPauseLargeButton(
+                                    size = 50.dp,
+                                    isPlaying = isPlaying,
+                                    onPlayPauseClick = remember {
+                                        {
+                                            playerViewModel.playPause()
+                                        }
+                                    }
+                                )
+                                if (isBuffering) {
+                                    CircularProgressIndicator()
                                 }
                             }
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
 
-                        ControlButton(
-                            icon = Icons.Default.Repeat,
-                            size = 30.dp,
-                            onClick = remember {
-                                {
-                                    playerViewModel.setRepeatMode((repeatMode + 1) % 3)
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            ControlButton(
+                                icon = Icons.Default.SkipNext,
+                                size = 40.dp,
+                                onClick = remember {
+                                    {
+                                        playerViewModel.skipNext()
+                                    }
                                 }
-                            },
-                            tint = Color.LightGray
-                        )
-                    }
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
 
-
-                    Row(modifier = Modifier.align(Alignment.CenterEnd)){
-                        VolumeControl(
-                            modifier = Modifier
-                                .width(150.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.Default.CloseFullscreen,
-                                contentDescription = "exit Full Screen",
-                                tint = Color.White
+                            ControlButton(
+                                icon = Icons.Default.Repeat,
+                                size = 30.dp,
+                                onClick = remember {
+                                    {
+                                        playerViewModel.setRepeatMode((repeatMode + 1) % 3)
+                                    }
+                                },
+                                tint = Color.LightGray
                             )
                         }
+
+
+                        Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+                            VolumeControl(
+                                modifier = Modifier
+                                    .width(150.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.Default.CloseFullscreen,
+                                    contentDescription = "exit Full Screen",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+
+
                     }
 
-
+                    Spacer(
+                        modifier = Modifier
+                            .height(60.dp)
+                    )
                 }
 
 
-                Spacer(
-                    modifier = Modifier
-                        .height(60.dp)
-
-                )
-
-            }
 
 
         }

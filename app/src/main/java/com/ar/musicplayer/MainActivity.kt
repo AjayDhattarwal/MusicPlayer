@@ -1,6 +1,5 @@
 package com.ar.musicplayer
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,14 +11,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.rememberNavController
-import androidx.window.core.layout.WindowWidthSizeClass
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.permission.PermissionHandler
 import com.ar.musicplayer.utils.permission.PermissionModel
 import com.ar.musicplayer.navigation.App
-import com.ar.musicplayer.screens.testing.PhoneAuthScreen
 import com.ar.musicplayer.ui.theme.AppTheme
-import com.ar.musicplayer.ui.theme.WindowInfoVM
+import com.ar.musicplayer.ui.WindowInfoVM
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.notification.AudioService
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
@@ -40,8 +37,6 @@ class MainActivity  : ComponentActivity() {
         setContent {
             val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
-            val navController = rememberNavController()
-
             val homeViewModel = hiltViewModel<HomeViewModel>()
             val playerViewModel = hiltViewModel<PlayerViewModel>()
             val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
@@ -49,6 +44,7 @@ class MainActivity  : ComponentActivity() {
             val favoriteViewModel = hiltViewModel<FavoriteViewModel>()
 
             windowInfoVm.updateWindowWidthSizeClass(windowSizeClass.windowWidthSizeClass)
+            windowInfoVm.updateWindowHeightSizeClass(windowSizeClass.windowHeightSizeClass)
 
             AppTheme {
                 PermissionHandler(
@@ -70,7 +66,6 @@ class MainActivity  : ComponentActivity() {
                 )
 
                 App(
-                    navController = navController,
                     homeViewModel = homeViewModel,
                     playerViewModel = playerViewModel,
                     downloaderViewModel = downloaderViewModel,
@@ -81,7 +76,10 @@ class MainActivity  : ComponentActivity() {
 
 //            PhoneAuthScreen( activity = this)
         }
+
+
     }
+
 
 }
 

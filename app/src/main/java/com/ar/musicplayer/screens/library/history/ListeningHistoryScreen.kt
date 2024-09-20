@@ -33,7 +33,7 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListeningHistoryScreen(
-    playerViewModel: PlayerViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel,
     onBackPressed: () -> Unit,
 ) {
     val songResponseList by playerViewModel.listeningHistory.collectAsState()

@@ -47,11 +47,11 @@ import com.ar.musicplayer.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel,
-    playerViewModel: PlayerViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel,
     navigateSetting: () -> Unit,
     onItemClick: (Boolean, HomeListItem) -> Unit
-
 ) {
+
 
     Log.d("recompose", "homeScreen recompose")
 
@@ -167,8 +167,6 @@ fun HomeScreen(
 
 
 }
-
-
 
 
 fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> {

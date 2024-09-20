@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -48,13 +47,10 @@ import androidx.navigation.compose.rememberNavController
 import com.ar.musicplayer.R
 import com.ar.musicplayer.components.library.PlaylistDialog
 import com.ar.musicplayer.navigation.FavoriteScreenObj
-import com.ar.musicplayer.navigation.LanguageSettingsScreenObj
-import com.ar.musicplayer.navigation.PlaybackSettingsScreenObj
-import com.ar.musicplayer.navigation.StorageSettingScreenObj
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaylistFetchScreen(
+fun PlaylistManagerScreen(
     navController: NavHostController,
 ){
     var showDialog by remember {
@@ -270,7 +266,7 @@ fun PlaylistFetchScreen(
 @Preview
 @Composable
 fun PlaylistFetchScreenPreview(){
-    PlaylistFetchScreen(
+    PlaylistManagerScreen(
         rememberNavController()
     )
 }

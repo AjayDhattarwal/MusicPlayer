@@ -50,8 +50,8 @@ import kotlin.math.absoluteValue
 fun SharedElementPager(
     modifier: Modifier = Modifier,
     playerViewModel: PlayerViewModel,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope
+//    sharedTransitionScope: SharedTransitionScope,
+//    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     val playlist by playerViewModel.playlist.collectAsState(emptyList())
     val currentIndex by playerViewModel.currentIndex.collectAsState()
@@ -76,16 +76,16 @@ fun SharedElementPager(
     }
 
 
-    with(sharedTransitionScope) {
+
         HorizontalPager(
             state = pagerState,
             beyondViewportPageCount = 2,
             modifier = modifier
-                .background(Color.Transparent)
-                .sharedElement(
-                    rememberSharedContentState(key = "image"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
+                .background(Color.Transparent),
+//                .sharedElement(
+//                    rememberSharedContentState(key = "image"),
+//                    animatedVisibilityScope = animatedVisibilityScope
+//                ),
             pageSize = PageSize.Fill,
             pageSpacing = 10.dp
         ) { page ->
@@ -140,6 +140,6 @@ fun SharedElementPager(
                 )
             }
         }
-    }
+//    }
 }
 

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.*
-import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.data.repository.LastSessionRepository
 import com.ar.musicplayer.data.models.SongResponse
@@ -15,9 +14,9 @@ import com.ar.musicplayer.utils.notification.AudioService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@UnstableApi
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     application: Application,
@@ -25,28 +24,28 @@ class PlayerViewModel @Inject constructor(
     private val lastSessionRepository: LastSessionRepository
 ) : AndroidViewModel(application) {
 
-    val currentPosition: StateFlow<Long> = playerRepository.currentPosition
-    val duration: StateFlow<Long> = playerRepository.duration
-    val currentIndex: StateFlow<Int> = playerRepository.currentIndex
-    val isPlaying: StateFlow<Boolean> = playerRepository.isPlaying
-    val currentSong: StateFlow<SongResponse?> = playerRepository.currentSong
-    val playlist: StateFlow<List<SongResponse>> = playerRepository.playlist
-    val currentPlaylistId: StateFlow<String?> = playerRepository.currentPlaylistId
-    val showBottomSheet: StateFlow<Boolean> = playerRepository.showBottomSheet
-    val repeatMode = playerRepository.repeatMode
-    val shuffleModeEnabled = playerRepository.shuffleModeEnabled
-    val isBuffering = playerRepository.isBuffering
+    val currentPosition: StateFlow<Long>  get() = playerRepository.currentPosition
+    val duration: StateFlow<Long> get() = playerRepository.duration
+    val currentIndex: StateFlow<Int> get() = playerRepository.currentIndex
+    val isPlaying: StateFlow<Boolean> get() = playerRepository.isPlaying
+    val currentSong: StateFlow<SongResponse?> get() = playerRepository.currentSong
+    val playlist: StateFlow<List<SongResponse>> get() = playerRepository.playlist
+    val currentPlaylistId: StateFlow<String?> get() = playerRepository.currentPlaylistId
+    val showBottomSheet: StateFlow<Boolean> get() = playerRepository.showBottomSheet
+    val repeatMode get() = playerRepository.repeatMode
+    val shuffleModeEnabled get() = playerRepository.shuffleModeEnabled
+    val isBuffering  get() = playerRepository.isBuffering
 
-    val lastSession = lastSessionRepository.lastSession
-    val listeningHistory = lastSessionRepository.listeningHistory
+    val lastSession get() = lastSessionRepository.lastSession
+    val listeningHistory get() = lastSessionRepository.listeningHistory
 
 
-    val currentLyricIndex = playerRepository.currentLyricIndex
-    val lyricsData: StateFlow<List<Pair<Int, String>>> = playerRepository.lyricsData
-    val isLyricsLoading: StateFlow<Boolean> = playerRepository.isLyricsLoading
+    val currentLyricIndex get() = playerRepository.currentLyricIndex
+    val lyricsData: StateFlow<List<Pair<Int, String>>> get() = playerRepository.lyricsData
+    val isLyricsLoading: StateFlow<Boolean> get() = playerRepository.isLyricsLoading
 
     private val _currentSongColor = MutableStateFlow(Color.Gray)
-    val currentSongColor: StateFlow<Color> = _currentSongColor
+    val currentSongColor: StateFlow<Color> get() = _currentSongColor
 
 
     fun playPause() {
@@ -84,23 +83,25 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
-        try {
-            // Ensure the playlist is not null
-            checkNotNull(playlist) { "Playlist is null" }
+        viewModelScope.launch{
+            try {
+                // Ensure the playlist is not null
+                checkNotNull(playlist) { "Playlist is null" }
 
-            playerRepository.setPlaylist(newPlaylist, playlistId)
+                playerRepository.setPlaylist(newPlaylist, playlistId)
 
-        } catch (e: Exception) {
-            Log.e("PlayerRepository", "Error setting playlist", e)
+            } catch (e: Exception) {
+                Log.e("PlayerRepository", "Error setting playlist", e)
+            }
         }
     }
 
     fun removeTrack(index: Int){
-        playerRepository.removeTrack(index)
+        viewModelScope.launch{ playerRepository.removeTrack(index) }
     }
 
     fun replaceIndex(add: Int, remove: Int) {
-        playerRepository.replaceIndex(add, remove)
+        viewModelScope.launch { playerRepository.replaceIndex(add, remove) }
     }
 
     fun setCurrentSongColor(color: Color){
@@ -109,16 +110,10 @@ class PlayerViewModel @Inject constructor(
 
 
     override fun onCleared() {
-        val context = getApplication<Application>().applicationContext
         super.onCleared()
-
         playerRepository.destroy()
-
-        Intent(context, AudioService::class.java).also {
-            it.action = ACTIONS.STOP.toString()
-            context.stopService(it)
-        }
     }
+
 
 
 }

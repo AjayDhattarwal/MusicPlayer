@@ -21,46 +21,40 @@ import androidx.compose.ui.text.style.TextOverflow
 fun SeDisplayName(
     trackName: String,
     artistName: String,
-    animatedVisibilityScope: AnimatedContentScope,
-    sharedTransitionScope: SharedTransitionScope,
     textStyle: TextStyle,
     modifier: Modifier = Modifier
 ){
-    with(sharedTransitionScope) {
-        Column(modifier = modifier) {
-            Text(
-                text = trackName,
-                color = Color.White,
-                maxLines = 1,
-                modifier = Modifier
-                    .basicMarquee(
-                        animationMode = MarqueeAnimationMode.Immediately,
-                        repeatDelayMillis = 2000,
-                        initialDelayMillis = 2000,
-                        iterations = Int.MAX_VALUE
-                    ),
-                style  = textStyle,
-                overflow = TextOverflow.Ellipsis,
+    Column(modifier = modifier) {
+        Text(
+            text = trackName,
+            color = Color.White,
+            maxLines = 1,
+            modifier = Modifier
+                .basicMarquee(
+                    animationMode = MarqueeAnimationMode.Immediately,
+                    repeatDelayMillis = 2000,
+                    initialDelayMillis = 2000,
+                    iterations = Int.MAX_VALUE
+                ),
+            style  = textStyle,
+            overflow = TextOverflow.Ellipsis,
 
+            )
+
+        Text(
+            text = artistName,
+            color = Color.LightGray,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .basicMarquee(
+                    animationMode = MarqueeAnimationMode.Immediately,
+                    repeatDelayMillis = 2000,
+                    initialDelayMillis = 2000
                 )
 
-            Text(
-                text = artistName,
-                color = Color.LightGray,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .basicMarquee(
-                        animationMode = MarqueeAnimationMode.Immediately,
-                        repeatDelayMillis = 2000,
-                        initialDelayMillis = 2000
-                    )
-                    .sharedElement(
-                        rememberSharedContentState(key = "artistName"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-            )
-        }
+        )
     }
+
 }

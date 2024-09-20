@@ -46,6 +46,7 @@ import coil.compose.AsyncImage
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.download.DownloadEvent
 import com.ar.musicplayer.utils.download.DownloadStatus
 import com.ar.musicplayer.utils.download.DownloaderViewModel
@@ -58,9 +59,7 @@ fun SongItemRepresentation(
     favViewModel: FavoriteViewModel = hiltViewModel() ,
     downloaderViewModel: DownloaderViewModel = hiltViewModel(),
     onTrackClicked: () -> Unit
-)
-{
-    val coroutineScope = rememberCoroutineScope()
+) {
 
     val isFavouriteFlow by remember {
         derivedStateOf {
@@ -82,8 +81,6 @@ fun SongItemRepresentation(
     var inDownloadQueue by remember { mutableStateOf(false) }
 
 
-
-    Log.d("daw",isDownloading.toString())
 
     LaunchedEffect(status) {
         when (status) {
@@ -150,7 +147,7 @@ fun SongItemRepresentation(
                 .weight(1f)
         ) {
             Text(
-                text = track.title ?: "null",
+                text = track.title?.sanitizeString().toString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = Color.White,
                 modifier = Modifier.padding(bottom = 2.dp),
@@ -159,7 +156,7 @@ fun SongItemRepresentation(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = track.subtitle ?: "unknown",
+                text = track.subtitle?.sanitizeString().toString(),
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.Gray,
                 maxLines = 1,

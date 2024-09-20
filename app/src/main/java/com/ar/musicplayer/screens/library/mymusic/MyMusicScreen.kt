@@ -56,8 +56,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MyMusicScreen(
-    playerViewModel: PlayerViewModel = hiltViewModel(),
-    onBackPressed: () -> Boolean,
+    playerViewModel: PlayerViewModel,
+    localSongsViewModel: LocalSongsViewModel,
+    onBackPressed: () -> Unit,
     onNavigate: (Any) -> Unit,
 ) {
 
@@ -167,6 +168,7 @@ fun MyMusicScreen(
 
                 MyMusicDisplay(
                     page = page,
+                    localSongsViewModel = localSongsViewModel,
                     onSongClick = remember {
                         {
                             playerViewModel.setNewTrack(it)
@@ -186,7 +188,7 @@ fun MyMusicScreen(
 @Composable
 fun MyMusicDisplay(
     page: Int,
-    localSongsViewModel: LocalSongsViewModel = hiltViewModel(),
+    localSongsViewModel: LocalSongsViewModel,
     onSongClick: (SongResponse) -> Unit
 ){
     val isLoading by localSongsViewModel.isLoading.collectAsState()

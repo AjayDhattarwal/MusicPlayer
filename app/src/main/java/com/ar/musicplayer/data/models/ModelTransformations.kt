@@ -224,11 +224,7 @@ fun Song.toSongResponse(): SongResponse{
 
 
 fun SongResponse.toSongDownloadEntity(): SongDownloadEntity{
-    val artist = this.moreInfo?.artistMap?.artists
-        ?.distinctBy { it.name }
-        ?.joinToString ( "," ) {it.name.toString()}
-        ?.sanitizeString()
-        .toString()
+    val artist = this.getArtistsString().toString()
 
     val album = this.moreInfo?.album ?: ""
     val genre = this.role ?: ""
@@ -274,7 +270,8 @@ fun ArtistMap.getArtistList(): List<Artist> {
 fun SongResponse.getArtistsString(): String? {
     return this.moreInfo?.artistMap?.artists
         ?.distinctBy { it.name }
-        ?.joinToString(", ") { it.name.toString() }?.sanitizeString()
+        ?.joinToString(", ") { it.name.toString() }
+            ?.sanitizeString()
 }
 
 fun ExoPlayer.getArtistsNameList(): List<String> {
@@ -284,3 +281,6 @@ fun ExoPlayer.getArtistsNameList(): List<String> {
         ?: listOf()
 }
 
+fun String.toLargeImg(): String {
+    return this.replace("150x150", "350x350")
+}
