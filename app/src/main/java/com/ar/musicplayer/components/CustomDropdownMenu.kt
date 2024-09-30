@@ -7,6 +7,8 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.PlaylistAdd
@@ -22,7 +24,11 @@ import androidx.compose.ui.graphics.Color
 
 
 @Composable
-fun PlayerDropDownMenu(expended: Boolean, onDismissRequest: () -> Unit){
+fun PlayerDropDownMenu(
+    expended: Boolean,
+    onDismissRequest: () -> Unit,
+    addToPlaylist: () -> Unit
+){
         DropdownMenu(
             expanded = expended,
             onDismissRequest = {onDismissRequest()},
@@ -45,7 +51,7 @@ fun PlayerDropDownMenu(expended: Boolean, onDismissRequest: () -> Unit){
             )
             DropdownMenuItem(
                 text = { Text(text = "Add to Playlist") },
-                onClick = { /*TODO*/ },
+                onClick = addToPlaylist,
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
@@ -136,3 +142,54 @@ fun InfoDropdownMenu(expended: Boolean, onDismissRequest: () -> Unit){
 
 
 }
+
+
+@Composable
+fun PlaylistDropdownMenu(
+    expended: Boolean,
+    onDismissRequest: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+
+    DropdownMenu(
+        expanded = expended,
+        onDismissRequest = { onDismissRequest() },
+        modifier = Modifier.background(Color.Black)
+    ) {
+        DropdownMenuItem(
+            text = { Text(text = "Edit") },
+            onClick = onEdit,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Playlist"
+                )
+            },
+            colors = MenuDefaults.itemColors(
+                textColor = Color.White,
+                disabledTextColor = Color.White,
+                leadingIconColor = Color.White
+            )
+        )
+
+        DropdownMenuItem(
+            text = { Text(text = "Delete") },
+            onClick =  onDelete ,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.DeleteForever,
+                    contentDescription = "Delete Playlist"
+                )
+            },
+            colors = MenuDefaults.itemColors(
+                textColor = Color.White,
+                disabledTextColor = Color.White,
+                leadingIconColor = Color.White
+            )
+        )
+    }
+
+
+}
+

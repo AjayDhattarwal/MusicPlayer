@@ -43,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -58,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -70,6 +68,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.ar.musicplayer.components.mix.PlaylistSelectionSheet
 import com.ar.musicplayer.components.player.AnimatedPager
 import com.ar.musicplayer.components.player.CollapseBar
 import com.ar.musicplayer.components.player.CollapsingBoxWithPadding
@@ -80,7 +79,6 @@ import com.ar.musicplayer.components.player.MiniPlayerControls
 import com.ar.musicplayer.components.player.PlayPauseLargeButton
 import com.ar.musicplayer.components.player.TrackSlider
 import com.ar.musicplayer.components.player.convertToText
-import com.ar.musicplayer.data.models.SongInfo
 import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.navigation.currentFraction
 import com.ar.musicplayer.utils.PreferencesManager
@@ -90,6 +88,7 @@ import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import kotlinx.collections.immutable.toPersistentList
 
@@ -100,6 +99,7 @@ import kotlinx.collections.immutable.toPersistentList
 @Composable
 fun MusicPlayerScreen(
     playerViewModel: PlayerViewModel,
+    localPlaylistViewModel: ImportViewModel,
     bottomSheetState: BottomSheetScaffoldState,
     onExpand: () -> Unit ,
     onCollapse: () -> Unit ,
@@ -123,9 +123,7 @@ fun MusicPlayerScreen(
     val repeatMode by playerViewModel.repeatMode.observeAsState(Player.REPEAT_MODE_OFF)
     val shuffleModeEnabled by playerViewModel.shuffleModeEnabled.observeAsState(false)
 
-
     var showCurrentPlaylist by remember { mutableStateOf(false) }
-
 
     val title = remember(currentSong?.title){
         currentSong?.title?.sanitizeString().toString()
@@ -138,7 +136,6 @@ fun MusicPlayerScreen(
             .toString()
     }
 
-
     val persistentList = remember{
         derivedStateOf{
             playlist.toPersistentList()
@@ -147,7 +144,7 @@ fun MusicPlayerScreen(
 
     val pagerState = rememberPagerState(pageCount = {persistentList.value.size})
 
-    LaunchedEffect(persistentList) {
+    LaunchedEffect(playlist) {
         pagerState.scrollToPage(currentIndex)
     }
 
@@ -243,6 +240,9 @@ fun MusicPlayerScreen(
     val currentLyricIndex = playerViewModel.currentLyricIndex.collectAsState()
 
 
+    val localPlaylist by localPlaylistViewModel.localPlaylists.collectAsState()
+    var isSelectPlaylist by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -274,6 +274,11 @@ fun MusicPlayerScreen(
                             FavoriteSongEvent.ToggleFavSong(it!!)
                         )
                     }
+                }
+            },
+            addToPlaylist = remember{
+                {
+                    isSelectPlaylist = true
                 }
             }
         )
@@ -523,11 +528,31 @@ fun MusicPlayerScreen(
             ModalBottomSheet(
                 onDismissRequest = { showCurrentPlaylist = false },
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = Color.Black.copy(0.5f),
+                containerColor = Color.Black.copy(0.8f),
                 dragHandle = {},
                 contentWindowInsets = { WindowInsets(0,0,0,0) }
             ) {
                 CurrPlayingPlaylist(playerViewModel = playerViewModel)
+            }
+        }
+
+        if(isSelectPlaylist){
+            ModalBottomSheet(
+                sheetState =  rememberModalBottomSheetState(skipPartiallyExpanded = false),
+                onDismissRequest = {
+                    isSelectPlaylist = false
+                }
+            ){
+                PlaylistSelectionSheet(
+                    playlists = localPlaylist,
+                    onPlaylistSelected = { selectedPlaylist ->
+                        localPlaylistViewModel.addSongToPlaylist(currentSong!!, selectedPlaylist)
+                        isSelectPlaylist = false
+                    },
+                    onCreatePlaylist = {
+                        localPlaylistViewModel.createPlaylist(title = it, description = null)
+                    }
+                )
             }
         }
 

@@ -2,6 +2,8 @@ package com.ar.musicplayer.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.work.WorkManager
 import com.ar.musicplayer.utils.roomdatabase.downloadDb.DownloadDao
 import com.ar.musicplayer.utils.roomdatabase.downloadDb.DownloadDatabase
@@ -12,6 +14,8 @@ import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDataDao
 import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDatabase
 import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDao
 import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDatabase
+import com.ar.musicplayer.utils.roomdatabase.playlistdb.PlaylistDao
+import com.ar.musicplayer.utils.roomdatabase.playlistdb.PlaylistDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,30 +31,30 @@ object DatabaseModule {
     @Singleton
     fun provideHomeDatabase(@ApplicationContext context: Context): HomeDatabase {
         return Room.databaseBuilder(
-            context,
+            context.applicationContext,
             HomeDatabase::class.java,
             "home_data_database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
     @Singleton
     fun provideLastSessionDatabase(@ApplicationContext context: Context): LastSessionDatabase {
         return Room.databaseBuilder(
-            context,
+            context.applicationContext,
             LastSessionDatabase::class.java,
             "lastSession_data_database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
     @Singleton
     fun provideFavDatabase(@ApplicationContext context: Context): FavoriteDatabase {
         return Room.databaseBuilder(
-            context,
+            context.applicationContext,
             FavoriteDatabase::class.java,
             "fav_data_database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
 
@@ -83,5 +87,29 @@ object DatabaseModule {
     @Singleton
     fun provideDownloadDao(database: DownloadDatabase): DownloadDao{
         return database.downloadDao()
+    }
+
+    @Singleton
+    @Provides
+    fun providePlaylistDatabase(
+        @ApplicationContext context: Context
+    ): PlaylistDatabase {
+        return Room.databaseBuilder(
+            context.applicationContext,
+            PlaylistDatabase::class.java,
+            "playlist_database"
+        ).addCallback(object : RoomDatabase.Callback() {
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    super.onOpen(db)
+                    db.setForeignKeyConstraintsEnabled(true)
+                }
+            }
+        ).fallbackToDestructiveMigration().build()
+    }
+
+    @Singleton
+    @Provides
+    fun providePlaylistDao(playlistDatabase: PlaylistDatabase): PlaylistDao {
+        return playlistDatabase.playlistDao
     }
 }

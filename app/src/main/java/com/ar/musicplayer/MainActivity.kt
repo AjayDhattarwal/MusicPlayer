@@ -15,6 +15,7 @@ import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.permission.PermissionHandler
 import com.ar.musicplayer.utils.permission.PermissionModel
 import com.ar.musicplayer.navigation.App
+import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.ui.theme.AppTheme
 import com.ar.musicplayer.ui.WindowInfoVM
 import com.ar.musicplayer.utils.download.DownloaderViewModel
@@ -22,6 +23,7 @@ import com.ar.musicplayer.utils.notification.AudioService
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 
 import com.ar.musicplayer.viewmodel.HomeViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -42,6 +44,8 @@ class MainActivity  : ComponentActivity() {
             val downloaderViewModel = hiltViewModel<DownloaderViewModel>()
             val windowInfoVm = viewModel<WindowInfoVM>()
             val favoriteViewModel = hiltViewModel<FavoriteViewModel>()
+            val importViewModel = hiltViewModel<ImportViewModel>()
+            val localSongsViewModel = hiltViewModel<LocalSongsViewModel>()
 
             windowInfoVm.updateWindowWidthSizeClass(windowSizeClass.windowWidthSizeClass)
             windowInfoVm.updateWindowHeightSizeClass(windowSizeClass.windowHeightSizeClass)
@@ -70,7 +74,9 @@ class MainActivity  : ComponentActivity() {
                     playerViewModel = playerViewModel,
                     downloaderViewModel = downloaderViewModel,
                     windowInfoVm = windowInfoVm,
-                    favoriteViewModel = favoriteViewModel
+                    favoriteViewModel = favoriteViewModel,
+                    localSongsViewModel = localSongsViewModel,
+                    importViewModel = importViewModel
                 )
             }
 

@@ -82,6 +82,7 @@ dependencies {
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0")
     implementation ("com.google.accompanist:accompanist-adaptive:0.35.2-beta")
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.crashlytics.buildtools)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -161,7 +162,8 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
 
-
+    implementation("org.jsoup:jsoup:1.15.3")
+    implementation ("com.github.maxrave-dev:kotlin-youtubeExtractor:0.0.7")
 
 
 //    implementation("androidx.compose.runtime:runtime-tracing:1.0.0-beta01")

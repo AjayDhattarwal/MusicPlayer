@@ -207,14 +207,10 @@ fun SongsScreen(
     songResponse: List<SongResponse>,
     onSongClick: (SongResponse) -> Unit
 ) {
-    val list by remember {
-        derivedStateOf {
-            songResponse
-        }
-    }
+
 
     LazyColumn {
-        items(list) { songResponse ->
+        items(songResponse) { songResponse ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -1,39 +1,34 @@
 package com.ar.musicplayer.navigation
 
-import android.util.Log
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.BottomSheetState
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.InfoScreenModel
 import com.ar.musicplayer.data.models.PlaylistResponse
-import com.ar.musicplayer.data.models.toInfoScreenModel
-import com.ar.musicplayer.screens.home.AdaptiveHomeScreen
 import com.ar.musicplayer.screens.home.HomeScreen
 import com.ar.musicplayer.screens.info.ArtistInfoScreen
 import com.ar.musicplayer.screens.info.InfoScreen
 import com.ar.musicplayer.screens.library.LibraryScreen
 import com.ar.musicplayer.screens.library.favorite.FavoriteScreen
 import com.ar.musicplayer.screens.library.history.ListeningHistoryScreen
-import com.ar.musicplayer.screens.library.mymusic.DetailsScreen
 import com.ar.musicplayer.screens.library.mymusic.MyMusicScreen
 import com.ar.musicplayer.screens.library.mymusic.SearchMyMusic
+import com.ar.musicplayer.screens.library.playlist.LocalPlaylistInfoScreen
 import com.ar.musicplayer.screens.library.playlist.PlaylistManagerScreen
 import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.screens.search.SearchScreen
@@ -47,19 +42,19 @@ import com.ar.musicplayer.ui.MusicAppState
 import com.ar.musicplayer.ui.WindowInfoVM
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.download.DownloaderViewModel
-import com.ar.musicplayer.utils.events.RadioStationEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.ar.musicplayer.viewmodel.RadioStationViewModel
 import com.ar.musicplayer.viewmodel.ThemeViewModel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 @UnstableApi
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
-fun MainScreenContent(
+fun NavigationGraph(
     appState: MusicAppState,
     windowInfoVm: WindowInfoVM,
     homeViewModel: HomeViewModel,
@@ -69,18 +64,18 @@ fun MainScreenContent(
     localSongsViewModel: LocalSongsViewModel,
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
-    themeViewModel: ThemeViewModel
+    themeViewModel: ThemeViewModel,
+    importViewModel: ImportViewModel,
+    bottomSheetState: BottomSheetScaffoldState
 ) {
-
-
+    val coroutineScope = rememberCoroutineScope()
+    val activity = LocalContext.current as? Activity
     NavHost(
         navController = appState.navController,
         startDestination = HomeScreenObj,
     ) {
 
         composable<HomeScreenObj> { backStackEntry ->
-//            Log.d("HomeScreenObj", "called for test")
-//        }
 
             HomeScreen(
                 windowInfoVm = windowInfoVm,
@@ -93,6 +88,15 @@ fun MainScreenContent(
                     { appState.navigate(it, backStackEntry) }
                 }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                }else{
+                    moveAppToBackground(activity)
+                }
+            }
         }
 
         composable<LargeScreenPlayerObj> {
@@ -116,9 +120,17 @@ fun MainScreenContent(
                         val senderData = Json.encodeToString(InfoScreenModel.serializer(), infoScreenModel)
                         appState.navigate(InfoScreenObj(senderData), backStackEntry)
                     }
-                },
-
-                )
+                }
+            )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
@@ -129,6 +141,15 @@ fun MainScreenContent(
                     appState.navigate(it, backStackEntry)
                 }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
         }
 
 
@@ -137,6 +158,15 @@ fun MainScreenContent(
                 onBackPressed = appState::navigateBack,
                 onNavigate = { appState.navigate(it, backStackEntry) }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
@@ -152,6 +182,15 @@ fun MainScreenContent(
                 data = data,
                 onBackPressed = appState::navigateBack
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
         }
 
 
@@ -161,6 +200,15 @@ fun MainScreenContent(
                 favViewModel = favViewModel,
                 onBackPressed = appState::navigateBack
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
@@ -170,17 +218,39 @@ fun MainScreenContent(
                 playerViewModel = playerViewModel,
                 onBackPressed = appState::navigateBack
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
 
         composable<MyMusicScreenObj> { backStackEntry ->
             MyMusicScreen(
-                playerViewModel = playerViewModel,
                 localSongsViewModel = localSongsViewModel,
                 onBackPressed = appState::navigateBack,
-                onNavigate = { appState.navigate(it, backStackEntry) }
+                onNavigate = { appState.navigate(it, backStackEntry) },
+                onSongClick =  remember {
+                    {
+                        playerViewModel.setNewTrack(it)
+                    }
+                }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
@@ -191,6 +261,15 @@ fun MainScreenContent(
                 localSongsViewModel = localSongsViewModel,
                 onBackPressed = appState::navigateBack
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
@@ -205,17 +284,45 @@ fun MainScreenContent(
 //                playerViewModel = playerViewModel
 //            )
 
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
+
         }
         composable<ThemeSettingObj> { backStackEntry ->
             ThemeSettingsScreen(
                 themeViewModel = themeViewModel,
                 onBackClick = appState::navigateBack
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
         }
         composable<DownloadSettingsScreenObj> { backStackEntry ->
             DownloadSettingsScreen(
                 onBackClick = appState::navigateBack
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
         composable<LanguageSettingsScreenObj> { backStackEntry ->
@@ -223,6 +330,15 @@ fun MainScreenContent(
                 preferencesManager = preferencesManager,
                 onBackClick = { appState.navigateBack() }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
         composable<PlaybackSettingsScreenObj> { backStackEntry ->
@@ -230,12 +346,30 @@ fun MainScreenContent(
                 preferencesManager = preferencesManager,
                 onBackClick = { appState.navigateBack() }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
         composable<StorageSettingScreenObj> { backStackEntry ->
             StorageSettingScreen(
                 onBackClick = remember{ { appState.navigateBack() } }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
         }
         composable<ArtistInfoScreenObj> {
             val args = it.toRoute<ArtistInfoScreenObj>()
@@ -258,16 +392,63 @@ fun MainScreenContent(
                     appState.navigateBack()
                 } }
             )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
         }
 
         composable<PlaylistFetchScreenObj> { backStackEntry ->
-//            PlaylistManagerScreen(
-//                appState = appState
-//            )
+            PlaylistManagerScreen(
+                importViewModel = importViewModel,
+                onBackPress = appState::navigateBack,
+                onNavigate = { appState.navigate(it, backStackEntry) }
+            )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
 
+        }
+
+        composable<LocalPlaylistInfoObj> { backStackEntry ->
+            val args = backStackEntry.toRoute<InfoScreenObj>()
+            val data = Json.decodeFromString(PlaylistResponse.serializer(), args.data)
+            LocalPlaylistInfoScreen(
+                playerViewModel = playerViewModel,
+                playlistResponse = data,
+                favViewModel = favViewModel,
+                downloaderViewModel = downloaderViewModel,
+                onBackPressed = appState::navigateBack
+            )
+            BackHandler {
+                if(bottomSheetState.bottomSheetState.isExpanded){
+                    coroutineScope.launch {
+                        bottomSheetState.bottomSheetState.collapse()
+                    }
+                } else{
+                    appState.navigateBack()
+                }
+            }
         }
 
     }
 
+}
+
+
+
+fun moveAppToBackground(activity: Activity?) {
+    activity?.moveTaskToBack(true)  // This moves the task (app) to the background
 }

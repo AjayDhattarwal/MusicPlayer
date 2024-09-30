@@ -1,6 +1,5 @@
 package com.ar.musicplayer.components.info
 
-import android.util.Log
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +27,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,13 +66,10 @@ import com.ar.musicplayer.screens.library.mymusic.toDp
 import com.ar.musicplayer.screens.library.mymusic.toPx
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 
-@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongListWithTopBar(
@@ -85,7 +82,8 @@ fun SongListWithTopBar(
     downloaderViewModel: DownloaderViewModel ,
     playerViewModel: PlayerViewModel ,
     onFollowClicked: () -> Unit,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onShare: () -> Unit
 ) {
 
     val currentPlaylistId by playerViewModel.currentPlaylistId.collectAsState()
@@ -259,7 +257,7 @@ fun SongListWithTopBar(
                     Text(
                         text = subtitle,
                         color = Color.LightGray,
-                        maxLines = 1,
+                        maxLines = 2,
                         softWrap = true,
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 10.sp,
@@ -271,9 +269,7 @@ fun SongListWithTopBar(
                     ButtonBox(
                         onFollowClicked = onFollowClicked,
                         isFavourite = false,
-                        isDownloading = false,
-                        downloadProgress = 0,
-                        isDownloaded = false
+                        onShare = onShare
                     )
                 }
 
@@ -307,7 +303,6 @@ fun SongListWithTopBar(
 
 }
 
-@UnstableApi
 @Composable
 fun PlaylistPlayPauseButton(playerViewModel: PlayerViewModel, data: PlaylistResponse?,  ) {
     val isPlaying by playerViewModel.isPlaying.collectAsState(initial = false)
@@ -354,10 +349,7 @@ fun PlaylistPlayPauseButton(playerViewModel: PlayerViewModel, data: PlaylistResp
 fun ButtonBox(
     onFollowClicked: () -> Unit,
     isFavourite: Boolean,
-    isDownloading: Boolean,
-    downloadProgress: Int,
-    isDownloaded: Boolean
-
+    onShare: () -> Unit,
 ){
     var isExpandedDropDown by remember {
         mutableStateOf(false)
@@ -379,28 +371,39 @@ fun ButtonBox(
             }
 
 
+//            IconButton(
+//                onClick = {
+//
+//                }
+//            ) {
+//                if(isDownloading){
+//                    CircularProgressIndicator(
+//                        modifier = Modifier,
+//                        progress = downloadProgress?.div(100.toFloat()) ?: 0f,
+//                        color = Color.LightGray
+//                    )
+//                    Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
+//                }
+//
+//                else{
+//                    Icon(
+//                        modifier = Modifier.weight(1f),
+//                        imageVector = if(isDownloaded) Icons.Default.DownloadDone  else Icons.Default.FileDownload,
+//                        contentDescription = "Download",
+//                        tint = Color.White
+//                    )
+//                }
+//            }
+
             IconButton(
-                onClick = {
-
-                }
+                onClick = onShare
             ) {
-                if(isDownloading){
-                    CircularProgressIndicator(
-                        modifier = Modifier,
-                        progress = downloadProgress?.div(100.toFloat()) ?: 0f,
-                        color = Color.LightGray
-                    )
-                    Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
-                }
-
-                else{
-                    Icon(
-                        modifier = Modifier.weight(1f),
-                        imageVector = if(isDownloaded) Icons.Default.DownloadDone  else Icons.Default.FileDownload,
-                        contentDescription = "Download",
-                        tint = Color.White
-                    )
-                }
+                Icon(
+                    modifier = Modifier.weight(1f),
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "Download",
+                    tint = Color.White
+                )
             }
 
             IconButton(onClick = { isExpandedDropDown = !isExpandedDropDown }) {

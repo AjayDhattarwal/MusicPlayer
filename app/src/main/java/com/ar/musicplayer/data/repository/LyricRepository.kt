@@ -67,7 +67,6 @@ class LyricRepository @Inject constructor(
         apiService.getLyricsLrclib(trackName, artistName).enqueue(object :
             Callback<List<LyricsResponse>> {
             override fun onResponse(call: Call<List<LyricsResponse>>, response: Response<List<LyricsResponse>>) {
-                Log.d("lyrics", "Lyrics :::::: called ${response.message()} ")
                 if (response.isSuccessful) {
                     val results = response.body()?.filter { it.syncedLyrics != "null" }
                     val matchedResult = results?.minByOrNull { result ->
@@ -94,7 +93,6 @@ class LyricRepository @Inject constructor(
 
 
             override fun onFailure(call: Call<List<LyricsResponse>>, t: Throwable) {
-                Log.d("lyrics", "Lyrics :::::: error ${t.message} ")
                 onError((t.cause ?: Exception("Unknown error")) as Exception)
             }
         })
@@ -105,10 +103,16 @@ class LyricRepository @Inject constructor(
         onSuccess: (List<Pair<Int, String>>) -> Unit,
         onError: (Exception) -> Unit
     ) {
-        translationService.getTranslatedLyrics(text).enqueue(object : Callback<TranslationResponse> {
+        val request = TransliterateRequest(
+            text = text.replace("\"", "")
+        )
+        val call = translationService.postTranslatedLyrics(request)
+        call.enqueue(object : Callback<TranslationResponse> {
             override fun onResponse(call: Call<TranslationResponse>, response: Response<TranslationResponse>) {
                 if (response.isSuccessful) {
-                    onSuccess(parseLrc(response.body()?.text.toString()))
+                    val translatedText = response.body()?.text
+                    onSuccess(parseLrc(translatedText.toString()))
+                    println("Translated Text: $translatedText")
                 } else {
                     onSuccess(parseLrc(text))
                 }
@@ -138,3 +142,8 @@ class LyricRepository @Inject constructor(
         return lrcLines
     }
 }
+
+
+data class TransliterateRequest(
+    val text: String
+)

@@ -22,8 +22,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetValue.Collapsed
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.OpenInFull
@@ -45,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -58,6 +61,7 @@ import androidx.navigation.NavHostController
 import com.ar.musicplayer.components.home.AnimatedAIFloatingActionButton
 import com.ar.musicplayer.components.modifier.shader
 import com.ar.musicplayer.data.models.Artist
+import com.ar.musicplayer.screens.library.viewmodel.LocalSongsViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.download.DownloaderViewModel
@@ -70,11 +74,13 @@ import com.ar.musicplayer.ui.MusicAppState
 import com.ar.musicplayer.ui.WindowInfoVM
 import com.ar.musicplayer.ui.rememberAppState
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.ThemeViewModel
 import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
 import com.google.accompanist.adaptive.TwoPane
 import com.google.accompanist.adaptive.calculateDisplayFeatures
 import kotlinx.serialization.json.Json
+import kotlin.ranges.coerceIn
 
 
 @UnstableApi
@@ -89,7 +95,9 @@ fun App(
     playerViewModel: PlayerViewModel,
     downloaderViewModel: DownloaderViewModel,
     favoriteViewModel: FavoriteViewModel,
-    windowInfoVm: WindowInfoVM
+    windowInfoVm: WindowInfoVM,
+    localSongsViewModel: LocalSongsViewModel,
+    importViewModel: ImportViewModel
 ) {
     val themeViewModel = hiltViewModel<ThemeViewModel>()
     val backgroundBrush by themeViewModel.blackToGrayGradient.collectAsState()
@@ -99,6 +107,7 @@ fun App(
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(Collapsed)
     )
+
 
     val paletteExtractor = remember { PaletteExtractor() }
 
@@ -173,44 +182,30 @@ fun App(
                                 downloaderViewModel = downloaderViewModel,
                                 favoriteViewModel = favoriteViewModel,
                                 bottomSheetState = bottomSheetState,
-                                windowInfoVm = windowInfoVm
+                                windowInfoVm = windowInfoVm,
+                                localSongsViewModel = localSongsViewModel,
+                                importViewModel = importViewModel
                             )
                         },
                         second = {
                             if (showPlayer && isMusicDetailsVisible && showPreviewScreen ) {
                                 var showCurrentPlaylist by remember { mutableStateOf(false) }
-                                Row(
+                                Surface(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(bottom = 100.dp)
+                                        .background(Color.Transparent)
+                                        .padding(bottom = 100.dp),
+                                    color = Color.Transparent
                                 ) {
-                                    Box(modifier = Modifier
-                                        .width(3.dp)
-                                        .align(Alignment.CenterVertically)
-                                        .background(Color.LightGray)
-                                        .draggable(
-                                            orientation = Orientation.Horizontal,
-                                            state = rememberDraggableState { delta ->
-                                                val newOffset =
-                                                    (offsetX + delta / screenWidth).coerceIn(
-                                                        0.4f,
-                                                        0.7f
-                                                    )
-                                                offsetX = newOffset
-                                            }
-                                        )
-                                        .pointerInput(true) {
-                                            detectTapGestures(
-                                                onTap = {
-                                                    offsetX = 0.6f
-                                                }
-                                            )
+                                    DraggableVerticalLine(
+                                        onPositionChange = {
+                                            offsetX = it
                                         }
-                                        .height(100.dp)
                                     )
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
+                                            .padding(start = 3.dp)
                                             .drawBehind {
                                                 drawRect(color = Color(0x1E999999))
                                             },
@@ -355,6 +350,44 @@ fun NavHostController.isMaxPlayer(): Boolean {
 }
 
 
+
+@Composable
+fun DraggableVerticalLine(
+    initialPosition: Float = 0.6f,
+    minPosition: Float = 0.4f,
+    maxPosition: Float = 0.7f,
+    onPositionChange: (Float) -> Unit = {}
+) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.toFloat()
+
+    var linePosition by remember { mutableStateOf(initialPosition) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(modifier = Modifier
+            .width(3.dp)
+            .height(100.dp)
+            .clip(RoundedCornerShape(50))
+            .background(Color.LightGray)
+            .draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { delta ->
+                    val newOffset = linePosition + delta / screenWidth
+                    linePosition = newOffset.coerceIn(minPosition, maxPosition)
+                    onPositionChange(linePosition)
+                }
+            )
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    linePosition = initialPosition
+                    onPositionChange(linePosition)
+                }
+            }
+        )
+    }
+}
 
 
 

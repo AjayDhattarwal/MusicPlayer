@@ -11,17 +11,21 @@ import com.ar.musicplayer.data.repository.SongDetailsRepository
 import com.ar.musicplayer.api.ApiService
 import com.ar.musicplayer.api.LyricsByLrclib
 import com.ar.musicplayer.api.Translate
+import com.ar.musicplayer.api.YouTubeApi
 import com.ar.musicplayer.data.models.LyricsResponse
 import com.ar.musicplayer.data.repository.GenerativeAiRepository
+import com.ar.musicplayer.data.repository.LocalPlaylistsRepository
 import com.ar.musicplayer.data.repository.LyricRepository
 import com.ar.musicplayer.data.repository.PhoneAuthRepository
 import com.ar.musicplayer.data.repository.PlayerRepository
 import com.ar.musicplayer.data.repository.PlaylistRepository
+import com.ar.musicplayer.data.repository.YoutubeRepository
 import com.ar.musicplayer.utils.download.MusicDownloadRepository
 import com.ar.musicplayer.utils.helper.NetworkConnectivityObserver
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavDao
 import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDataDao
 import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDao
+import com.ar.musicplayer.utils.roomdatabase.playlistdb.PlaylistDao
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthProvider
 import dagger.Module
@@ -127,4 +131,14 @@ object RepositoryModule {
     fun provideGenerativeAiRepository(): GenerativeAiRepository {
         return GenerativeAiRepository()
     }
+
+    @Provides
+    @Singleton
+    fun provideLocalPlaylistRepository(playlistDao: PlaylistDao) =
+        LocalPlaylistsRepository(playlistDao = playlistDao)
+
+    @Provides
+    @Singleton
+    fun provideYoutubeRepository(youTubeApi: YouTubeApi, @ApplicationContext context: Context) =
+       YoutubeRepository(context, youTubeApi)
 }

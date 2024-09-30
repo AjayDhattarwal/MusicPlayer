@@ -52,14 +52,10 @@ fun HomeScreen(
     onItemClick: (Boolean, HomeListItem) -> Unit
 ) {
 
-
-    Log.d("recompose", "homeScreen recompose")
-
-
     val context = LocalContext.current
     val preferencesManager = remember{ PreferencesManager(context = context) }
 
-    val homeData by homeViewModel.homeData.collectAsState()
+    val homeDataList by homeViewModel.homeData.collectAsState()
     val lastSession by playerViewModel.lastSession.collectAsState()
 
     val showLastSession by remember {
@@ -67,18 +63,6 @@ fun HomeScreen(
             lastSession.isNotEmpty()
         }
     }
-
-    val homeDataList by remember {
-        derivedStateOf {
-            homeData?.let {
-                homeData?.modules?.let { it1 ->
-                    getMappedHomeData(it, it1).toList()
-                }
-            }
-        }
-    }
-
-
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -168,52 +152,6 @@ fun HomeScreen(
 
 }
 
-
-fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> {
-    return listOf(
-        modules.a1, modules.a2, modules.a3, modules.a4, modules.a5,
-        modules.a6, modules.a7, modules.a8, modules.a9, modules.a10,
-        modules.a11, modules.a12, modules.a13, modules.a14,modules.a15,
-        modules.a16, modules.a17
-    ).filterNotNull()
-        .sortedBy {
-        it.position?.toIntOrNull() ?: Int.MAX_VALUE
-    }.associate { it.source to it.title  }
-}
-
-
-
-fun getMappedHomeData(homeData: HomeData, modules: ModulesOfHomeScreen): Map<String?, List<HomeListItem>> {
-    val sortedSourceTitleMap = createSortedSourceTitleMap(modules)
-
-    val sourceToListMap = mapOf(
-        "new_trending" to homeData.newTrending,
-        "top_playlists" to homeData.topPlaylist,
-        "new_albums" to homeData.newAlbums,
-        "charts" to homeData.charts,
-        "radio" to homeData.radio,
-        "artist_recos" to homeData.artistRecos,
-        "city_mod" to homeData.cityMod,
-        "tag_mixes" to homeData.tagMixes,
-        "promo:vx:data:68" to homeData.data68,
-        "promo:vx:data:76" to homeData.data76,
-        "promo:vx:data:185" to homeData.data185,
-        "promo:vx:data:107" to homeData.data107,
-        "promo:vx:data:113" to homeData.data113,
-        "promo:vx:data:114" to homeData.data114,
-        "promo:vx:data:116" to homeData.data116,
-        "promo:vx:data:145" to homeData.data144,
-        "promo:vx:data:211" to homeData.data211,
-        "browser_discover" to homeData.browserDiscover,
-
-    )
-
-    return sortedSourceTitleMap.mapNotNull { (source, title) ->
-        sourceToListMap[source]?.let { title to it }
-    }.toMap()
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
 @Composable
 fun HomeScreenPreview() {

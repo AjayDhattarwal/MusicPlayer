@@ -14,6 +14,9 @@ import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.ArtistMap
 import com.ar.musicplayer.data.models.MoreInfoResponse
 import com.ar.musicplayer.data.models.SongResponse
+import com.mpatric.mp3agic.ID3v24Frame
+import com.mpatric.mp3agic.ID3v2Frame
+import com.mpatric.mp3agic.Mp3File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -21,6 +24,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.io.File
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
@@ -45,7 +51,6 @@ LocalSongsViewModel @Inject constructor(
 
     init {
         fetchLocalSongs()
-
     }
 
     fun fetchLocalSongs() {
@@ -84,7 +89,6 @@ LocalSongsViewModel @Inject constructor(
             )
 
             cursor?.use {
-                val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
                 val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
                 val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val dataColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
@@ -93,13 +97,14 @@ LocalSongsViewModel @Inject constructor(
                 val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
 
                 while (it.moveToNext()) {
-                    val id = it.getString(idColumn)
                     val title = it.getString(titleColumn)
                     val artist = it.getString(artistColumn)
                     val uri = it.getString(dataColumn)
                     val albumId = it.getString(albumIdColumn)
                     val album = it.getString(albumColumn)
+                    val id = extractStringIdFromMp3(uri)
                     val duration = it.getLong(durationColumn)
+
 
                     // Optional: Check the file extension or MIME type to avoid recordings
                     if (uri.endsWith(".3gp") || uri.endsWith(".mp4") || uri.contains("recording")) {
@@ -118,13 +123,14 @@ LocalSongsViewModel @Inject constructor(
                             artistMap = ArtistMap(
                                 artists = listOf(Artist(name = artist))
                             ),
-                            album = album
+                            album = album,
+                            duration = duration.toString()
                         ),
                         uri = uri,
-                        image = albumArtUri.toString()
+                        image = albumArtUri.toString(),
                     )
 
-                    Log.d("Local", "$album")
+                    Timber.tag("Local").d(album)
                     songList.add(song)
                 }
             }
@@ -160,8 +166,30 @@ LocalSongsViewModel @Inject constructor(
 
     fun scanMedia(context: Context, paths: Array<String>) {
         MediaScannerConnection.scanFile(context, paths, null) { path, uri ->
-            Log.d("MediaScan", "Scanned $path:")
-            Log.d("MediaScan", "-> uri=$uri")
+            Timber.tag("MediaScan").d("Scanned  $path")
+            Timber.tag("MediaScan").d("$uri")
         }
     }
+
+    fun extractStringIdFromMp3(mp3FilePath: String): String? {
+        val mp3file = Mp3File(mp3FilePath)
+        val id3v2Tag = mp3file.id3v2Tag
+        val frameSet = id3v2Tag.frameSets["TXXX"]
+
+        if (frameSet != null) {
+
+            for (frame in frameSet.frames) {
+                if (frame is ID3v24Frame) {
+                    val content = frame.data
+                    if(content != null){
+                        return content.decodeToString()
+                    }
+                }
+            }
+        } else {
+            return null
+        }
+        return null
+    }
+
 }

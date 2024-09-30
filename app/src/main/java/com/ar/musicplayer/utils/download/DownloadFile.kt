@@ -7,7 +7,10 @@ import android.util.Log
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
+import com.mpatric.mp3agic.ID3v24Frame
 import com.mpatric.mp3agic.ID3v24Tag
+import com.mpatric.mp3agic.ID3v2Frame
+import com.mpatric.mp3agic.ID3v2FrameSet
 import com.mpatric.mp3agic.Mp3File
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,6 +27,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody
 import okio.*
 import java.net.URL
+import kotlin.text.toByteArray
 
 fun handleMp4ToMp3Conversion(
     context: Context,
@@ -43,6 +47,7 @@ fun handleMp4ToMp3Conversion(
     val mp4File = File(tempMp4)
 
     val trackMetaData = TrackMetaData(
+        id = entity.id,
         tempFilePath = mp3Path,
         title = entity.title,
         artist = entity.artist,
@@ -123,6 +128,16 @@ fun addMetadataToMp3(
             ID3v24Tag()
         }
 
+        val encodedValue = trackMetaData.id.toByteArray(StandardCharsets.UTF_8)
+        val frame = ID3v2Frame("TXXX",
+            byteArrayOf(*encodedValue)
+        )
+
+        val frameSet = ID3v2FrameSet("TXXX")
+        frameSet.addFrame(frame)
+
+        id3v2Tag.frameSets["TXXX"] = frameSet
+
         id3v2Tag.title = trackMetaData.title
         id3v2Tag.artist = trackMetaData.artist
         id3v2Tag.album = trackMetaData.album
@@ -136,6 +151,9 @@ fun addMetadataToMp3(
                 e.printStackTrace()
             }
         }
+
+
+
 
         mp3File.id3v2Tag = id3v2Tag
 
@@ -286,6 +304,7 @@ private class ProgressResponseBody(
 
 
 data class TrackMetaData(
+    val id: String,
     val tempFilePath: String,
     val title: String,
     val artist: String,

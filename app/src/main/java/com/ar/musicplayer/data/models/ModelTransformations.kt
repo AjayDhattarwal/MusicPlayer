@@ -3,6 +3,8 @@ package com.ar.musicplayer.data.models
 import androidx.media3.exoplayer.ExoPlayer
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.HomeDataEntity
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
+import com.ar.musicplayer.utils.roomdatabase.playlistdb.LocalPlaylistSong
+import com.ar.musicplayer.utils.roomdatabase.playlistdb.PlaylistWithSongs
 import com.google.gson.Gson
 
 
@@ -143,7 +145,9 @@ fun HomeListItem.toInfoScreenModel(): InfoScreenModel {
         songCount = this.count ?: this.moreInfoHomeList?.songCount ?: 0,
         image = this.image.toString(),
         type = this.type.toString(),
-        token = this.permaUrl?.substringAfterLast('/') ?: ""
+        token = this.permaUrl?.substringAfterLast('/') ?: "",
+        isYoutube = this.moreInfoHomeList?.isYoutube ?: false,
+        subtitle = this.subtitle.toString()
     )
 }
 
@@ -283,4 +287,63 @@ fun ExoPlayer.getArtistsNameList(): List<String> {
 
 fun String.toLargeImg(): String {
     return this.replace("150x150", "350x350")
+}
+
+
+
+fun List<PlaylistWithSongs>.toPlaylistResponse() : List<PlaylistResponse>{
+    return this.map {
+        PlaylistResponse(
+            id = it.playlist.id,
+            title = it.playlist.name,
+            subtitle = it.playlist.description,
+            image = it.playlist.image,
+            type = "LocalPlaylist",
+            list = it.songs.toSongResponse()
+
+        )
+    }
+}
+
+
+fun List<LocalPlaylistSong>.toSongResponse(): List<SongResponse> {
+    return this.map { item ->
+        SongResponse(
+            id = item.songId,
+            subtitle = item.artist,
+            title = item.title,
+            moreInfo = MoreInfoResponse(
+                artistMap = ArtistMap(
+                    artists = item.artist.toArtist()
+                ),
+                album = item.album,
+                duration = item.duration.toString(),
+                encryptedMediaUrl = item.encryptedUrl
+            ),
+
+            image = item.image
+        )
+    }
+}
+
+fun String.toArtist(): List<Artist> {
+    return this.split(",").map { artistName ->
+        Artist(
+            name = artistName.trim()
+        )
+    }
+}
+
+
+fun HomeListItem.toSongResponse(): SongResponse {
+    return SongResponse(
+        id = id.toString(),
+        title = title.toString(),
+        image = image,
+        type = type,
+        permaUrl = permaUrl,
+        subtitle = subtitle,
+        isYoutube = moreInfoHomeList?.isYoutube
+
+    )
 }

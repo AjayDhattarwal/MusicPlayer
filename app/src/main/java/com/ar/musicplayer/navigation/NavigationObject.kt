@@ -21,6 +21,11 @@ data class InfoScreenObj(
     val data: String
 )
 
+@Serializable
+data class LocalPlaylistInfoObj(
+    val data: String
+)
+
 
 @Serializable
 object FavoriteScreenObj

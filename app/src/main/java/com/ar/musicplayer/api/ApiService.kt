@@ -49,6 +49,24 @@ interface ApiService {
         @Query("p") page: String = "5",
     ): Call<SearchResults>
 
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    suspend fun getSearchResultsSuspended(
+        @Query("__call") call: String = "search.getResults",
+        @Query("q") query: String,
+        @Query("n") totalSong: String = "5",
+        @Query("p") page: String = "5",
+    ): SearchResults
+
+
+    @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
+    suspend fun getSingleSearchResult(
+        @Query("__call") call: String = "search.getResults",
+        @Query("q") query: String,
+        @Query("n") totalSong: String = "1",
+        @Query("p") page: String = "1",
+    ) : Response<SearchResults>
+
     @GET("/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0")
     fun getTopSearchType(
         @Query("cc") cc: String = "in",

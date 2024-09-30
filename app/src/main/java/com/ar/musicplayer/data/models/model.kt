@@ -95,7 +95,8 @@ data class MoreInfoHomeList(
     @SerializedName("featured_station_type") val stationType : String? = "",
     @SerializedName("query") val query: String? = "",
     @SerializedName("language") val language: String? = "",
-
+    @SerializedName("viewCount") val viewCount: String? = "",
+    @SerializedName("isYoutube") val isYoutube: Boolean? = false
     ): Parcelable
 
 
@@ -191,6 +192,7 @@ data class SongResponse(
     @SerializedName("is_followed") val isFollowed: Boolean? = false,
     @SerializedName("uri") val uri: String? = "",
     @SerializedName("isRadioPresent") val isRadioPresent: Boolean? = false,
+    @SerializedName("isYoutube") val isYoutube: Boolean? = false,
 
     ) : Parcelable
 
@@ -578,4 +580,27 @@ data class SongInfo(
     val title: String ? = "",
     val artist: String ? = "",
     val color: Color ? = Color.Black.copy(0.5f)
+)
+
+               /////////////////// Import Playlist /////////////////////
+
+data class ImportPlaylistResponse(
+    val id : String,
+    val items: List<SimpleImportTrack>,
+    val image: String = "",
+    val name : String = "",
+    val description: String = "",
+    val pagingInfo: PagingInfo,
+    val pageUrl: String = ""
+)
+
+data class SimpleImportTrack(
+    val name: String,
+    val artists: List<String>
+)
+
+data class PagingInfo(
+    val limit: Int = 100,
+    val offset: Int = 0,
+    val totalCount: Int
 )

@@ -5,19 +5,25 @@ import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.data.models.Album
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.BasicSongInfo
+import com.ar.musicplayer.data.models.ImportPlaylistResponse
 import com.ar.musicplayer.data.models.PlaylistResponse
 import com.ar.musicplayer.data.models.SearchResults
+import com.ar.musicplayer.data.models.Song
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.TopSearchResults
 import com.ar.musicplayer.data.models.toAlbumResponse
 import com.ar.musicplayer.data.models.toArtist
 import com.ar.musicplayer.data.models.toPlaylistResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import timber.log.Timber
 import javax.inject.Inject
 
 class SearchRepository @Inject constructor(
@@ -31,6 +37,9 @@ class SearchRepository @Inject constructor(
 
     private val _searchSongResults = MutableStateFlow<List<SongResponse>>(emptyList())
     val searchSongResults = _searchSongResults.asStateFlow()
+
+    private val _importPlaylist = MutableStateFlow<List<SongResponse>>(emptyList())
+    val importPlaylist = _importPlaylist.asStateFlow()
 
     private val _searchAlbumsResults = MutableStateFlow<List<Album>>(emptyList())
     val searchAlbumsResults = _searchAlbumsResults.asStateFlow()
@@ -194,4 +203,9 @@ class SearchRepository @Inject constructor(
         _isError.update { true }
         _isSearching.update { false }
     }
+
+
+
+
+
 }

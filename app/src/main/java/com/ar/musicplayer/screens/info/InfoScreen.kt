@@ -49,13 +49,8 @@ fun InfoScreen(
     val scrollState = rememberLazyListState()
 
     LaunchedEffect(data.image) {
-        moreInfoViewModel.fetchPlaylistData(
-            data.token,
-            data.type,
-            data.songCount,
-            "1",
-            "webapi.get"
-        )
+        moreInfoViewModel.fetchPlaylist(data)
+        scrollState.scrollToItem(0)
     }
 
 
@@ -106,12 +101,15 @@ fun InfoScreen(
                     favViewModel = favViewModel,
                     downloaderViewModel = downloaderViewModel,
                     playerViewModel = playerViewModel,
-                    onFollowClicked = { },
-                    onBackPressed = onBackPressed
-
+                    onFollowClicked = { TODO() },
+                    onBackPressed = onBackPressed,
+                    onShare = { TODO() }
                 )
 
             }
         }
     }
 }
+
+
+

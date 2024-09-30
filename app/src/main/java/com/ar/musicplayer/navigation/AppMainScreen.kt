@@ -27,6 +27,7 @@ import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.ThemeViewModel
@@ -43,9 +44,10 @@ fun AppMainScreen(
     playerViewModel: PlayerViewModel,
     downloaderViewModel: DownloaderViewModel,
     bottomSheetState: BottomSheetScaffoldState,
-    localSongsViewModel: LocalSongsViewModel = hiltViewModel(),
+    localSongsViewModel: LocalSongsViewModel,
     windowInfoVm: WindowInfoVM,
-    favoriteViewModel: FavoriteViewModel
+    favoriteViewModel: FavoriteViewModel,
+    importViewModel: ImportViewModel
 ) {
     if(showPlayerSheet && appState.navController.isMaxPlayer()) {
         appState.navigateBack()
@@ -89,7 +91,8 @@ fun AppMainScreen(
                         paletteExtractor = paletteExtractor,
                         downloaderViewModel = downloaderViewModel,
                         favoriteViewModel = favoriteViewModel,
-                        preferencesManager = preferencesManager
+                        preferencesManager = preferencesManager,
+                        localPlaylistViewModel = importViewModel
                     )
                 }
             },
@@ -98,7 +101,7 @@ fun AppMainScreen(
             backgroundColor = Color.Transparent,
             modifier = Modifier.navigationBarsPadding()
         ) {
-            MainScreenContent(
+            NavigationGraph(
                 appState = appState,
 //                listState = listState,
                 windowInfoVm = windowInfoVm,
@@ -110,11 +113,13 @@ fun AppMainScreen(
                 themeViewModel = themeViewModel,
                 downloaderViewModel = downloaderViewModel,
                 favViewModel = favoriteViewModel,
+                importViewModel = importViewModel,
+                bottomSheetState = bottomSheetState
             )
         }
 
     } else{
-        MainScreenContent(
+        NavigationGraph(
             appState = appState,
 //            listState = listState,
             windowInfoVm = windowInfoVm,
@@ -126,6 +131,8 @@ fun AppMainScreen(
             themeViewModel = themeViewModel,
             downloaderViewModel = downloaderViewModel,
             favViewModel = favoriteViewModel,
+            importViewModel = importViewModel,
+            bottomSheetState = bottomSheetState
         )
     }
 }

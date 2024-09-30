@@ -2,6 +2,7 @@ package com.ar.musicplayer.data.repository
 
 import android.content.Context
 import android.content.Intent
+import android.media.session.MediaSession
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -9,12 +10,14 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.work.await
 import com.ar.musicplayer.api.ApiConfig
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.getArtistsNameList
@@ -28,6 +31,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -116,7 +122,6 @@ class PlayerRepository @Inject constructor(
     private val updateLyricsRunnable = object : Runnable {
         override fun run() {
             updateLyric()
-            // Schedule the next update after 0.5 second
             handler.postDelayed(this, 500L)
         }
 
@@ -264,10 +269,17 @@ class PlayerRepository @Inject constructor(
             .setDurationMs(song.moreInfo?.duration?.toLong())
             .build()
 
-        return MediaItem.Builder()
-            .setUri(decodeDES(song.moreInfo?.encryptedMediaUrl.toString(), song.moreInfo?.kbps320 ?: false))
-            .setMediaMetadata(mediaMetadata)
-            .build()
+        return if(song.uri.isNullOrEmpty()){
+                MediaItem.Builder()
+                    .setUri(decodeDES(song.moreInfo?.encryptedMediaUrl.toString(), song.moreInfo?.kbps320 ?: false))
+                    .setMediaMetadata(mediaMetadata)
+                    .build()
+            } else{
+                MediaItem.Builder()
+                    .setUri(song.uri)
+                    .setMediaMetadata(mediaMetadata)
+                    .build()
+            }
     }
 
 
@@ -311,7 +323,7 @@ class PlayerRepository @Inject constructor(
             }
 
             override fun onFailure(call: Call<List<SongResponse>>, t: Throwable) {
-                Log.d("reco", "${t.message}")
+                Timber.tag("reco").d(t)
             }
         })
     }
@@ -356,37 +368,41 @@ class PlayerRepository @Inject constructor(
             exoPlayer.clearMediaItems()
             _currentPlaylistId.value = "history"
         }
-        if (song.moreInfo?.encryptedMediaUrl.isNullOrEmpty()) {
-            makePerfectSong(song) { perfectSong ->
-                addSongInPlaylist(perfectSong)
+        if (song.moreInfo?.encryptedMediaUrl.isNullOrEmpty() && song.uri.isNullOrEmpty()) {
+            coroutineScope.launch{
+                val perfectSong = fetchCompleteSongDetails(song)
+                if(perfectSong != null){
+                    addSongInPlaylist(perfectSong)
+                }
             }
         } else {
             addSongInPlaylist(song)
         }
     }
 
-    fun makePerfectSong(song: SongResponse, onCallback: (SongResponse) -> Unit) {
-        coroutineScope.launch {
-            val perfectSong = songDetailsRepository.fetchSongDetails(song.id.toString())
-            onCallback(perfectSong)
+    suspend fun fetchCompleteSongDetails(song: SongResponse): SongResponse? {
+        return if (song.type == "Youtube" || song.isYoutube == true) {
+            songDetailsRepository.searchSingleSong(song.title!!)
+        } else {
+            songDetailsRepository.fetchSongDetails(song.id.toString())
         }
     }
 
     private fun addSongInPlaylist(song: SongResponse) {
 
-        if (song in playlist.value) {
-            val index = playlist.value.indexOf(song)
-            removeTrack(index)
+        if (playlist.value.any { it.id == song.id }) {
+            val index = playlist.value.indexOfFirst { it.id == song.id }
+            if (index != -1) {
+                removeTrack(index)
+            }
         }
-        Timber.d("mediaItems count:   ${exoPlayer.mediaItemCount}   ${exoPlayer.currentMediaItemIndex}  ")
+
         if (mutablePlaylist.value.isNotEmpty()) {
             mutablePlaylist.value = mutablePlaylist.value
                 .subList(0, exoPlayer.currentMediaItemIndex + 1)
 
             exoPlayer.removeMediaItems(exoPlayer.currentMediaItemIndex + 1, exoPlayer.mediaItemCount)
         }
-
-        Timber.d("mediaItems count after remove:   ${exoPlayer.mediaItemCount}   ${exoPlayer.currentMediaItemIndex}  ")
 
         exoPlayer.prepare()
         updatePlaylist { currentPlaylist -> currentPlaylist + song }
@@ -409,21 +425,50 @@ class PlayerRepository @Inject constructor(
         exoPlayer.play()
     }
 
-    fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
-        mutablePlaylist.value = newPlaylist
+    suspend fun setPlaylist(playlist: List<SongResponse>, playlistId: String) {
+        mutablePlaylist.value = emptyList()
         _currentIndex.value = 0
         _currentPlaylistId.value = playlistId
 
-        val mediaItems = newPlaylist.mapNotNull { song ->
-            song.moreInfo?.let { moreInfo ->
-                createMediaItem(song)
+        val batchSize = 5
+        var currentIndex = 0
+
+        while (currentIndex < playlist.size) {
+            val nextBatch = playlist.subList(currentIndex, minOf(currentIndex + batchSize, playlist.size))
+
+            val newBatch = nextBatch.mapNotNull { song ->
+                if (song.moreInfo?.encryptedMediaUrl.isNullOrEmpty() && song.uri.isNullOrEmpty()) {
+                    fetchCompleteSongDetails(song)
+                } else {
+                    song
+                }
+            }
+
+            val currentPlaylist = mutablePlaylist.value ?: emptyList()
+            mutablePlaylist.value = currentPlaylist + newBatch
+
+            val mediaItems = newBatch.mapNotNull { song ->
+                song.moreInfo?.let { moreInfo ->
+                    createMediaItem(song)
+                }
+            }
+
+            if (currentIndex == 0) {
+                exoPlayer.setMediaItems(mediaItems)
+                exoPlayer.prepare()
+                exoPlayer.play()
+            } else {
+                exoPlayer.addMediaItems(mediaItems)
+            }
+
+            currentIndex += batchSize
+
+            if (currentIndex < playlist.size) {
+                delay(1000L)
             }
         }
-
-        exoPlayer.setMediaItems(mediaItems)
-        exoPlayer.prepare()
-        exoPlayer.play()
     }
+
 
     fun changeSong(index: Int) {
         playlist.value.let { playlist ->
@@ -541,7 +586,7 @@ class PlayerRepository @Inject constructor(
                     getRecommendations(playlist.value[currentIndex.value].id.toString())
                     job?.cancel()
                 } catch (e: Exception) {
-                    android.util.Log.d("reco", "${e.message}")
+                    Timber.tag("reco").d(e)
                 }
             }
         }
@@ -603,6 +648,7 @@ class PlayerRepository @Inject constructor(
 
     fun destroy(){
         val context = application
+        Timber.tag("service").d( "service destroy called for repository ")
         exoPlayer.removeListener(playerListener)
         Intent(context, AudioService::class.java).also {
             it.action = ACTIONS.STOP.toString()

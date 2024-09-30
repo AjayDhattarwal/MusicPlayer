@@ -38,6 +38,7 @@ fun CollapseBar(
     fraction: () -> Float,
     onFavClick: () -> Unit,
     isFavorite: State<Boolean>,
+    addToPlaylist: () -> Unit
 ) {
 
     val currentFraction = fraction()
@@ -99,7 +100,8 @@ fun CollapseBar(
                             {
                                 isMoreExpanded = false
                             }
-                        }
+                        },
+                        addToPlaylist = addToPlaylist
                     )
                 }
             }

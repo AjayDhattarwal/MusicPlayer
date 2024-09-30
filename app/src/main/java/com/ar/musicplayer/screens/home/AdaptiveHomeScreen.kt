@@ -21,6 +21,7 @@ import androidx.window.layout.DisplayFeature
 import com.ar.musicplayer.data.models.HomeListItem
 import com.ar.musicplayer.data.models.InfoScreenModel
 import com.ar.musicplayer.data.models.toInfoScreenModel
+import com.ar.musicplayer.data.models.toSongResponse
 import com.ar.musicplayer.navigation.InfoScreenObj
 import com.ar.musicplayer.navigation.SettingsScreenObj
 import com.ar.musicplayer.screens.info.InfoScreen
@@ -88,12 +89,18 @@ fun HomeScreen(
                 )
                 radioStationSelection.value = true
             } else {
-                if (!showPreviewScreen) {
-                    val serializedData = Json.encodeToString(
-                        InfoScreenModel.serializer(),
-                        data.toInfoScreenModel()
-                    )
-                    navigate(InfoScreenObj(serializedData))
+                if(data.type == "Video" || data.type == "song"){
+                    windowInfoVm.closePreview()
+                    playerViewModel.setNewTrack(data.toSongResponse())
+
+                }else{
+                    if (!showPreviewScreen) {
+                        val serializedData = Json.encodeToString(
+                            InfoScreenModel.serializer(),
+                            data.toInfoScreenModel()
+                        )
+                        navigate(InfoScreenObj(serializedData))
+                    }
                 }
             }
         }

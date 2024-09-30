@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -56,8 +57,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun MyMusicScreen(
-    playerViewModel: PlayerViewModel,
     localSongsViewModel: LocalSongsViewModel,
+    onSongClick: (SongResponse) -> Unit,
     onBackPressed: () -> Unit,
     onNavigate: (Any) -> Unit,
 ) {
@@ -66,6 +67,11 @@ fun MyMusicScreen(
     val scope = rememberCoroutineScope()
     val titles = listOf("Songs", "Albums", "Artists", "Genres")
     val pagerState = rememberPagerState(initialPage = 0,pageCount = {titles.size})
+
+
+    LaunchedEffect(Unit) {
+        localSongsViewModel.fetchLocalSongs()
+    }
 
     if(!hasPermissions(context as ComponentActivity, Manifest.permission.RECORD_AUDIO)){
         PermissionHandler(
@@ -169,11 +175,7 @@ fun MyMusicScreen(
                 MyMusicDisplay(
                     page = page,
                     localSongsViewModel = localSongsViewModel,
-                    onSongClick = remember {
-                        {
-                            playerViewModel.setNewTrack(it)
-                        }
-                    }
+                    onSongClick = onSongClick
                 )
 
             }

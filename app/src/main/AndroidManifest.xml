@@ -61,8 +61,9 @@
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"
             android:permission="android.permission.POST_NOTIFICATIONS">
+
             <intent-filter>
-                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="androidx.media3.session.MediaSessionService" />
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

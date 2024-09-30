@@ -1,8 +1,10 @@
 package com.ar.musicplayer.di
 
 import com.ar.musicplayer.api.ApiService
+import com.ar.musicplayer.api.ImportSpotifyPlaylist
 import com.ar.musicplayer.api.LyricsByLrclib
 import com.ar.musicplayer.api.Translate
+import com.ar.musicplayer.api.YouTubeApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,6 +48,17 @@ class NetworkModule {
 
     @Singleton
     @Provides
+    @Named("spotifyImport")
+    fun provideSpotifyRetrofit(okHttpClient: OkHttpClient): Retrofit{
+        return Retrofit.Builder()
+            .baseUrl("https://api-partner.spotify.com")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(okHttpClient)
+            .build()
+    }
+
+    @Singleton
+    @Provides
     @Named("lyrics")
     fun provideLrclibRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
@@ -54,6 +67,7 @@ class NetworkModule {
             .client(okHttpClient)
             .build()
     }
+
 
     @Singleton
     @Provides
@@ -65,6 +79,23 @@ class NetworkModule {
             .client(okHttpClient)
             .build()
     }
+
+    @Singleton
+    @Provides
+    @Named("youtube")
+    fun providesYoutubeRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://www.youtube.com/")
+            .client(okHttpClient)
+            .build()
+    }
+
+    @Singleton
+    @Provides
+    fun provideYoutubeApiService(@Named("youtube") youtubeRetrofit: Retrofit): YouTubeApi {
+        return youtubeRetrofit.create(YouTubeApi::class.java)
+    }
+
 
     @Singleton
     @Provides
@@ -83,4 +114,14 @@ class NetworkModule {
     fun provideTranslate(@Named("translate") translateRetrofit: Retrofit): Translate {
         return translateRetrofit.create(Translate::class.java)
     }
+
+    @Singleton
+    @Provides
+    fun provideImportSpotifyPlaylist(@Named("spotifyImport") retrofit: Retrofit): ImportSpotifyPlaylist {
+        return retrofit.create(ImportSpotifyPlaylist::class.java)
+    }
+
+
+
+
 }
