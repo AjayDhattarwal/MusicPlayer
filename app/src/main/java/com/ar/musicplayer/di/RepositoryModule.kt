@@ -16,7 +16,6 @@ import com.ar.musicplayer.data.models.LyricsResponse
 import com.ar.musicplayer.data.repository.GenerativeAiRepository
 import com.ar.musicplayer.data.repository.LocalPlaylistsRepository
 import com.ar.musicplayer.data.repository.LyricRepository
-import com.ar.musicplayer.data.repository.PhoneAuthRepository
 import com.ar.musicplayer.data.repository.PlayerRepository
 import com.ar.musicplayer.data.repository.PlaylistRepository
 import com.ar.musicplayer.data.repository.YoutubeRepository
@@ -26,8 +25,6 @@ import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavDao
 import com.ar.musicplayer.utils.roomdatabase.homescreendb.HomeDataDao
 import com.ar.musicplayer.utils.roomdatabase.lastsession.LastSessionDao
 import com.ar.musicplayer.utils.roomdatabase.playlistdb.PlaylistDao
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.PhoneAuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,21 +38,6 @@ import javax.inject.Singleton
 object RepositoryModule {
 
 
-
-    @Provides
-    @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth {
-        return FirebaseAuth.getInstance()
-    }
-
-
-    @Provides
-    @Singleton
-    fun providePhoneAuthRepository(
-        firebaseAuth: FirebaseAuth,
-    ): PhoneAuthRepository {
-        return PhoneAuthRepository(firebaseAuth)
-    }
 
     @Provides
     fun provideContentResolver(

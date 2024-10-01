@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.devtools.ksp")
     id ("com.google.dagger.hilt.android")
-    alias(libs.plugins.google.gms.google.services)
+//    alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
@@ -81,8 +81,6 @@ dependencies {
     implementation("androidx.compose.material3.adaptive:adaptive:1.1.0-alpha02")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.3.0")
     implementation ("com.google.accompanist:accompanist-adaptive:0.35.2-beta")
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.androidx.core.splashscreen)
 
     testImplementation(libs.junit)
@@ -158,8 +156,6 @@ dependencies {
     implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
     implementation ("com.jakewharton.timber:timber:5.0.1")
 
-    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
-    implementation("com.google.firebase:firebase-analytics")
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
 

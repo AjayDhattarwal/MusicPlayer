@@ -7,7 +7,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import org.checkerframework.common.aliasing.qual.Unique
 
 @Entity(tableName = "playlists")
 data class RoomPlaylist(
