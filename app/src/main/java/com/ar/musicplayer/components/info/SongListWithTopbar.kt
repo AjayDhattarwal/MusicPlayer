@@ -31,7 +31,9 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -61,12 +63,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.ar.musicplayer.components.InfoDropdownMenu
+import com.ar.musicplayer.components.mix.PlaylistSelectionSheet
 import com.ar.musicplayer.data.models.PlaylistResponse
+import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.screens.library.mymusic.toDp
 import com.ar.musicplayer.screens.library.mymusic.toPx
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.sanitizeString
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
 
@@ -79,14 +84,18 @@ fun SongListWithTopBar(
     subtitle: String,
     data: PlaylistResponse?,
     favViewModel: FavoriteViewModel,
-    downloaderViewModel: DownloaderViewModel ,
-    playerViewModel: PlayerViewModel ,
+    downloaderViewModel: DownloaderViewModel,
+    localPlaylistViewModel: ImportViewModel,
+    playerViewModel: PlayerViewModel,
     onFollowClicked: () -> Unit,
     onBackPressed: () -> Unit,
     onShare: () -> Unit
 ) {
 
     val currentPlaylistId by playerViewModel.currentPlaylistId.collectAsState()
+    val localPlaylist by localPlaylistViewModel.localPlaylists.collectAsState()
+
+    var selectedSongForPlaylistInset by remember { mutableStateOf<SongResponse?>(null) }
 
     val minImgSize = 0.dp
     val maxImgSize =  300.dp
@@ -134,7 +143,6 @@ fun SongListWithTopBar(
     }
 
 
-
     val topBarAlpha by remember {
         derivedStateOf {
              1 - (currentImgSize /maxImgSize.toPx())
@@ -145,6 +153,8 @@ fun SongListWithTopBar(
             currentImgSize/maxImgSize.toPx()
         }
     }
+
+    var isSelectPlaylist by remember { mutableStateOf(false) }
 
 
     Box(modifier = Modifier
@@ -287,6 +297,13 @@ fun SongListWithTopBar(
                                         ?.let { playerViewModel.setNewTrack(it) }
                                 }
                             }
+                        },
+                        addToPlaylist = remember {
+                            {
+                                selectedSongForPlaylistInset = track
+                                isSelectPlaylist = true
+
+                            }
                         }
                     )
                 }
@@ -294,6 +311,31 @@ fun SongListWithTopBar(
                 item{
                     Spacer(Modifier.height(125.dp))
                 }
+            }
+        }
+
+        if(isSelectPlaylist){
+            ModalBottomSheet(
+                sheetState =  rememberModalBottomSheetState(skipPartiallyExpanded = false),
+                onDismissRequest = {
+                    isSelectPlaylist = false
+                }
+            ){
+                PlaylistSelectionSheet(
+                    playlists = localPlaylist,
+                    onPlaylistSelected = { selectedPlaylist ->
+                        selectedSongForPlaylistInset?.let {
+                            localPlaylistViewModel.addSongToPlaylist(
+                                it,
+                                selectedPlaylist
+                            )
+                        }
+                        isSelectPlaylist = false
+                    },
+                    onCreatePlaylist = {
+                        localPlaylistViewModel.createPlaylist(title = it, description = null)
+                    }
+                )
             }
         }
 

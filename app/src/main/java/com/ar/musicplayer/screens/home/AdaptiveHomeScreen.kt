@@ -30,6 +30,7 @@ import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.events.RadioStationEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.HomeViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 import com.ar.musicplayer.viewmodel.RadioStationViewModel
@@ -46,6 +47,7 @@ fun HomeScreen(
     homeViewModel: HomeViewModel,
     playerViewModel: PlayerViewModel,
     moreInfoViewModel: MoreInfoViewModel,
+    importViewModel: ImportViewModel,
     downloaderViewModel: DownloaderViewModel,
     favViewModel: FavoriteViewModel,
     navigate: (Any) -> Unit
@@ -112,6 +114,7 @@ fun HomeScreen(
         playerViewModel = playerViewModel,
         moreInfoViewModel = moreInfoViewModel,
         downloaderViewModel = downloaderViewModel,
+        importViewModel = importViewModel,
         favViewModel = favViewModel,
         navigateSetting = navigateSetting,
         displayFeatures = displayFeatures,
@@ -128,6 +131,7 @@ fun AdaptiveHomeScreen(
     playerViewModel: PlayerViewModel,
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
+    importViewModel: ImportViewModel,
     moreInfoViewModel: MoreInfoViewModel,
     displayFeatures: List<DisplayFeature>,
     navigateSetting: () -> Unit,
@@ -166,6 +170,7 @@ fun AdaptiveHomeScreen(
                     playerViewModel = playerViewModel,
                     favViewModel = favViewModel,
                     downloaderViewModel = downloaderViewModel,
+                    importViewModel = importViewModel,
                     data = selectedItem!!,
                     onBackPressed = remember {
                         { windowInfoVM.closePreview() }

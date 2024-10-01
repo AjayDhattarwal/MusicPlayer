@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ar.musicplayer.components.PlayerDropDownMenu
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.data.models.SongResponse
@@ -58,7 +59,8 @@ fun SongItemRepresentation(
     track: SongResponse,
     favViewModel: FavoriteViewModel = hiltViewModel() ,
     downloaderViewModel: DownloaderViewModel = hiltViewModel(),
-    onTrackClicked: () -> Unit
+    onTrackClicked: () -> Unit,
+    addToPlaylist: () -> Unit
 ) {
 
     val isFavouriteFlow by remember {
@@ -79,7 +81,7 @@ fun SongItemRepresentation(
         songDownloadStatus[track.id.toString()] ?: DownloadStatus.NOT_DOWNLOADED
 
     var inDownloadQueue by remember { mutableStateOf(false) }
-
+    var isMoreExpanded by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(status) {
@@ -205,11 +207,20 @@ fun SongItemRepresentation(
                 tint = if(isFavourite) Color.Red else Color.White
             )
         }
-        IconButton(onClick = { /* Handle menu button click */ }) {
+        IconButton(onClick = { isMoreExpanded = !isMoreExpanded }) {
             Icon(
                 Icons.Default.MoreVert,
                 contentDescription = "Menu",
                 tint = Color.White
+            )
+            PlayerDropDownMenu(
+                expended = isMoreExpanded,
+                onDismissRequest = remember{
+                    {
+                        isMoreExpanded = false
+                    }
+                },
+                addToPlaylist = addToPlaylist
             )
         }
     }

@@ -112,6 +112,8 @@ fun App(
     val paletteExtractor = remember { PaletteExtractor() }
 
     val showBottomBar by windowInfoVm.showBottomBar.collectAsStateWithLifecycle()
+    val isCompatHeight by windowInfoVm.isCompatHeight.collectAsState()
+    val isCompatWidth by windowInfoVm.isCompatWidth.collectAsState()
     val showPreviewScreen by windowInfoVm.showPreviewScreen.collectAsState()
     val isMusicDetailsVisible by windowInfoVm.isMusicDetailsVisible.collectAsState()
     val isFullScreenPlayer by windowInfoVm.isFullScreenPlayer.collectAsState()
@@ -120,9 +122,8 @@ fun App(
 
     val context = LocalContext.current
 
-
-    val screenWidth = LocalConfiguration.current.screenWidthDp.toFloat()
     var offsetX by remember { mutableStateOf(0.6f) }
+
 
 
     Box(
@@ -147,8 +148,9 @@ fun App(
                 }
             },
             floatingActionButton = {
-                if(!showBottomBar){
+                if(!isCompatHeight){
                     AnimatedAIFloatingActionButton(
+                        isCompatWidth = isCompatWidth,
                         onArtistClick = remember{
                             { artist ->
                                 val senderData = Json.encodeToString(Artist.serializer(), artist)

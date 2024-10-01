@@ -83,6 +83,7 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-adaptive:0.35.2-beta")
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.androidx.core.splashscreen)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

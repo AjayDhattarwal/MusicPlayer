@@ -16,6 +16,7 @@ import com.ar.musicplayer.data.models.PlaylistResponse
 import com.ar.musicplayer.utils.download.DownloaderViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
 
@@ -26,6 +27,7 @@ fun LocalPlaylistInfoScreen(
     playerViewModel: PlayerViewModel,
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
+    importViewModel: ImportViewModel,
     onBackPressed: () -> Unit,
 ){
     val image = playlistResponse.image.toString()
@@ -67,7 +69,8 @@ fun LocalPlaylistInfoScreen(
             playerViewModel = playerViewModel,
             onFollowClicked = { TODO() },
             onBackPressed = onBackPressed,
-            onShare = { TODO() }
+            onShare = { TODO() },
+            localPlaylistViewModel = importViewModel,
         )
     }
 }

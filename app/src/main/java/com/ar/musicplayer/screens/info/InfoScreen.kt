@@ -29,6 +29,8 @@ import com.ar.musicplayer.data.models.toLargeImg
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.download.DownloaderViewModel
+import com.ar.musicplayer.utils.roomdatabase.playlistdb.LocalPlaylistSong
+import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 
 
@@ -41,6 +43,7 @@ fun InfoScreen(
     favViewModel: FavoriteViewModel,
     downloaderViewModel: DownloaderViewModel,
     data: InfoScreenModel,
+    importViewModel: ImportViewModel,
     onBackPressed: () -> Unit,
 ) {
 
@@ -101,6 +104,7 @@ fun InfoScreen(
                     favViewModel = favViewModel,
                     downloaderViewModel = downloaderViewModel,
                     playerViewModel = playerViewModel,
+                    localPlaylistViewModel = importViewModel,
                     onFollowClicked = { TODO() },
                     onBackPressed = onBackPressed,
                     onShare = { TODO() }

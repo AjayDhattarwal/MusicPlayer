@@ -1,13 +1,10 @@
 package com.ar.musicplayer.components.home
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -77,7 +74,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ar.musicplayer.components.mix.ArtistItem
 import com.ar.musicplayer.data.models.Artist
@@ -89,7 +85,8 @@ import com.ar.musicplayer.viewmodel.AiViewModel
 fun AnimatedAIFloatingActionButton(
     aiViewModel: AiViewModel = hiltViewModel<AiViewModel>(),
     onSongClick: (SongResponse) -> Unit,
-    onArtistClick: (Artist) -> Unit
+    onArtistClick: (Artist) -> Unit,
+    isCompatWidth: Boolean
 ) {
     val context = LocalContext.current
 
@@ -151,7 +148,12 @@ fun AnimatedAIFloatingActionButton(
 
     val isImeVisible by keyboardAsState()
 
-    val width = LocalConfiguration.current.screenWidthDp/4
+    val width = if(isCompatWidth) {
+        (LocalConfiguration.current.screenWidthDp/1.7f).toInt()
+    } else {
+        LocalConfiguration.current.screenWidthDp / 4
+    }
+
     val size by animateDpAsState(
         targetValue = if (expanded) if(maxExpanded) (width * 1.5).dp else width.dp else 56.dp,
         animationSpec = tween(durationMillis = 300)
@@ -179,7 +181,12 @@ fun AnimatedAIFloatingActionButton(
             Modifier
         }
 
-    val imeBottom = (WindowInsets.ime.getBottom(LocalDensity.current).dp / 2) + 100.dp
+    val imeBottom = ((
+            (WindowInsets.ime.getBottom(LocalDensity.current).dp)
+                / if(isCompatWidth) 4f else 2f)
+                + if(isCompatWidth) 40.dp else 100.dp
+
+    )
 
 
     Box(

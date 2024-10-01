@@ -83,6 +83,7 @@ fun NavigationGraph(
                 playerViewModel = playerViewModel,
                 moreInfoViewModel = moreInfoViewModel,
                 downloaderViewModel = downloaderViewModel,
+                importViewModel = importViewModel,
                 favViewModel = favViewModel,
                 navigate = remember{
                     { appState.navigate(it, backStackEntry) }
@@ -180,6 +181,7 @@ fun NavigationGraph(
                 downloaderViewModel = downloaderViewModel,
                 moreInfoViewModel = moreInfoViewModel,
                 data = data,
+                importViewModel = importViewModel,
                 onBackPressed = appState::navigateBack
             )
             BackHandler {
@@ -430,6 +432,7 @@ fun NavigationGraph(
                 playlistResponse = data,
                 favViewModel = favViewModel,
                 downloaderViewModel = downloaderViewModel,
+                importViewModel = importViewModel,
                 onBackPressed = appState::navigateBack
             )
             BackHandler {

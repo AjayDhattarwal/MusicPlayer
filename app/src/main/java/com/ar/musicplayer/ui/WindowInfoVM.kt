@@ -17,6 +17,12 @@ class WindowInfoVM : ViewModel() {
     private val _showBottomBar = MutableStateFlow(true)
     val showBottomBar: StateFlow<Boolean> = _showBottomBar
 
+    private val _isCompatHeight = MutableStateFlow(false)
+    val isCompatHeight: StateFlow<Boolean> = _isCompatHeight
+
+    private val _isCompatWidth = MutableStateFlow(false)
+    val isCompatWidth: StateFlow<Boolean> = _isCompatWidth
+
     private val _showPreviewScreen = MutableStateFlow(false)
     val showPreviewScreen: StateFlow<Boolean> = _showPreviewScreen
 
@@ -51,6 +57,7 @@ class WindowInfoVM : ViewModel() {
                 _showBottomBar.value = true
                 _showPreviewScreen.value = false
                 _isTwoPaneLayout.value = false
+                _isCompatWidth.value = true
                 _isLargeScreen.value = false
                 _isMusicDetailsVisible.value = false
             }
@@ -58,6 +65,7 @@ class WindowInfoVM : ViewModel() {
                 _showBottomBar.value = false
                 _showPreviewScreen.value = true
                 _isTwoPaneLayout.value = false
+                _isCompatWidth.value = false
                 _isLargeScreen.value = false
                 _isMusicDetailsVisible.value = false
             }
@@ -65,6 +73,7 @@ class WindowInfoVM : ViewModel() {
                 _showBottomBar.value = false
                 _showPreviewScreen.value = true
                 _isTwoPaneLayout.value = true
+                _isCompatWidth.value = false
                 _isLargeScreen.value = true
                 _isMusicDetailsVisible.value = false
             }
@@ -116,14 +125,17 @@ class WindowInfoVM : ViewModel() {
             WindowHeightSizeClass.COMPACT -> {
                 Timber.tag("height").d("compact")
                 _maxPlayerImageHeight.value = 300.dp
+                _isCompatHeight.value = true
             }
             WindowHeightSizeClass.MEDIUM -> {
                 Timber.tag("height").d("medium")
                 _maxPlayerImageHeight.value = 410.dp
+                _isCompatHeight.value = false
             }
             WindowHeightSizeClass.EXPANDED -> {
                 Timber.tag("height").d("high")
                 _maxPlayerImageHeight.value = 410.dp
+                _isCompatHeight.value = false
             }
         }
     }
