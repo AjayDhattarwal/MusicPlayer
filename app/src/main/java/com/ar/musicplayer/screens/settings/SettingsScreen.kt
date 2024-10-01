@@ -1,6 +1,7 @@
 package com.ar.musicplayer.screens.settings
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.getString
+import com.ar.musicplayer.R
 import com.ar.musicplayer.navigation.DownloadSettingsScreenObj
 import com.ar.musicplayer.navigation.LanguageSettingsScreenObj
 import com.ar.musicplayer.navigation.PlaybackSettingsScreenObj
@@ -53,7 +56,7 @@ fun SettingsScreen(
 
     val context = LocalContext.current
 
-    val url = "Https://rewatch.online/music-player/download"
+    val url = "https://rewatch.online/music-player/download"
 
     val sendIntent: Intent = Intent().apply {
         action = Intent.ACTION_SEND
@@ -252,6 +255,12 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable {
+                            val string = getString(context,R.string.githubReadMe)
+                            val intent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse(string))
+                            context.startActivity(intent)
+                        }
                         .padding(top = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
