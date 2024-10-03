@@ -8,13 +8,6 @@ Music App is an open-source music player designed to offer a comprehensive liste
 ![Made with Jetpack Compose](https://img.shields.io/badge/Made%20with-Jetpack%20Compose-blue)
 
 
-## Download
-
-[![GitHub](https://img.shields.io/badge/GitHub-000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yourusername/my-android-app/releases)
-
-[![Telegram](https://img.shields.io/badge/Telegram-0088CC?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/your_telegram_channel)
-
-
 ## Features
 
 - AI-Powered Music Assistance (Gemini)
