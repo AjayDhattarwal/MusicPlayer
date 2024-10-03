@@ -38,7 +38,6 @@ Music App is an open-source music player designed to offer a comprehensive liste
 ## Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/gif/gif_1.gif" width="200" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_1.png" width="200" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_2.png" width="200" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_3.png" width="200" />
@@ -48,6 +47,7 @@ Music App is an open-source music player designed to offer a comprehensive liste
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_7.png" width="400" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_8.png" width="400" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_9.png" width="400" />
+  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/gif/gif_1.gif" width="200" />
 </p>
 
 
