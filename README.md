@@ -42,8 +42,11 @@ Music App is an open-source music player designed to offer a comprehensive liste
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_2.png" width="200" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_3.png" width="200" />
   <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_4.png" width="200" />
-  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_5.png" width="200" />
-  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_6.png" width="200" />
+  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_5.png" width="400" />
+  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_6.png" width="400" />
+  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_7.png" width="400" />
+  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_8.png" width="400" />
+  <img src="https://raw.githubusercontent.com/AjayDhattarwal/MusicPlayer/refs/heads/master/assets/screenshots/Screenshot_9.png" width="400" />
 </p>
 
 
