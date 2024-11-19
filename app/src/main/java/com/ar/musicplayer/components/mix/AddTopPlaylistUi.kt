@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.material.placeholder
 import coil.compose.rememberAsyncImagePainter
 import com.ar.musicplayer.components.library.PLAYLIST_ACTIONS
 import com.ar.musicplayer.components.library.PlaylistDialog

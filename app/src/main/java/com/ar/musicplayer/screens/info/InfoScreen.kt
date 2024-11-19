@@ -15,10 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.draw.drawBehind
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.components.CircularProgress
@@ -29,7 +28,6 @@ import com.ar.musicplayer.data.models.toLargeImg
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.download.DownloaderViewModel
-import com.ar.musicplayer.utils.roomdatabase.playlistdb.LocalPlaylistSong
 import com.ar.musicplayer.viewmodel.ImportViewModel
 import com.ar.musicplayer.viewmodel.MoreInfoViewModel
 

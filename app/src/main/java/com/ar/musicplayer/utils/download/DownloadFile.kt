@@ -1,13 +1,11 @@
 package com.ar.musicplayer.utils.download
 
-import android.content.ContentValues
+import android.annotation.SuppressLint
 import android.content.Context
-import android.provider.MediaStore
 import android.util.Log
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
-import com.mpatric.mp3agic.ID3v24Frame
 import com.mpatric.mp3agic.ID3v24Tag
 import com.mpatric.mp3agic.ID3v2Frame
 import com.mpatric.mp3agic.ID3v2FrameSet
@@ -186,7 +184,8 @@ fun addMetadataToMp3(
 
 
 
-private fun decodeDES(input: String, kbps320: Boolean,downloadQuality: String): String {
+@SuppressLint("GetInstance")
+private fun decodeDES(input: String, kbps320: Boolean, downloadQuality: String): String {
     Log.d("input","$input")
     val key = "38346591"
     val algorithm = "DES/ECB/PKCS5Padding"

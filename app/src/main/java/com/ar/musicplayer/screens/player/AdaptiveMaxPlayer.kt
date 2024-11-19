@@ -77,7 +77,7 @@ import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+//import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import org.intellij.lang.annotations.Language
 
 @Language("AGSL")
@@ -184,14 +184,14 @@ fun AdaptiveMaxPlayer(
     }
 
 
-    val systemUiController = rememberSystemUiController()
-
-    LaunchedEffect(Unit) {
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent
-        )
-        systemUiController.isSystemBarsVisible = false
-    }
+//    val systemUiController = rememberSystemUiController()
+//
+//    LaunchedEffect(Unit) {
+//        systemUiController.setSystemBarsColor(
+//            color = Color.Transparent
+//        )
+//        systemUiController.isSystemBarsVisible = false
+//    }
 
 
     val time by produceState (0f) {

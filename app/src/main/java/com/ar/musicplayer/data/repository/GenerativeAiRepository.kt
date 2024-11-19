@@ -4,18 +4,24 @@ import com.ar.musicplayer.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
 import com.google.ai.client.generativeai.type.Content
+import com.google.ai.client.generativeai.type.FunctionCallingConfig
+import com.google.ai.client.generativeai.type.FunctionDeclaration
 import com.google.ai.client.generativeai.type.FunctionType
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.HarmCategory
+import com.google.ai.client.generativeai.type.RequestOptions
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.Schema
 import com.google.ai.client.generativeai.type.TextPart
+import com.google.ai.client.generativeai.type.Tool
+import com.google.ai.client.generativeai.type.ToolConfig
 import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.lang.Exception
 
 class GenerativeAiRepository {
+
 
     val jsonSchema = Schema.obj(
         name = "systemInstruction",
@@ -68,14 +74,15 @@ class GenerativeAiRepository {
             TextPart("Your tone should be casual, upbeat, and enthusiastic, spreading the joy of music."),
             TextPart("If a question is not related to music, respond like this : {  description: outputString }")
         )
+
+
     )
 
     suspend fun getAiResponse(prompt: String): GenerateContentResponse? {
         return withContext(Dispatchers.IO) {
             try {
                 val generativeModel = GenerativeModel(
-//                    modelName = "gemini-1.5-flash",
-                    modelName = "gemini-1.5-pro-exp-0827",
+                    modelName = "gemini-1.5-pro-002",
                     systemInstruction = systemInstruction,
                     apiKey = BuildConfig.API_KEY,
                     generationConfig = generationConfig {
@@ -87,7 +94,7 @@ class GenerativeAiRepository {
                         SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
                         SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
                         SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
-                    )
+                    ),
                 )
 
                 val response = generativeModel.generateContent(prompt)

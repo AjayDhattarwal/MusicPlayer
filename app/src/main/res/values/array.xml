@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="completed_tasks_synonyms">
+        <item>completed</item>
+        <item>completed tasks</item>
+        <item>finished</item>
+        <item>finished tasks</item>
+    </array>
+    <array name="active_tasks_synonyms">
+        <item>active</item>
+        <item>pending</item>
+        <item>pending tasks</item>
+        <item>open</item>
+    </array>
+    <array name="all_tasks_synonyms">
+        <item>all</item>
+    </array>
+    <array name="statistics_synonyms">
+        <item>show statistics</item>
+        <item>show progress</item>
+        <item>stats</item>
+    </array>
+
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+<!--    <shortcut-->
+<!--        android:shortcutId="shortcut_id_1"-->
+<!--        android:enabled="true"-->
+<!--        android:shortLabel="@string/label_active"-->
+<!--        android:longLabel="@string/label_completed">-->
+<!--    <intent-->
+<!--        android:action="android.intent.action.VIEW" />-->
+<!--    </shortcut>-->
+</shortcuts>
