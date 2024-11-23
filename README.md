@@ -7,6 +7,10 @@ Music App is an open-source music player designed to offer a comprehensive liste
 
 ![Made with Jetpack Compose](https://img.shields.io/badge/Made%20with-Jetpack%20Compose-blue)
 
+## Download
+[![GitHub](https://img.shields.io/badge/GitHub-000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AjayDhattarwal/MusicPlayer/blob/master/app/release/app-release.apk)
+
+
 
 ## Features
 
