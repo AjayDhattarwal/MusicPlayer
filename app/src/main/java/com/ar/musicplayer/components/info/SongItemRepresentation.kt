@@ -1,10 +1,12 @@
 package com.ar.musicplayer.components.info
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -130,16 +132,20 @@ fun SongItemRepresentation(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Box(modifier = Modifier.size(50.dp)){
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .padding(4.dp)
+                .clip(RoundedCornerShape(2))
+                .background(Color.Gray.copy(alpha = 0.2f))
+        ) {
             AsyncImage(
                 model = track.image,
                 contentDescription = "image",
                 modifier = Modifier
-                    .size(50.dp)
-                    .padding(4.dp)
-                    .clip(RoundedCornerShape(2)),
+                    .fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alignment = Alignment.Center
+                alignment = Alignment.Center,
             )
         }
 

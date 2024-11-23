@@ -76,6 +76,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.ar.musicplayer.components.home.HomeScreenRowCard
+import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.TrackRecognition
 import com.ar.musicplayer.utils.AudioRecorder.AndroidAudioRecorder
 import com.ar.musicplayer.utils.permission.hasPermissions
@@ -93,7 +94,7 @@ import kotlin.math.sin
 
 
 @Composable
-fun MusicRecognizer(backHandler: @Composable () -> Unit) {
+fun MusicRecognizer(playSong: (SongResponse) -> Unit,togglePlaying: () -> Unit, backHandler: @Composable () -> Unit) {
 
     val context = LocalContext.current
 
@@ -112,6 +113,8 @@ fun MusicRecognizer(backHandler: @Composable () -> Unit) {
         backHandler()
     }
     val scrollState = rememberScrollState()
+
+    var isPlayed by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -141,7 +144,17 @@ fun MusicRecognizer(backHandler: @Composable () -> Unit) {
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
-                EnhancedTrackDetailsUI(track)
+                EnhancedTrackDetailsUI(
+                    track = track,
+                    togglePlaying = togglePlaying
+                ){
+                    if(!isPlayed){
+                        if(it.title != null){
+                            playSong(SongResponse(title = it.title, subtitle = it.subtitle, isYoutube = true))
+                            isPlayed = true
+                        }
+                    }
+                }
                 if(track?.relatedTracksUrl != null) {
                     Text(
                         text = "Related",
@@ -169,7 +182,9 @@ fun MusicRecognizer(backHandler: @Composable () -> Unit) {
                             imageUrl = track.images?.coverart ?: track.images?.coverarthq ?: track.images?.background,
                             title = track.title ?: "",
                             size = 170,
-                            onClick = { _, _ -> }
+                            onClick = { _, _ ->
+
+                            }
                         )
                     }
                 }
@@ -182,8 +197,10 @@ fun MusicRecognizer(backHandler: @Composable () -> Unit) {
 }
 
 @Composable
-fun EnhancedTrackDetailsUI(track: TrackRecognition?) {
+fun EnhancedTrackDetailsUI(track: TrackRecognition?, togglePlaying: () -> Unit,  onPlayPause: (TrackRecognition) -> Unit = {}) {
     val images = track?.images
+    var isPlaying by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier) {
         Box {
 
@@ -223,8 +240,12 @@ fun EnhancedTrackDetailsUI(track: TrackRecognition?) {
                         .padding(16.dp)
                         .size(180.dp)
                         .clip(RoundedCornerShape(12.dp)),
-                    isPlaying = false,
-                    onPlayPauseClick = { /* Handle play/pause click */ },
+                    isPlaying = { isPlaying },
+                    onPlayPauseClick = {
+                        track?.let { onPlayPause(it) }
+                        togglePlaying()
+                        isPlaying = !isPlaying
+                    } ,
                     imageUrl = images?.coverart ?: images?.coverarthq ?: images?.background
                 )
 
@@ -291,7 +312,7 @@ fun EnhancedTrackDetailsUI(track: TrackRecognition?) {
 @Composable
 fun TrackImageWithPlayPause(
     modifier: Modifier = Modifier,
-    isPlaying: Boolean,
+    isPlaying: ()  -> Boolean,
     onPlayPauseClick: () -> Unit,
     imageUrl: String?
 ) {
@@ -308,8 +329,8 @@ fun TrackImageWithPlayPause(
         )
 
         Icon(
-            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-            contentDescription = if (isPlaying) "Pause" else "Play",
+            imageVector = if (isPlaying()) Icons.Default.Pause else Icons.Default.PlayArrow,
+            contentDescription = "PlayPause",
             tint = Color.White,
             modifier = Modifier
                 .align(Alignment.Center)

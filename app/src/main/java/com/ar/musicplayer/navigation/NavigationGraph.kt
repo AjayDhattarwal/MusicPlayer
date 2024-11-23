@@ -448,17 +448,25 @@ fun NavigationGraph(
         }
 
         composable<MusicRecognizerObj> { backStackEntry ->
-            MusicRecognizer(){
-                BackHandler {
-                    if(bottomSheetState.bottomSheetState.isExpanded){
-                        coroutineScope.launch {
-                            bottomSheetState.bottomSheetState.collapse()
+            MusicRecognizer(
+                playSong = {
+                    playerViewModel.setNewTrack(it)
+                },
+                togglePlaying = {playerViewModel.playPause()},
+                backHandler = remember{
+                    {
+                        BackHandler {
+                            if(bottomSheetState.bottomSheetState.isExpanded){
+                                coroutineScope.launch {
+                                    bottomSheetState.bottomSheetState.collapse()
+                                }
+                            } else{
+                                appState.navigateBack()
+                            }
                         }
-                    } else{
-                        appState.navigateBack()
                     }
                 }
-            }
+            )
         }
 
     }

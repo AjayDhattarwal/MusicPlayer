@@ -32,6 +32,7 @@ class NetworkModule {
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
+            .retryOnConnectionFailure(true)
             .build()
     }
 

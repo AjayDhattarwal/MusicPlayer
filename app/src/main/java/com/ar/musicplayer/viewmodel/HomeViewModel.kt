@@ -188,13 +188,7 @@ class HomeViewModel @Inject constructor(
 
 
         val sortedList = if(youtubeData != null){
-            if(list.size > 8){
-                list.subList(0,8) + youtubeData + list.subList(8, list.size)
-            }else{
-                val list2 = list + youtubeData
-                Log.d("HomeViewModel", "getMappedHomeData: ${youtubeData}")
-                list2
-            }
+            list + youtubeData
         } else{
             list
         }

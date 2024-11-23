@@ -85,7 +85,6 @@ class PlayerViewModel @Inject constructor(
     fun setPlaylist(newPlaylist: List<SongResponse>, playlistId: String) {
         viewModelScope.launch{
             try {
-                // Ensure the playlist is not null
                 checkNotNull(playlist) { "Playlist is null" }
 
                 playerRepository.setPlaylist(newPlaylist, playlistId)
