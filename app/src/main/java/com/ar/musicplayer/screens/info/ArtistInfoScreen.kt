@@ -185,7 +185,6 @@ fun ArtistInfoScreen(
                     .graphicsLayer {
                         alpha = if (isDefaultImg) 0.5f else clampedDarkness - 0.4f
                     }
-//                    .alpha()
                     .scale(animatedScale)
                     .fillMaxSize()
             ) {

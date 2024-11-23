@@ -57,28 +57,7 @@ class ApiConfig {
             return retrofit.create(SpotifyApiService::class.java)
         }
 
-        fun getMusicRecognizer(): MusicRecognizerApiService {
-//            val BASE_URL = "https://shazam-api-free.p.rapidapi.com/"
-            val BASE_URL = "https://shazam-api7.p.rapidapi.com/"
-            val loggingInterceptor = HttpLoggingInterceptor()
-                .setLevel(HttpLoggingInterceptor.Level.BODY)
 
-            val okHttpClient = OkHttpClient.Builder()
-                .connectTimeout(120, TimeUnit.SECONDS) // Adjust as needed
-                .readTimeout(120, TimeUnit.SECONDS)
-                .writeTimeout(120, TimeUnit.SECONDS)
-                .addInterceptor(loggingInterceptor)
-                .build()
-
-            val retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create()) // Use Gson for JSON parsing
-                .build()
-
-
-            return retrofit.create(MusicRecognizerApiService::class.java)
-        }
 
 
     }

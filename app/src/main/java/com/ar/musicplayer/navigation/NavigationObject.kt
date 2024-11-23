@@ -36,8 +36,6 @@ object ListeningHisScreenObj
 @Serializable
 object MyMusicScreenObj
 
-@Serializable
-object MusicRecognizerObj
 
 @Serializable
 object SearchMyMusicObj
@@ -75,3 +73,6 @@ object CurrPlayingPlaylistObj
 
 @Serializable
 object LargeScreenPlayerObj
+
+@Serializable
+object MusicRecognizerObj

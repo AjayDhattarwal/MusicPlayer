@@ -1,6 +1,7 @@
 package com.ar.musicplayer.viewmodel
 
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.data.repository.HomeDataRepository
@@ -14,6 +15,8 @@ import com.ar.musicplayer.data.repository.YoutubeRepository
 import com.ar.musicplayer.utils.helper.NetworkConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,12 +41,17 @@ class HomeViewModel @Inject constructor(
 
     private val _data = MutableStateFlow<HomeData?>(null)
 
+
     private val _youtubeData = MutableStateFlow<List<Pair<String?, List<HomeListItem>>>?>(null)
 
     val combinedData: Flow<List<Pair<String?, List<HomeListItem>>>> = combine(
-        _youtubeData, _data.filterNotNull()
+        _youtubeData.asStateFlow(), _data.asStateFlow()
     ){ youtubeData, homeData ->
-        getMappedHomeData(homeData, homeData.modules, youtubeData)
+        (if (homeData != null) {
+            getMappedHomeData(homeData, homeData.modules, youtubeData)
+        } else{
+            emptyList()
+        })
     }
 
     val homeData: StateFlow<List<Pair<String?, List<HomeListItem>>>?> = combinedData
@@ -58,7 +66,9 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             networkConnectivityObserver.observe().collect { isConnected ->
                 if (isConnected && !_isDataRefreshed.value) {
-                    refreshData()
+                   withContext(Dispatchers.IO){
+                       refreshData()
+                   }
                 }
             }
         }
@@ -72,6 +82,12 @@ class HomeViewModel @Inject constructor(
                         _data.value = homeData
                     }
             }
+            launch(Dispatchers.IO){
+                val data = homeDataRepository.updateRefreshedData()
+
+                _data.value = data
+                data?.let { homeDataRepository.updateDataInRoom(it) }
+            }
             launch(Dispatchers.IO) {
                 getYoutubeMapData()
             }
@@ -80,20 +96,17 @@ class HomeViewModel @Inject constructor(
 
     private fun refreshData() {
         viewModelScope.launch {
-            homeDataRepository.getHomeScreenData()
-                .collect { data ->
-                    _data.value = data
-                }
+             homeDataRepository.getHomeScreenData()
             _isDataRefreshed.value = true
         }
     }
 
 
-    fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> {
-        return listOf(
+    suspend fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> = withContext(Dispatchers.IO) {
+        return@withContext listOf(
             modules.a1, modules.a2, modules.a3, modules.a4, modules.a5,
-            modules.a6, modules.a7, modules.a8, modules.a9, modules.a10,
-            modules.a11, modules.a12, modules.a13, modules.a14,modules.a15,
+            modules.a6, modules.a7, modules.a8, modules.a9, modules.a10, modules.a11,
+            modules.a12, modules.a13, modules.a14,modules.a15,
             modules.a16, modules.a17
         ).filterNotNull()
             .sortedBy {
@@ -102,21 +115,24 @@ class HomeViewModel @Inject constructor(
     }
 
     suspend fun getYoutubeMapData(){
-        val list =  youtubeRepository.getMusicHome()
+        withContext(Dispatchers.IO){
+            val list =  youtubeRepository.getMusicHome()
 
-        val items = list.map { map ->
-            val title = map["title"] as String
-            val playlists = map["playlists"] as List<Item>
+            val items = list.map { map ->
+                async{
+                    val title = map["title"] as String
+                    val playlists = map["playlists"] as List<Item>
 
-            title to playlists.toHomeListItem()
+                    title to playlists.toHomeListItem()
+                }
+            }
+            _youtubeData.value = items.awaitAll()
         }
-
-        _youtubeData.value = items
 
     }
 
-    fun List<Item>.toHomeListItem(): List<HomeListItem> {
-        return this.map{ item ->
+    suspend fun List<Item>.toHomeListItem(): List<HomeListItem> = withContext(Dispatchers.IO) {
+        return@withContext this@toHomeListItem.map{ item ->
             HomeListItem(
                 id = item.id,
                 title = item.title,
@@ -133,11 +149,14 @@ class HomeViewModel @Inject constructor(
 
 
 
-    fun getMappedHomeData(
+    suspend fun getMappedHomeData(
         homeData: HomeData,
         modules: ModulesOfHomeScreen,
         youtubeData: List<Pair<String?, List<HomeListItem>>>?
-    ): List<Pair<String?, List<HomeListItem>>> {
+    ): List<Pair<String?, List<HomeListItem>>> = withContext(Dispatchers.Main) {
+        Log.d("HomeViewmodle " , "getMappedHomeData: $youtubeData")
+        Log.d("HomeViewmodle", "getmodules: $modules" )
+        Log.d("HomeViewmodle", "getHomeData: $homeData" )
 
         val sortedSourceTitleMap = createSortedSourceTitleMap(modules)
 
@@ -166,12 +185,20 @@ class HomeViewModel @Inject constructor(
             sourceToListMap[source]?.let { title to it }
         }.toMap().toList()
 
+
+
         val sortedList = if(youtubeData != null){
-            (list.subList(0, 11) + youtubeData + list.subList(11, list.size))
+            if(list.size > 8){
+                list.subList(0,8) + youtubeData + list.subList(8, list.size)
+            }else{
+                val list2 = list + youtubeData
+                Log.d("HomeViewModel", "getMappedHomeData: ${youtubeData}")
+                list2
+            }
         } else{
             list
         }
 
-        return sortedList
+        return@withContext sortedList
     }
 }

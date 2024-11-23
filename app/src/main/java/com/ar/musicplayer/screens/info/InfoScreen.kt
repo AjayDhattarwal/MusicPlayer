@@ -1,6 +1,7 @@
 package com.ar.musicplayer.screens.info
 
 
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -50,6 +51,7 @@ fun InfoScreen(
     val scrollState = rememberLazyListState()
 
     LaunchedEffect(data.image) {
+        Log.d("InfoScreen", "InfoScreen: $data")
         moreInfoViewModel.fetchPlaylist(data)
         scrollState.scrollToItem(0)
     }

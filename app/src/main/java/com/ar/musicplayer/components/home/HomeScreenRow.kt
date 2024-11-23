@@ -82,7 +82,7 @@ fun <T> HomeScreenRowCard(
     isRadio: Boolean,
     subtitle: String,
     cornerRadius: Int = 0,
-    imageUrl: String,
+    imageUrl: String?,
     title: String,
     size: Int,
     onClick: (Boolean, T) -> Unit,

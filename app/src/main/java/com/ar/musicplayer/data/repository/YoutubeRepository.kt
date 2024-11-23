@@ -10,8 +10,10 @@ import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.toArtist
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import io.ktor.utils.io.writer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 
 class YoutubeRepository @Inject constructor(
@@ -39,13 +41,16 @@ class YoutubeRepository @Inject constructor(
 
     suspend fun getMusicHome():List<Map<String,Any>>  = withContext(Dispatchers.IO) {
         val response = getYouTubeData("music") ?: return@withContext emptyList()
-        Log.d("error","error")
         try {
-            val searchResults = "{" + Regex("\"contents\":\\{.*?\\},\"metadata\"", RegexOption.DOT_MATCHES_ALL)
-                .find(response)?.groupValues?.get(0)?.replace(",\"metadata\"", "}")
+            val file = File(context.cacheDir, "youtube.txt")
+            val searchResults = "{" + Regex("(\"contents\":\\{.*?\"carouselHeaderRenderer\")", RegexOption.DOT_MATCHES_ALL)
+                .find(response)?.groupValues?.get(0)?.replace(",\"header\":{\"carouselHeaderRenderer\"", "}")
+
+            file.writeText(searchResults)
 
 
             val data = JsonParser.parseString(searchResults).asJsonObject
+
 
 
             val result = data.getAsJsonObject("contents")
@@ -54,11 +59,9 @@ class YoutubeRepository @Inject constructor(
                 .getAsJsonObject("tabRenderer").getAsJsonObject("content")
                 .getAsJsonObject("sectionListRenderer").getAsJsonArray("contents")
 
-            val headResult = data.getAsJsonObject("header")
-                .getAsJsonObject("carouselHeaderRenderer")
-                .getAsJsonArray("contents").get(0).asJsonObject
-                .getAsJsonObject("carouselItemRenderer")
-                .getAsJsonArray("carouselItems")
+            Log.d("HomeViewModel", "getYoutubeMapData result: $result")
+
+
 
             val items = result.map { element ->
                 element.asJsonObject.getAsJsonObject("itemSectionRenderer")
@@ -90,6 +93,7 @@ class YoutubeRepository @Inject constructor(
 
            return@withContext finalResult
         } catch (e: Exception) {
+            Log.e("HomeViewModel", "Error parsing YouTube data: ${e.message}")
             return@withContext emptyList()
         }
     }
@@ -248,20 +252,34 @@ class YoutubeRepository @Inject constructor(
         }
     }
 
+
     private fun formatItems(itemsList: JsonArray): List<Item> {
         return try {
             itemsList.map { item ->
-                val playlist = item.asJsonObject.getAsJsonObject("compactStationRenderer")
+                val playlist = item.asJsonObject.getAsJsonObject("lockupViewModel")
+                val metadata = playlist.getAsJsonObject("metadata").getAsJsonObject("lockupMetadataViewModel")
+                val metadataParts =  metadata.getAsJsonObject("metadata").getAsJsonObject("contentMetadataViewModel")
+                    .getAsJsonArray("metadataRows").get(0).asJsonObject.getAsJsonArray("metadataParts").get(0).asJsonObject
+                val thumbnailViewModel = playlist.getAsJsonObject("contentImage").getAsJsonObject("collectionThumbnailViewModel")
+                    .getAsJsonObject("primaryThumbnail").getAsJsonObject("thumbnailViewModel")
+
+                val contentImage = thumbnailViewModel.getAsJsonObject("image").getAsJsonArray("sources")
+                val overlays = thumbnailViewModel.getAsJsonArray("overlays").get(0).asJsonObject
+                    .getAsJsonObject("thumbnailOverlayBadgeViewModel").getAsJsonArray("thumbnailBadges")
+                    .get(0).asJsonObject.getAsJsonObject("thumbnailBadgeViewModel")
+
+
                 Item(
-                    title = playlist.getAsJsonObject("title").get("simpleText").asString,
+                    title = metadata.getAsJsonObject("title").get("content").asString,
                     type = "playlist",
-                    description = playlist.getAsJsonObject("description").get("simpleText").asString,
-                    count = playlist.getAsJsonObject("videoCountText").getAsJsonArray("runs").get(0).asJsonObject.get("text").asString,
-                    id = playlist.getAsJsonObject("navigationEndpoint").asJsonObject.getAsJsonObject("watchPlaylistEndpoint").get("playlistId").asString,
-                    image = playlist.getAsJsonObject("thumbnail").getAsJsonArray("thumbnails").get(0).asJsonObject.get("url").asString,
+                    description = metadataParts.getAsJsonObject("text").get("content").asString,
+                    count = overlays.get("text").asString,
+                    id = playlist.get("contentId").asString,
+                    image = contentImage.last().asJsonObject.get("url").asString,
                 )
             }
         } catch (e: Exception) {
+            Log.e("HomeViewModel", "formatItems: ${e.message}")
             emptyList()
         }
     }

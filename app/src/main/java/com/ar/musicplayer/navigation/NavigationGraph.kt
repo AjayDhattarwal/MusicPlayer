@@ -38,6 +38,7 @@ import com.ar.musicplayer.screens.settings.subscreens.LanguageSettingsScreen
 import com.ar.musicplayer.screens.settings.subscreens.PlaybackSettingsScreen
 import com.ar.musicplayer.screens.settings.subscreens.StorageSettingScreen
 import com.ar.musicplayer.screens.settings.subscreens.ThemeSettingsScreen
+import com.ar.musicplayer.screens.testing.MusicRecognizer
 import com.ar.musicplayer.ui.MusicAppState
 import com.ar.musicplayer.ui.WindowInfoVM
 import com.ar.musicplayer.utils.PreferencesManager
@@ -442,6 +443,20 @@ fun NavigationGraph(
                     }
                 } else{
                     appState.navigateBack()
+                }
+            }
+        }
+
+        composable<MusicRecognizerObj> { backStackEntry ->
+            MusicRecognizer(){
+                BackHandler {
+                    if(bottomSheetState.bottomSheetState.isExpanded){
+                        coroutineScope.launch {
+                            bottomSheetState.bottomSheetState.collapse()
+                        }
+                    } else{
+                        appState.navigateBack()
+                    }
                 }
             }
         }

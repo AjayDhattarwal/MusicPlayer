@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <domain-config>
+    <!-- Saavn CDN and Spotify CDN -->
+    <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">c.saavncdn.com</domain>
+        <domain includeSubdomains="true">c.sop.saavncdn.com</domain>
         <domain includeSubdomains="true">i.scdn.co</domain>
+        <domain includeSubdomains="true">i.ytimg.com</domain>
+        <domain includeSubdomains="true">musikerkennung.com</domain>
+        <domain includeSubdomains="true">cdn.shazam.com</domain>
+        <domain includeSubdomains="true">www.shazam.com</domain>
     </domain-config>
-</network-security-config>
 
+</network-security-config>

@@ -13,6 +13,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +46,7 @@ fun BottomNavigationBar(
         listOf(
             BottomNavItem.Home,
             BottomNavItem.Search,
+            BottomNavItem.Recognize,
             BottomNavItem.Library,
         )
     }
@@ -161,7 +163,9 @@ fun NavigationRailBar(
 sealed class BottomNavItem<T>(val obj: T, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem<HomeScreenObj>( HomeScreenObj, Icons.Default.Home, "Home")
     object Search : BottomNavItem<SearchScreenObj>( SearchScreenObj, Icons.Default.Search, "Search")
+    object Recognize : BottomNavItem<MusicRecognizerObj>( MusicRecognizerObj, Icons.Default.Mic, "Recognize")
     object Library: BottomNavItem<LibraryScreenObj>(LibraryScreenObj, Icons.Default.LibraryMusic, "Library")
+
 }
 
 
