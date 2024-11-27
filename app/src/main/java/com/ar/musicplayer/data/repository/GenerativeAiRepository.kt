@@ -38,7 +38,7 @@ class GenerativeAiRepository {
                 Schema.str("artist", "Artist of the song"),
                 Schema.str("album", "Album of the song"),
                 Schema.int("release_year", "Release year of the song"),
-                Schema.num("duration", "Duration of the song in seconds As Long"),
+                Schema.long("duration", "Duration of the song in seconds As Long"),
                 Schema.str("genre", "Genre of the song"),
                 Schema.str("description", "Description of the song"),
                 Schema.str("other", "Other information about the song")
@@ -82,7 +82,7 @@ class GenerativeAiRepository {
         return withContext(Dispatchers.IO) {
             try {
                 val generativeModel = GenerativeModel(
-                    modelName = "gemini-1.5-pro-002",
+                    modelName = "gemini-1.5-pro",
                     systemInstruction = systemInstruction,
                     apiKey = BuildConfig.API_KEY,
                     generationConfig = generationConfig {
@@ -95,6 +95,7 @@ class GenerativeAiRepository {
                         SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
                         SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
                     ),
+
                 )
 
                 val response = generativeModel.generateContent(prompt)

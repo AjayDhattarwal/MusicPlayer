@@ -7,16 +7,15 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.ArtistMap
 import com.ar.musicplayer.data.models.MoreInfoResponse
 import com.ar.musicplayer.data.models.SongResponse
-import com.mpatric.mp3agic.ID3v24Frame
-import com.mpatric.mp3agic.ID3v2Frame
-import com.mpatric.mp3agic.Mp3File
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.Session
+import com.arthenica.ffmpegkit.SessionState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,9 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.io.File
-import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
@@ -102,7 +100,7 @@ LocalSongsViewModel @Inject constructor(
                     val uri = it.getString(dataColumn)
                     val albumId = it.getString(albumIdColumn)
                     val album = it.getString(albumColumn)
-                    val id = extractStringIdFromMp3(uri)
+                    val id = extractStringIdFromM4a(uri)
                     val duration = it.getLong(durationColumn)
 
 
@@ -164,32 +162,44 @@ LocalSongsViewModel @Inject constructor(
         _songsByAlbum.value = groupedByAlbum
     }
 
-    fun scanMedia(context: Context, paths: Array<String>) {
+    private fun scanMedia(context: Context, paths: Array<String>) {
         MediaScannerConnection.scanFile(context, paths, null) { path, uri ->
             Timber.tag("MediaScan").d("Scanned  $path")
             Timber.tag("MediaScan").d("$uri")
         }
     }
 
-    fun extractStringIdFromMp3(mp3FilePath: String): String? {
-        val mp3file = Mp3File(mp3FilePath)
-        val id3v2Tag = mp3file.id3v2Tag
-        val frameSet = id3v2Tag.frameSets["TXXX"]
+    private suspend fun extractStringIdFromM4a(filePath: String): String?  {
 
-        if (frameSet != null) {
+        return withContext(Dispatchers.IO) {
+            try {
 
-            for (frame in frameSet.frames) {
-                if (frame is ID3v24Frame) {
-                    val content = frame.data
-                    if(content != null){
-                        return content.decodeToString()
-                    }
+                val command = arrayOf(
+                    "-i", filePath,
+                    "-f", "ffmetadata",
+                    "-"
+                )
+                val session: Session = FFmpegKit.execute(command.joinToString(" "))
+
+                // Check if the session is completed
+                if (session.state == SessionState.COMPLETED) {
+
+                    val output = session.output
+
+
+                    val result = output.substringBefore("=song_id").substringAfterLast(": ")
+
+
+                    return@withContext result
+
+                } else {
+                     return@withContext null
                 }
+            } catch (e: Exception) {
+                 return@withContext null
             }
-        } else {
-            return null
         }
-        return null
+
     }
 
 }

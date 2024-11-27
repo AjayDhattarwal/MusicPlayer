@@ -2,14 +2,16 @@ package com.ar.musicplayer.utils.download
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMuxer
 import android.util.Log
+import com.ar.musicplayer.data.models.sanitizeFileName
+import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
-import com.mpatric.mp3agic.ID3v24Tag
-import com.mpatric.mp3agic.ID3v2Frame
-import com.mpatric.mp3agic.ID3v2FrameSet
-import com.mpatric.mp3agic.Mp3File
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -25,6 +27,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody
 import okio.*
 import java.net.URL
+import java.nio.ByteBuffer
 import kotlin.text.toByteArray
 
 fun handleMp4ToMp3Conversion(
@@ -38,7 +41,7 @@ fun handleMp4ToMp3Conversion(
 
     val mp4Url = decodeDES(entity.url,entity.is320kbps, downloadQuality = downloadQuality)
 
-    val tempFileName = "${entity.title} - ${entity.artist}_temp.mp3"
+    val tempFileName = "temp.aac"
     val mp3Path = File(context.cacheDir, tempFileName).absolutePath
 
     val tempMp4 = File(context.filesDir, "downloaded.mp4").absolutePath
@@ -47,9 +50,9 @@ fun handleMp4ToMp3Conversion(
     val trackMetaData = TrackMetaData(
         id = entity.id,
         tempFilePath = mp3Path,
-        title = entity.title,
-        artist = entity.artist,
-        album = entity.album,
+        title = entity.title.sanitizeString().sanitizeFileName(),
+        artist = entity.artist.sanitizeString().sanitizeFileName(),
+        album = entity.album.sanitizeString().sanitizeFileName(),
         genre = entity.genre,
         imageUrl = entity.imageUrl,
         savePath = downloadPath
@@ -62,9 +65,9 @@ fun handleMp4ToMp3Conversion(
         },
         onComplete = { success ->
             if(success){
-                convertMp4ToMp3(mp4File.absolutePath, mp3Path) { conversionSuccess ->
+                convertMp4ToAAC(mp4File.absolutePath, mp3Path) { conversionSuccess ->
                     if (conversionSuccess) {
-                        addMetadataToMp3(
+                        addMetadataToAAC(
                             trackMetaData = trackMetaData,
                             context = context,
                             onComplete = onComplete
@@ -76,104 +79,115 @@ fun handleMp4ToMp3Conversion(
     )
 }
 
-fun convertMp4ToMp3(inputPath: String, outputPath: String, onComplete: (Boolean) -> Unit) {
+@SuppressLint("WrongConstant")
+fun convertMp4ToAAC(inputFilePath: String, outputFilePath: String, onComplete: (Boolean) -> Unit) {
+    val extractor = MediaExtractor()
+    val muxer = MediaMuxer(outputFilePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+
     try {
-        val outputFile = File(outputPath)
+        extractor.setDataSource(inputFilePath)
+        val trackCount = extractor.trackCount
 
-        if (outputFile.exists()) {
-            if (!outputFile.delete()) {
-                onComplete(false)
-                return
-            }
-        }
+        for (i in 0 until trackCount) {
+            val format = extractor.getTrackFormat(i)
+            val mime = format.getString(MediaFormat.KEY_MIME)
 
-        // FFmpeg command for converting MP4 to MP3
-        val command = "-i \"$inputPath\" -q:a 0 -map a \"$outputPath\""
 
-        // Execute FFmpeg command
-        FFmpegKit.executeAsync(command) { session ->
-            try {
-                val returnCode = session.returnCode
+            if (mime?.startsWith("audio/") == true) {
+                extractor.selectTrack(i)
 
-                if (ReturnCode.isSuccess(returnCode)) {
-                    onComplete(true)
-                } else {
-                    onComplete(false)
+                val trackIndex = muxer.addTrack(format)
+                muxer.start()
+
+                val buffer = ByteBuffer.allocate(1024 * 1024)
+                while (true) {
+                    val bufferInfo = MediaCodec.BufferInfo()
+                    val sampleSize = extractor.readSampleData(buffer, 0)
+                    if (sampleSize < 0) {
+                        break
+                    }
+
+                    bufferInfo.offset = 0
+                    bufferInfo.size = sampleSize
+                    bufferInfo.presentationTimeUs = extractor.sampleTime
+                    bufferInfo.flags = extractor.sampleFlags
+
+                    muxer.writeSampleData(trackIndex, buffer, bufferInfo)
+                    extractor.advance()
                 }
-            } catch (e: Exception) {
-                onComplete(false)
+                break
             }
         }
+
+        muxer.stop()
+        muxer.release()
+        extractor.release()
+        Log.d("download", "completed ")
+        onComplete(true)
     } catch (e: Exception) {
-        onComplete(false)
+
+        Log.e("download", "error : $e")
+        e.printStackTrace()
+        onComplete(false) // Extraction failed
     }
 }
 
 
 
-fun addMetadataToMp3(
+fun addMetadataToAAC(
     trackMetaData: TrackMetaData,
     context: Context,
     onComplete: (Boolean) -> Unit
 ) {
     try {
 
-        val mp3File = Mp3File(trackMetaData.tempFilePath)
+        val imageBytes = URL(trackMetaData.imageUrl).openStream().readBytes()
+        val coverImageFile = File(context.cacheDir, "temp.jpg")
 
-        val id3v2Tag = if (mp3File.hasId3v2Tag()) {
-            mp3File.id3v2Tag
-        } else {
-            ID3v24Tag()
-        }
+        if(saveImageBytesToFile(imageBytes, coverImageFile)){
 
-        val encodedValue = trackMetaData.id.toByteArray(StandardCharsets.UTF_8)
-        val frame = ID3v2Frame("TXXX",
-            byteArrayOf(*encodedValue)
-        )
+            val newPath = getFilePath(trackMetaData.title, trackMetaData.artist, trackMetaData.savePath)
 
-        val frameSet = ID3v2FrameSet("TXXX")
-        frameSet.addFrame(frame)
 
-        id3v2Tag.frameSets["TXXX"] = frameSet
+            val command = arrayOf(
+                "-i", trackMetaData.tempFilePath,
+                "-i", coverImageFile.absolutePath,
+                "-map", "0:a",
+                "-map", "1:v",
+                "-c:a", "copy",
+                "-c:v", "mjpeg",
+                "-disposition:v:0", "attached_pic",
+                "-metadata", "artist=${trackMetaData.artist}",
+                "-metadata", "title=${trackMetaData.title}",
+                "-metadata", "album=${trackMetaData.album}",
+                "-metadata", "genre=${trackMetaData.genre}",
+                "-metadata", "comment=${trackMetaData.id}=song_id",
+                "-b:a", "320k",
+                "-id3v2_version", "3",
+                "-f", "ipod",
+                newPath
+            )
 
-        id3v2Tag.title = trackMetaData.title
-        id3v2Tag.artist = trackMetaData.artist
-        id3v2Tag.album = trackMetaData.album
-        id3v2Tag.genreDescription = trackMetaData.genre
 
-        trackMetaData.imageUrl?.let {
-            try {
-                val imageBytes = URL(trackMetaData.imageUrl).openStream().readBytes()
-                id3v2Tag.setAlbumImage(imageBytes, "image/jpeg")
-            } catch (e: Exception) {
-                e.printStackTrace()
+
+
+
+
+            FFmpegKit.executeAsync(command.joinToString(" ")) { session ->
+                val returnCode = session.returnCode
+                if (ReturnCode.isSuccess(returnCode)) {
+
+                    println("Metadata added successfully to MP3: ${trackMetaData.savePath}")
+                    coverImageFile.delete()
+
+                    File(trackMetaData.tempFilePath).delete()
+
+                    onComplete(true)
+                } else {
+                    Log.e("download", "Failed to add metadata: $returnCode")
+                }
             }
         }
-
-
-
-
-        mp3File.id3v2Tag = id3v2Tag
-
-        val newPath = getFilePath(trackMetaData.title, trackMetaData.artist, trackMetaData.savePath)
-        val newFile = File(newPath)
-        val parentDir = newFile.parentFile
-
-        if (parentDir != null && !parentDir.exists()) {
-            try {
-                parentDir.mkdirs()
-            } catch (e: IOException) {
-                return
-            }
-        }
-
-        mp3File.save(newPath)
-
-        File(trackMetaData.tempFilePath).delete()
-
-        println("Metadata added successfully to MP3: ${trackMetaData.savePath}")
-
-        onComplete(true)
 
     } catch (e: Exception) {
         e.printStackTrace()
@@ -182,11 +196,23 @@ fun addMetadataToMp3(
 }
 
 
+fun saveImageBytesToFile(imageBytes: ByteArray, tempFile: File): Boolean {
+    return try {
+        val outputStream = FileOutputStream(tempFile)
+        outputStream.write(imageBytes)
+        outputStream.flush()
+        outputStream.close()
+        true
+    } catch (e: Exception) {
+        e.printStackTrace()
+        false
+    }
+}
+
 
 
 @SuppressLint("GetInstance")
 private fun decodeDES(input: String, kbps320: Boolean, downloadQuality: String): String {
-    Log.d("input","$input")
     val key = "38346591"
     val algorithm = "DES/ECB/PKCS5Padding"
 
@@ -256,11 +282,26 @@ fun downloadFile(url: String, outputFile: File, onProgress: (Int) -> Unit, onCom
     })
 }
 
-private fun getFilePath(title: String, artist: String, downloadPath: String): String {
-    val musicFolderPath = downloadPath
-    return "$musicFolderPath/${title} - ${artist}.mp3"
-}
 
+
+private fun getFilePath(title: String, artist: String, downloadPath: String): String {
+
+    val filePath = "$downloadPath/${title}_by_$artist.m4a"
+
+    // Log the file path for debugging purposes
+    println("Generated file path: $filePath")
+
+    val file = File(filePath)
+
+    // Check if the file path exists (for debugging purposes)
+    if (!file.exists()) {
+        println("File does not exist: $filePath")
+    } else {
+        println("File exists: $filePath")
+    }
+
+    return filePath
+}
 
 private class ProgressResponseBody(
     private val responseBody: ResponseBody,

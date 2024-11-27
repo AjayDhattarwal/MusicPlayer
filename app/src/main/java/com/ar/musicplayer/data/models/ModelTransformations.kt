@@ -347,3 +347,8 @@ fun HomeListItem.toSongResponse(): SongResponse {
 
     )
 }
+
+fun String.sanitizeFileName(): String {
+    // Replace any character that isn't alphanumeric, hyphen, dot, or underscore with an underscore.
+    return this.replace("[^a-zA-Z0-9\\-\\._]".toRegex(), "_")
+}

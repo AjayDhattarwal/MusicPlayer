@@ -64,6 +64,7 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomComp
 coil-compose = { module = "io.coil-kt:coil-compose",version.ref = "coilBom"}
 coil-svg = { module = "io.coil-kt:coil-svg", version = "2.6.0" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+ffmpeg-kit-full = { module = "com.arthenica:ffmpeg-kit-full", version.ref = "ffmpegKitFull" }
 ffmpeg-kit-min = { module = "com.arthenica:ffmpeg-kit-min", version.ref = "ffmpegKitFull" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }

@@ -57,7 +57,6 @@ fun BottomNavigationBar(
         }
     }
 
-
     BottomNavigation(
         backgroundColor = Color.Black,
         modifier =  modifier

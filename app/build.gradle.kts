@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.devtools.ksp")
     id ("com.google.dagger.hilt.android")
-//    alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
@@ -147,10 +146,7 @@ dependencies {
    implementation(libs.ffmpeg.kit.min)
 
 
-    // mp3 create
-    implementation(libs.mpatric.mp3agic)
-
-    implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     implementation ("com.jakewharton.timber:timber:5.0.1")
 
@@ -159,7 +155,6 @@ dependencies {
 
     implementation("org.jsoup:jsoup:1.15.3")
 
-    //
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.android)

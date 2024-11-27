@@ -86,13 +86,13 @@ fun FavoriteScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            Icons.Filled.Download,
-                            contentDescription = "Download",
-                            tint = Color.White
-                        )
-                    }
+//                    IconButton(onClick = {}) {
+//                        Icon(
+//                            Icons.Filled.Download,
+//                            contentDescription = "Download",
+//                            tint = Color.White
+//                        )
+//                    }
                     IconButton(onClick = { }) {
                         Icon(
                             Icons.Filled.Search,

@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
 fun SongItemRepresentation(
     track: SongResponse,
     favViewModel: FavoriteViewModel = hiltViewModel() ,
-    downloaderViewModel: DownloaderViewModel = hiltViewModel(),
+    downloaderViewModel: DownloaderViewModel,
     onTrackClicked: () -> Unit,
     addToPlaylist: () -> Unit
 ) {
@@ -173,32 +173,34 @@ fun SongItemRepresentation(
             )
         }
 
-        IconButton(
-            onClick = remember{
-                {
-                    if (!isDownloaded) {
-                        downloaderViewModel.onEvent(DownloadEvent.downloadSong(track))
-                        inDownloadQueue = true
+        if(track.type != "Youtube" || track.isYoutube == false){
+            IconButton(
+                onClick = remember{
+                    {
+                        if (!isDownloaded) {
+                            downloaderViewModel.onEvent(DownloadEvent.downloadSong(track))
+                            inDownloadQueue = true
+                        }
                     }
                 }
-            }
-        ) {
-            if(isDownloading){
-                CircularProgressIndicator(
-                    modifier = Modifier,
-                    progress = downloadProgress.div(100.toFloat()) ?: 0f,
-                    color = Color.LightGray
-                )
-                Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
-            }
+            ) {
+                if(isDownloading){
+                    CircularProgressIndicator(
+                        modifier = Modifier,
+                        progress = downloadProgress.div(100.toFloat()) ?: 0f,
+                        color = Color.LightGray
+                    )
+                    Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
+                }
 
-            else{
-                Icon(
-                    modifier = Modifier.weight(1f),
-                    imageVector = if(isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
-                    contentDescription = "Download",
-                    tint = Color.White
-                )
+                else{
+                    Icon(
+                        modifier = Modifier.weight(1f),
+                        imageVector = if(isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
+                        contentDescription = "Download",
+                        tint = Color.White
+                    )
+                }
             }
         }
 

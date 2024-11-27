@@ -2,6 +2,7 @@ package com.ar.musicplayer.utils.download
 
 import android.content.Context
 import com.ar.musicplayer.data.models.SongResponse
+import com.ar.musicplayer.data.models.sanitizeFileName
 import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.PreferencesManager
 import com.ar.musicplayer.utils.roomdatabase.dbmodels.SongDownloadEntity
@@ -56,9 +57,12 @@ class MusicDownloadRepository @Inject constructor(
     }
 
     private fun getFilePath(title: String, artist: String): String {
-        val musicFolderPath = downloadPath
-        return "$musicFolderPath/${title} - ${artist}.mp3"
-    }
 
+        val sanitizedTitle = title.sanitizeString().sanitizeFileName()
+        val sanitizedArtist = artist.sanitizeString().sanitizeFileName()
+        val filePath = "$downloadPath/${sanitizedTitle}_by_$sanitizedArtist.m4a"
+
+        return filePath
+    }
 
 }
