@@ -9,20 +9,26 @@ import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.data.repository.LastSessionRepository
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.repository.PlayerRepository
+import com.ar.musicplayer.utils.helper.NetworkConnectivityObserver
 import com.ar.musicplayer.utils.notification.ACTIONS
 import com.ar.musicplayer.utils.notification.AudioService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     application: Application,
     private val playerRepository: PlayerRepository,
-    private val lastSessionRepository: LastSessionRepository
+    private val lastSessionRepository: LastSessionRepository,
+    private val networkConnectivityObserver: NetworkConnectivityObserver
 ) : AndroidViewModel(application) {
+
+
 
     val currentPosition: StateFlow<Long>  get() = playerRepository.currentPosition
     val duration: StateFlow<Long> get() = playerRepository.duration
@@ -48,9 +54,23 @@ class PlayerViewModel @Inject constructor(
     val currentSongColor: StateFlow<Color> get() = _currentSongColor
 
 
+    init {
+        viewModelScope.launch {
+
+            networkConnectivityObserver.observe().collect { isConnected ->
+                if (isConnected) {
+                    playerRepository.retryPlayback()
+                    playerRepository.updateNotification()
+                }
+            }
+        }
+    }
+
+
     fun playPause() {
         playerRepository.playPause()
     }
+
 
     fun seekTo(position: Long) {
         playerRepository.seekTo(position)

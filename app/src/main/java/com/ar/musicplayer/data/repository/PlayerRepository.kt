@@ -240,6 +240,13 @@ class PlayerRepository @Inject constructor(
             exoPlayer.play()
 
     }
+    fun retryPlayback() {
+        if (!exoPlayer.isPlaying) {
+            exoPlayer.prepare()
+            exoPlayer.play()
+        }
+    }
+
 
     fun seekTo(position: Long) {
         exoPlayer.seekTo(position)
@@ -594,7 +601,7 @@ class PlayerRepository @Inject constructor(
     }
 
 
-    @UnstableApi
+
     private fun startForegroundService() {
         val intent = Intent(application, AudioService::class.java).apply {
             action = ACTIONS.START.toString()
@@ -602,8 +609,8 @@ class PlayerRepository @Inject constructor(
         application.startService(intent)
     }
 
-    @UnstableApi
-    private fun updateNotification(){
+
+    fun updateNotification(){
         val intent = Intent(application, AudioService::class.java).apply {
             action = ACTIONS.UPDATE.toString()
         }

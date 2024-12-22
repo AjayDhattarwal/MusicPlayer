@@ -41,6 +41,7 @@ class HomeDataRepository @Inject constructor(
     }
 
     suspend fun updateRefreshedData(): HomeData? = withContext(Dispatchers.IO){
+
         val client = HttpClient(Android){
             engine {
                 connectTimeout = 100_000
@@ -51,15 +52,18 @@ class HomeDataRepository @Inject constructor(
             }
         }
 
-        val response = client.get("https://jiosaavn.com/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0&__call=webapi.getLaunchData").bodyAsText()
-
-
         return@withContext try {
-            val homeData = Json {
+
+
+            val response = client.get("https://jiosaavn.com/api.php?_format=json&_marker=0&api_version=4&ctx=web6dot0&__call=webapi.getLaunchData").bodyAsText()
+
+            val json = Json {
                 prettyPrint = true
                 isLenient = true
                 ignoreUnknownKeys = true
-            }.decodeFromString<HomeData>(response)
+            }
+
+            val homeData = json.decodeFromString<HomeData>(response)
 
 
             homeData
@@ -70,6 +74,8 @@ class HomeDataRepository @Inject constructor(
         } catch (e: Exception){
             Log.e("HomeScreenRepository", "Error updating data $e")
             null
+        } finally{
+            client.close()
         }
 
     }

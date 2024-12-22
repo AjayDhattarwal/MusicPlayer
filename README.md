@@ -8,8 +8,15 @@ Music App is an open-source music player designed to offer a comprehensive liste
 ![Made with Jetpack Compose](https://img.shields.io/badge/Made%20with-Jetpack%20Compose-blue)
 
 ## Download
-[![GitHub](https://img.shields.io/badge/GitHub-000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AjayDhattarwal/MusicPlayer/blob/master/app/release/app-release.apk)
 
+Download APKs for different ABI architectures:
+
+| ABI         | APK Link                                                                | Badge                                                                 |
+|-------------|-------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| ARM64-v8a   | [Download ARM64-v8a APK](https://github.com/AjayDhattarwal/MusicPlayer/blob/master/app/release/app-arm64-v8a-release.apk) | ![ARM64-v8a](https://img.shields.io/badge/ABI-arm64--v8a-blue)        |
+| Armeabi-v7a | [Download Armeabi-v7a APK](https://github.com/AjayDhattarwal/MusicPlayer/blob/master/app/release//app-armeabi-v7a-release.apk) | ![Armeabi-v7a](https://img.shields.io/badge/ABI-armeabi--v7a-green)   |
+| x86         | [Download x86 APK](https://github.com/AjayDhattarwal/MusicPlayer/blob/master/app/release/app-x86-release.apk)          | ![x86](https://img.shields.io/badge/ABI-x86-orange)                   |
+| x86_64      | [Download x86_64 APK](https://github.com/AjayDhattarwal/MusicPlayer/blob/master/app/release/app-x86_64-release.apk)   | ![x86_64](https://img.shields.io/badge/ABI-x86__64-red)               |
 
 
 ## Features

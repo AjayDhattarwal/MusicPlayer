@@ -179,8 +179,8 @@ fun MusicRecognizer(playSong: (SongResponse) -> Unit,togglePlaying: () -> Unit, 
                             imageUrl = track.images?.coverart ?: track.images?.coverarthq ?: track.images?.background,
                             title = track.title ?: "",
                             size = 170,
-                            onClick = { _, _ ->
-
+                            onClick = { _,it ->
+                                playSong(SongResponse(title = it.title, subtitle = it.subtitle, isYoutube = true))
                             }
                         )
                     }

@@ -15,10 +15,13 @@ class NetworkConnectivityObserver(context: Context) {
     fun observe(): Flow<Boolean> = callbackFlow {
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+
                 trySend(true).isSuccess
             }
 
             override fun onLost(network: Network) {
+                super.onLost(network)
                 trySend(false).isSuccess
             }
         }

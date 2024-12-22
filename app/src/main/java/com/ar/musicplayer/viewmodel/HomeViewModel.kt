@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -74,7 +75,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun loadHomeScreenData() {
+    private fun loadHomeScreenData() {
         viewModelScope.launch {
             launch {
                 homeDataRepository.getHomeScreenData()
@@ -102,7 +103,7 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    suspend fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> = withContext(Dispatchers.IO) {
+    private suspend fun createSortedSourceTitleMap(modules: ModulesOfHomeScreen): Map<String?, String?> = withContext(Dispatchers.IO) {
         return@withContext listOf(
             modules.a1, modules.a2, modules.a3, modules.a4, modules.a5,
             modules.a6, modules.a7, modules.a8, modules.a9, modules.a10, modules.a11,
@@ -116,17 +117,21 @@ class HomeViewModel @Inject constructor(
 
     suspend fun getYoutubeMapData(){
         withContext(Dispatchers.IO){
-            val list =  youtubeRepository.getMusicHome()
+            try {
+                val list =  youtubeRepository.getMusicHome()
 
-            val items = list.map { map ->
-                async{
-                    val title = map["title"] as String
-                    val playlists = map["playlists"] as List<Item>
+                val items = list.map { map ->
+                    async{
+                        val title = map["title"] as String
+                        val playlists = map["playlists"] as List<Item>
 
-                    title to playlists.toHomeListItem()
+                        title to playlists.toHomeListItem()
+                    }
                 }
+                _youtubeData.value = items.awaitAll()
+            }catch (e: Exception){
+                Timber.e("e")
             }
-            _youtubeData.value = items.awaitAll()
         }
 
     }
@@ -149,14 +154,12 @@ class HomeViewModel @Inject constructor(
 
 
 
-    suspend fun getMappedHomeData(
+    private suspend fun getMappedHomeData(
         homeData: HomeData,
         modules: ModulesOfHomeScreen,
         youtubeData: List<Pair<String?, List<HomeListItem>>>?
     ): List<Pair<String?, List<HomeListItem>>> = withContext(Dispatchers.Main) {
-        Log.d("HomeViewmodle " , "getMappedHomeData: $youtubeData")
-        Log.d("HomeViewmodle", "getmodules: $modules" )
-        Log.d("HomeViewmodle", "getHomeData: $homeData" )
+
 
         val sortedSourceTitleMap = createSortedSourceTitleMap(modules)
 
