@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,11 +52,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.State
@@ -68,13 +64,16 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.mix.ArtistItem
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.SongResponse
@@ -216,7 +215,7 @@ fun AnimatedAIFloatingActionButton(
             containerColor = color
         ) {
             Icon(
-                imageVector = Icons.Default.AutoAwesome,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_auto_awesome),
                 contentDescription = "Voice Input",
                 tint = Color.White
             )
@@ -234,7 +233,7 @@ fun AnimatedAIFloatingActionButton(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                imageVector = Icons.Default.AutoAwesome,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_auto_awesome),
                                 contentDescription = "Gemini Icon",
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -249,7 +248,7 @@ fun AnimatedAIFloatingActionButton(
                                 onClick = { }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.VerifiedUser,
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_verified_user),
                                     contentDescription = "keyBoard",
                                     tint = Color.Black
                                 )
@@ -295,7 +294,7 @@ fun AnimatedAIFloatingActionButton(
                                 .focusRequester(focusRequester)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Keyboard,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_keyboard),
                                 contentDescription = "keyBoard",
                                 tint = Color.White
                             )
@@ -308,7 +307,7 @@ fun AnimatedAIFloatingActionButton(
                             }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Mic,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_mic),
                                 contentDescription = "keyBoard",
                                 tint = Color.White
                             )
@@ -522,7 +521,7 @@ fun AiResponseDisplay(
             modifier = Modifier.align(Alignment.TopStart)
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "back",
                 tint = Color.White
             )
@@ -546,7 +545,7 @@ fun AiLoadingAnimation(
                 onClick = onBackClick
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "back"
                 )
             }

@@ -28,10 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +49,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.consumePositionChange
 import androidx.compose.ui.input.pointer.pointerInput
@@ -60,12 +57,14 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.player.ControlButton
 import com.ar.musicplayer.components.player.PlayPauseLargeButton
 import com.ar.musicplayer.components.player.SeDisplayName
@@ -209,7 +208,7 @@ fun AdaptiveMiniPlayer(
                         .padding(top = 5.dp)
                 ) {
                     ControlButton(
-                        icon = Icons.Default.Shuffle,
+                        icon = ImageVector.vectorResource(R.drawable.ic_shuffle),
                         size = 30.dp,
                         onClick = remember {
                             {
@@ -221,7 +220,7 @@ fun AdaptiveMiniPlayer(
                     Spacer(modifier = Modifier.width(10.dp))
 
                     ControlButton(
-                        icon = Icons.Default.SkipPrevious,
+                        icon = ImageVector.vectorResource(R.drawable.ic_skip_previous_24),
                         size = 40.dp,
                         onClick = remember {
                             {
@@ -249,7 +248,7 @@ fun AdaptiveMiniPlayer(
 
                     Spacer(modifier = Modifier.width(10.dp))
                     ControlButton(
-                        icon = Icons.Default.SkipNext,
+                        icon = ImageVector.vectorResource(R.drawable.ic_skip_next_24),
                         size = 40.dp,
                         onClick = remember {
                             {
@@ -259,7 +258,7 @@ fun AdaptiveMiniPlayer(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     ControlButton(
-                        icon = Icons.Default.Repeat,
+                        icon = ImageVector.vectorResource(R.drawable.ic_repeat),
                         size = 30.dp,
                         onClick = remember {
                             {

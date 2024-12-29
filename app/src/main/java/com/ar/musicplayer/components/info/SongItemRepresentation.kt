@@ -1,6 +1,5 @@
 package com.ar.musicplayer.components.info
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,15 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.RemoveFromQueue
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,18 +23,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.PlayerDropDownMenu
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
@@ -53,7 +45,6 @@ import com.ar.musicplayer.data.models.sanitizeString
 import com.ar.musicplayer.utils.download.DownloadEvent
 import com.ar.musicplayer.utils.download.DownloadStatus
 import com.ar.musicplayer.utils.download.DownloaderViewModel
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -187,16 +178,18 @@ fun SongItemRepresentation(
                 if(isDownloading){
                     CircularProgressIndicator(
                         modifier = Modifier,
-                        progress = downloadProgress.div(100.toFloat()) ?: 0f,
-                        color = Color.LightGray
+                        color = Color.LightGray,
+                        progress = { downloadProgress / 100f }
+
                     )
                     Text(text = "${downloadProgress}%", color = Color.White, fontSize = 14.sp)
                 }
 
                 else{
+                    val downloadIcon =  if(isDownloaded) R.drawable.ic_download_done else if (inDownloadQueue) R.drawable.ic_hourglass_top else R.drawable.ic_download
                     Icon(
                         modifier = Modifier.weight(1f),
-                        imageVector = if(isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
+                        imageVector = ImageVector.vectorResource(downloadIcon),
                         contentDescription = "Download",
                         tint = Color.White
                     )
@@ -210,14 +203,14 @@ fun SongItemRepresentation(
             }
         ) {
             Icon(
-                imageVector = if(isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                imageVector = ImageVector.vectorResource(if(isFavourite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
                 contentDescription = "Like",
                 tint = if(isFavourite) Color.Red else Color.White
             )
         }
         IconButton(onClick = { isMoreExpanded = !isMoreExpanded }) {
             Icon(
-                Icons.Default.MoreVert,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_more_horiz),
                 contentDescription = "Menu",
                 tint = Color.White
             )

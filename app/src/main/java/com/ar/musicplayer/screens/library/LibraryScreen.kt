@@ -11,13 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
+import com.ar.musicplayer.R
 import com.ar.musicplayer.navigation.FavoriteScreenObj
 import com.ar.musicplayer.navigation.ListeningHisScreenObj
 import com.ar.musicplayer.navigation.MyMusicScreenObj
@@ -74,7 +70,7 @@ fun  LibraryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Favorite,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_favorite),
                 contentDescription = "Liked",
                 tint = Color.White,
                 modifier = Modifier.padding(10.dp)
@@ -91,7 +87,7 @@ fun  LibraryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Outlined.Album,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_album),
                 contentDescription = "Albums",
                 tint = Color.White,
                 modifier = Modifier.padding(10.dp)
@@ -111,7 +107,7 @@ fun  LibraryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.History,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_history),
                 contentDescription = "Last Session",
                 tint = Color.White,
                 modifier = Modifier.padding(10.dp)
@@ -133,7 +129,7 @@ fun  LibraryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Folder,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_my_music),
                 contentDescription = "My Music",
                 tint = Color.White,
                 modifier = Modifier.padding(10.dp)
@@ -150,7 +146,7 @@ fun  LibraryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.DownloadDone,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_download_done),
                 contentDescription = "Downloads",
                 tint = Color.White,
                 modifier = Modifier.padding(10.dp)
@@ -172,7 +168,7 @@ fun  LibraryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.PlaylistPlay,
+                imageVector = ImageVector.vectorResource(R.drawable.ic_playlist_play),
                 contentDescription = "Playlists",
                 tint = Color.White,
                 modifier = Modifier.padding(10.dp)

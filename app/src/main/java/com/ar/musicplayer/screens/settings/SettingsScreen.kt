@@ -11,14 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,7 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,7 +72,7 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = { onBackPressed() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = Color.White,
                             modifier = Modifier.padding(10.dp)
@@ -115,7 +110,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Language,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_language),
                         contentDescription = "Audio Quality",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -140,7 +135,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MusicNote,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_music_note_24),
                         contentDescription = "Music Playback ",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -165,7 +160,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Storage,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_storage),
                         contentDescription = "Storage",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -190,7 +185,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.DarkMode,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_dark_mode),
                         contentDescription = "Downloads",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -215,7 +210,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.FileDownload,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_download),
                         contentDescription = "Download",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -237,7 +232,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.HelpOutline,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_help_outline),
                         contentDescription = "Help",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)
@@ -265,7 +260,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.VerifiedUser,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_verified_user),
                         contentDescription = "About",
                         tint = Color.White,
                         modifier = Modifier.padding(10.dp)

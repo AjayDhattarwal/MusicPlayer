@@ -7,22 +7,19 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PauseCircleFilled
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.ar.musicplayer.R
 import com.ar.musicplayer.utils.PreferencesManager
 
 @Composable
@@ -54,9 +51,9 @@ fun AnimatedPlayPauseButton(
 @Composable
 fun AnimatedPlayPauseIcon(isPlaying: Boolean ) {
     val scale by  animateFloatAsState(if (isPlaying) 0.9f else 0.8f)
-    val icon = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow
+    val icon = if (isPlaying) R.drawable.ic_pause_24 else R.drawable.ic_play_arrow_24
     Icon(
-        imageVector = icon,
+        imageVector = ImageVector.vectorResource(icon),
         contentDescription = if (isPlaying) "Pause" else "Play",
         tint = Color.Black,
         modifier = Modifier

@@ -40,9 +40,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,8 +64,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -76,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.home.HomeScreenRowCard
 import com.ar.musicplayer.data.models.SongResponse
 import com.ar.musicplayer.data.models.TrackRecognition
@@ -326,7 +326,7 @@ fun TrackImageWithPlayPause(
         )
 
         Icon(
-            imageVector = if (isPlaying()) Icons.Default.Pause else Icons.Default.PlayArrow,
+            imageVector = ImageVector.vectorResource(if (isPlaying()) R.drawable.ic_pause_24 else R.drawable.ic_play_arrow_24),
             contentDescription = "PlayPause",
             tint = Color.White,
             modifier = Modifier
@@ -593,9 +593,9 @@ val RECOGNIZER_SHADER = """
     float sdCylinder(vec3 p, vec3 c) {
       return length(p.xz-c.xy)-c.z;
     }
-
+    
     vec2 doModel(vec3 p) {
-      float r = 0.5 + pow(triNoise3D(p * 0.5 + iTime * vec3(0, 0.1, 0), 1.5, iTime) * 0.1, 1.) ;
+      float r = 0.5 + pow(triNoise3D(p * 0.4 + iTime * vec3(0, 0.1, 0), 1.5, iTime) * 0.1, 1.) ;
       float d = length(p) - r * iAmplitude  ; //amptitude
 
       return vec2(d, 0.0);
@@ -705,6 +705,8 @@ val RECOGNIZER_SHADER = """
     }
 
 """.trimIndent()
+
+
 
 
 

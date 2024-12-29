@@ -15,9 +15,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,12 +40,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.mix.AlbumsLazyVGrid
 import com.ar.musicplayer.components.mix.ArtistsLazyColumn
 import com.ar.musicplayer.viewmodel.PlayerViewModel
@@ -79,7 +80,7 @@ fun FavoriteScreen(
                 navigationIcon = {
                     IconButton(onClick = { onBackPressed() }) {
                         Icon(
-                            Icons.Filled.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = Color.White
                         )
@@ -259,7 +260,7 @@ fun SongsScreen(
 
                 IconButton(onClick = { /* Handle download button click */ }) {
                     Icon(
-                        Icons.Default.FileDownload,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_download),
                         contentDescription = "Download",
                         tint = Color.White
                     )

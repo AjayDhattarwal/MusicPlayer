@@ -28,7 +28,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberBottomSheetState
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -50,14 +49,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.home.AnimatedAIFloatingActionButton
 import com.ar.musicplayer.components.modifier.shader
 import com.ar.musicplayer.data.models.Artist
@@ -298,7 +300,7 @@ fun App(
                                                 }
                                             ) {
                                                 Icon(
-                                                    imageVector = Icons.Default.OpenInFull,
+                                                    imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_full),
                                                     contentDescription = "preview",
                                                     tint = Color.White
                                                 )

@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -26,14 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,8 +50,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -68,6 +63,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.mix.PlaylistSelectionSheet
 import com.ar.musicplayer.components.player.AnimatedPager
 import com.ar.musicplayer.components.player.CollapseBar
@@ -389,7 +385,7 @@ fun MusicPlayerScreen(
                         .padding(top = 5.dp)
                 ) {
                     ControlButton(
-                        icon = Icons.Default.Shuffle,
+                        icon = ImageVector.vectorResource(R.drawable.ic_shuffle),
                         size = 30.dp,
                         onClick = remember {
                             {
@@ -401,7 +397,7 @@ fun MusicPlayerScreen(
                     Spacer(modifier = Modifier.width(20.dp))
 
                     ControlButton(
-                        icon = Icons.Default.SkipPrevious,
+                        icon = ImageVector.vectorResource(R.drawable.ic_skip_previous_24),
                         size = 50.dp,
                         onClick = remember {
                             {
@@ -428,7 +424,7 @@ fun MusicPlayerScreen(
 
                     Spacer(modifier = Modifier.width(10.dp))
                     ControlButton(
-                        icon = Icons.Default.SkipNext,
+                        icon = ImageVector.vectorResource(R.drawable.ic_skip_next_24),
                         size = 50.dp,
                         onClick = remember {
                             {
@@ -438,7 +434,7 @@ fun MusicPlayerScreen(
                     )
                     Spacer(modifier = Modifier.width(20.dp))
                     ControlButton(
-                        icon = Icons.Default.Repeat,
+                        icon = ImageVector.vectorResource(R.drawable.ic_repeat),
                         size = 30.dp,
                         onClick = remember {
                             {
@@ -459,7 +455,7 @@ fun MusicPlayerScreen(
                         onClick = { showCurrentPlaylist = true }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_queue),
                             contentDescription = "CurrentPlaylist",
                             tint = Color.White
                         )
@@ -493,7 +489,7 @@ fun MusicPlayerScreen(
                         } else {
                             Icon(
                                 modifier = Modifier.weight(1f),
-                                imageVector = if (isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
+                                imageVector = ImageVector.vectorResource(if (isDownloaded) R.drawable.ic_download_done else if (inDownloadQueue) R.drawable.ic_hourglass_top else R.drawable.ic_download),
                                 contentDescription = "Download",
                                 tint = Color.White
                             )

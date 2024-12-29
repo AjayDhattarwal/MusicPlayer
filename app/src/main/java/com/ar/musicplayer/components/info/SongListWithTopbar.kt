@@ -21,12 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,11 +43,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -62,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.InfoDropdownMenu
 import com.ar.musicplayer.components.mix.PlaylistSelectionSheet
 import com.ar.musicplayer.data.models.PlaylistResponse
@@ -183,7 +181,8 @@ fun SongListWithTopBar(
                             onClick = {onBackPressed()}
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack, tint = Color.White,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                tint = Color.White,
                                 contentDescription = "back",
                                 modifier = Modifier
                             )
@@ -406,7 +405,7 @@ fun ButtonBox(
                 onFollowClicked()
             }) {
                 Icon(
-                    imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = ImageVector.vectorResource(if (isFavourite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
                     contentDescription = "Like",
                     tint = if (isFavourite) Color.Red else Color.White
                 )
@@ -450,7 +449,7 @@ fun ButtonBox(
 
             IconButton(onClick = { isExpandedDropDown = !isExpandedDropDown }) {
                 Icon(
-                    Icons.Default.MoreHoriz,
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_more_horiz),
                     contentDescription = "Menu",
                     tint = Color.White
                 )

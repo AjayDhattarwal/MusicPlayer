@@ -2,17 +2,8 @@ package com.ar.musicplayer.components
 
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.AddCircleOutline
-import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.AvTimer
-import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LibraryAdd
-import androidx.compose.material.icons.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -21,6 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.ar.musicplayer.R
 
 
 @Composable
@@ -39,7 +33,7 @@ fun PlayerDropDownMenu(
                 onClick = { /*TODO*/ },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Album,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_album),
                         contentDescription = "album"
                     )
                 },
@@ -54,7 +48,7 @@ fun PlayerDropDownMenu(
                 onClick = addToPlaylist,
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_playlist_add),
                         contentDescription = "Add to Playlist"
                     )
                 },
@@ -69,7 +63,7 @@ fun PlayerDropDownMenu(
                 onClick = { /*TODO*/ },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.AvTimer,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_av_timer),
                         contentDescription = "Sleep timer"
                     )
                 },
@@ -84,7 +78,7 @@ fun PlayerDropDownMenu(
                 onClick = { /*TODO*/ },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Info,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_info),
                         contentDescription = "Song Info"
                     )
                 },
@@ -112,7 +106,7 @@ fun InfoDropdownMenu(expended: Boolean, onDismissRequest: () -> Unit){
             onClick = { /*TODO*/ },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.LibraryAdd,
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_library_add),
                     contentDescription = "add to Library"
                 )
             },
@@ -128,7 +122,7 @@ fun InfoDropdownMenu(expended: Boolean, onDismissRequest: () -> Unit){
             onClick = { /*TODO*/ },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_queue),
                     contentDescription = "Add tp Queue"
                 )
             },
@@ -178,7 +172,7 @@ fun PlaylistDropdownMenu(
             onClick =  onDelete ,
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.DeleteForever,
+                    imageVector = Icons.Default.Delete,
                     contentDescription = "Delete Playlist"
                 )
             },

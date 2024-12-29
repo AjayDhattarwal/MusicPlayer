@@ -10,11 +10,6 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -29,13 +24,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.ar.musicplayer.R
 import com.ar.musicplayer.ui.MusicAppState
 
-@OptIn(ExperimentalMaterialApi::class)
+
 @Composable
 fun BottomNavigationBar(
     appState: MusicAppState,
@@ -78,7 +75,7 @@ fun BottomNavigationBar(
                 onClick = remember{ { appState.navigateToBottomBarRoute(screen.obj) } },
                 icon = {
                     Icon(
-                        imageVector = screen.icon,
+                        imageVector = ImageVector.vectorResource(screen.icon),
                         contentDescription = screen.label,
                         tint =  if (isSelected) Color.White else Color.Gray,
                     )
@@ -133,7 +130,7 @@ fun NavigationRailBar(
                     },
                     icon = {
                         Icon(
-                            imageVector = screen.icon,
+                            imageVector = ImageVector.vectorResource(screen.icon),
                             contentDescription = screen.label,
                         )
                     },
@@ -159,12 +156,11 @@ fun NavigationRailBar(
 }
 
 
-sealed class BottomNavItem<T>(val obj: T, val icon: ImageVector, val label: String) {
-    object Home : BottomNavItem<HomeScreenObj>( HomeScreenObj, Icons.Default.Home, "Home")
-    object Search : BottomNavItem<SearchScreenObj>( SearchScreenObj, Icons.Default.Search, "Search")
-    object Recognize : BottomNavItem<MusicRecognizerObj>( MusicRecognizerObj, Icons.Default.Mic, "Recognize")
-    object Library: BottomNavItem<LibraryScreenObj>(LibraryScreenObj, Icons.Default.LibraryMusic, "Library")
-
+sealed class BottomNavItem<T>(val obj: T, val icon: Int, val label: String) {
+    object Home : BottomNavItem<HomeScreenObj>( HomeScreenObj, R.drawable.ic_home_24, "Home")
+    object Search : BottomNavItem<SearchScreenObj>( SearchScreenObj, R.drawable.ic_search, "Search")
+    object Recognize : BottomNavItem<MusicRecognizerObj>( MusicRecognizerObj, R.drawable.ic_mic, "Recognize")
+    object Library: BottomNavItem<LibraryScreenObj>(LibraryScreenObj, R.drawable.ic_library_music, "Library")
 }
 
 

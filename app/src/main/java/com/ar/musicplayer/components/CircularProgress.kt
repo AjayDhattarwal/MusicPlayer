@@ -1,7 +1,5 @@
 package com.ar.musicplayer.components
 
-
-import android.text.style.LineBackgroundSpan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

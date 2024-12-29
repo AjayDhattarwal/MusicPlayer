@@ -14,8 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Input
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -42,8 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,7 +107,7 @@ fun PlaylistManagerScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackPress ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = Color.White,
                             modifier = Modifier.padding(10.dp)
@@ -200,7 +201,7 @@ fun PlaylistManagerScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Input,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_input),
                             contentDescription = "Import Playlist",
                             tint = Color.White,
                             modifier = Modifier.padding(10.dp)
@@ -217,7 +218,7 @@ fun PlaylistManagerScreen(
                 }
                 item{
                     PlaylistItem(
-                        image = R.drawable.ic_music_note_24,
+                        image = R.drawable.ic_favorite,
                         title = "Favourite Songs",
                         onNavigate = { onNavigate(FavoriteScreenObj) },
                         onEdit = {},

@@ -27,14 +27,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloseFullscreen
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material.icons.filled.VolumeDown
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,13 +49,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.player.ControlButton
 import com.ar.musicplayer.components.player.FavToggleButton
 import com.ar.musicplayer.components.player.PlayPauseLargeButton
@@ -343,7 +338,7 @@ fun AdaptiveMaxPlayer(
                             modifier = Modifier.align(Alignment.Center)
                         ) {
                             ControlButton(
-                                icon = Icons.Default.Shuffle,
+                                icon = ImageVector.vectorResource(R.drawable.ic_shuffle),
                                 size = 30.dp,
                                 onClick = remember {
                                     {
@@ -355,7 +350,7 @@ fun AdaptiveMaxPlayer(
                             Spacer(modifier = Modifier.width(10.dp))
 
                             ControlButton(
-                                icon = Icons.Default.SkipPrevious,
+                                icon = ImageVector.vectorResource(R.drawable.ic_skip_previous_24),
                                 size = 40.dp,
                                 onClick = remember {
                                     {
@@ -384,7 +379,7 @@ fun AdaptiveMaxPlayer(
                             Spacer(modifier = Modifier.width(10.dp))
 
                             ControlButton(
-                                icon = Icons.Default.SkipNext,
+                                icon = ImageVector.vectorResource(R.drawable.ic_skip_next_24),
                                 size = 40.dp,
                                 onClick = remember {
                                     {
@@ -395,7 +390,7 @@ fun AdaptiveMaxPlayer(
                             Spacer(modifier = Modifier.width(10.dp))
 
                             ControlButton(
-                                icon = Icons.Default.Repeat,
+                                icon = ImageVector.vectorResource(R.drawable.ic_repeat),
                                 size = 30.dp,
                                 onClick = remember {
                                     {
@@ -415,7 +410,7 @@ fun AdaptiveMaxPlayer(
                             Spacer(modifier = Modifier.width(10.dp))
                             IconButton(onClick = onBack) {
                                 Icon(
-                                    imageVector = Icons.Default.CloseFullscreen,
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_cloase_full_screen),
                                     contentDescription = "exit Full Screen",
                                     tint = Color.White
                                 )
@@ -475,11 +470,11 @@ fun VolumeControl(
 
     val icon =
         if(sliderPosition >= maxVolume/2){
-            Icons.Default.VolumeUp
+            ImageVector.vectorResource(R.drawable.ic_volume_up)
         } else if(sliderPosition.toInt() == 0){
-            Icons.Default.VolumeOff
+            ImageVector.vectorResource(R.drawable.ic_volume_mute)
         } else{
-            Icons.Default.VolumeDown
+            ImageVector.vectorResource(R.drawable.ic_volume_down)
         }
 
     var lastVolume by remember {

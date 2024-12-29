@@ -13,11 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowRight
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -38,7 +36,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.ar.musicplayer.R
 import com.ar.musicplayer.utils.PreferencesManager
 
 
@@ -74,7 +75,7 @@ fun PlaybackSettingsScreen(
                         onClick = { onBackClick() }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = Color.White
                         )
@@ -195,7 +196,7 @@ fun PlaybackSettingsScreen(
                         )
                     }
                     Icon(
-                        imageVector = Icons.Default.ArrowRight,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_right),
                         contentDescription = "download Quality Selector",
                         tint = Color.White
                     )
@@ -235,7 +236,7 @@ fun PlaybackSettingsScreen(
                                 modifier = Modifier.size(30.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Remove,
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_remove),
                                     contentDescription = "add",
                                     tint = Color.White,
                                     modifier = Modifier.size(20.dp)

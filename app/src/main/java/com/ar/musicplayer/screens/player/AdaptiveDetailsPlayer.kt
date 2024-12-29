@@ -32,11 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -62,13 +58,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
 import coil.compose.rememberImagePainter
+import com.ar.musicplayer.R
 import com.ar.musicplayer.components.player.AnimatedPager
 import com.ar.musicplayer.components.player.LyricsCard
 import com.ar.musicplayer.data.models.Artist
@@ -282,7 +281,7 @@ fun AdaptiveDetailsPlayer(
                         onClick = { onQueue() }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_queue),
                             contentDescription = "CurrentPlaylist",
                             tint = Color.White
                         )
@@ -304,7 +303,7 @@ fun AdaptiveDetailsPlayer(
                     ) {
                         if (isDownloading) {
                             CircularProgressIndicator(
-                                progress = { downloadProgress.div(100.toFloat()) ?: 0f },
+                                progress = { downloadProgress.div(100.toFloat()) },
                                 modifier = Modifier,
                                 color = Color.LightGray,
                             )
@@ -316,7 +315,7 @@ fun AdaptiveDetailsPlayer(
                         } else {
                             Icon(
                                 modifier = Modifier.weight(1f),
-                                imageVector = if (isDownloaded) Icons.Default.DownloadDone else if (inDownloadQueue) Icons.Filled.HourglassTop else Icons.Default.FileDownload,
+                                imageVector = ImageVector.vectorResource(if (isDownloaded) R.drawable.ic_download_done else if (inDownloadQueue) R.drawable.ic_hourglass_top else R.drawable.ic_download),
                                 contentDescription = "Download",
                                 tint = Color.White
                             )

@@ -4,29 +4,18 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PauseCircle
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.ar.musicplayer.R
 
 
 @Composable
@@ -41,7 +30,7 @@ fun PlayPauseButton(
             .indication(remember { MutableInteractionSource() }, null)
     ) {
         Icon(
-            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+            imageVector = ImageVector.vectorResource(if (isPlaying) R.drawable.ic_pause_24 else R.drawable.ic_play_arrow_24),
             contentDescription = "Play/Pause",
             tint = Color.White
         )
@@ -61,11 +50,12 @@ fun PlayPauseLargeButton(
             .indication(remember { MutableInteractionSource() }, null)
     ) {
         Icon(
-            if (isPlaying.value) Icons.Filled.PauseCircle else Icons.Default.PlayCircle,
+            imageVector = ImageVector.vectorResource(if (isPlaying.value) R.drawable.ic_pause_circle else R.drawable.ic_play_circle),
             contentDescription = "Play/Pause",
             modifier = Modifier.size((100 / 1.5f).dp),
-            tint = Color.White
-        )
+            tint = Color.White,
+
+            )
     }
 }
 
@@ -82,7 +72,7 @@ fun FavToggleButton(
             .indication(remember { MutableInteractionSource() }, null)
     ) {
         Icon(
-            imageVector = if(isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+            imageVector = ImageVector.vectorResource(if(isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border) ,
             contentDescription = "Like",
             tint = if(isFavorite) Color.Red else Color.White
         )
@@ -101,7 +91,7 @@ fun SkipNextButton(
             .indication(remember { MutableInteractionSource() }, null)
     ) {
         Icon(
-            Icons.Default.SkipNext,
+            imageVector = ImageVector.vectorResource(R.drawable.ic_skip_next_24),
             contentDescription = "SkipNext",
             tint = Color.White
         )
