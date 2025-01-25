@@ -15,18 +15,23 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -43,6 +49,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,11 +58,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.ar.musicplayer.R
@@ -72,7 +81,7 @@ import com.ar.musicplayer.utils.helper.PaletteExtractor
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteSongEvent
 import com.ar.musicplayer.utils.roomdatabase.favoritedb.FavoriteViewModel
 import com.ar.musicplayer.viewmodel.PlayerViewModel
-//import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.delay
 import org.intellij.lang.annotations.Language
 
 @Language("AGSL")
@@ -86,31 +95,45 @@ val CUSTOM_SHADER = """
 
     half4 main(in float2 fragCoord) {
         float2 uv = fragCoord / resolution.xy;
-        
-        // Simulate wave turbulence with sine and cosine functions
-        uv += 0.05 * sin(uv.yx * 10.0 + time * 0.6);
-        uv += 0.03 * cos(uv.yx * 20.0 - time * 0.8);
 
-        // Add rotational distortion to mimic the flow of a wave
+        // Precompute wave offsets
+        float waveX = time * 0.6;
+        float waveY = time * 0.8;
+
+        // Apply wave turbulence with optimized sine and cosine
+        uv += 0.05 * sin(uv.yx * 10.0 + waveX);
+        uv += 0.03 * cos(uv.yx * 20.0 - waveY);
+
+        // Simplify rotational distortion
         float angle = sin(time * 0.3) * 1.5;
         float s = sin(angle);
         float c = cos(angle);
-        uv = mat2(c, -s, s, c) * (uv - 0.5) + 0.5;
+        uv = float2(
+            c * (uv.x - 0.5) - s * (uv.y - 0.5) + 0.5,
+            s * (uv.x - 0.5) + c * (uv.y - 0.5) + 0.5
+        );
 
-        float noise1 = 0.5 + 0.5 * sin(distance(uv, vec2(0.3, 0.7)) * 15.0 + time * 1.0);
-        float noise2 = 0.5 + 0.5 * cos(distance(uv, vec2(0.7, 0.3)) * 15.0 - time * 1.5);
-        float noise3 = 0.5 + 0.5 * sin(distance(uv, vec2(0.5, 0.5)) * 10.0 + time * 1.3);
+        // Simplify noise calculations
+        float2 center1 = float2(0.3, 0.7);
+        float2 center2 = float2(0.7, 0.3);
+        float2 center3 = float2(0.5, 0.5);
 
+        float noise1 = 0.5 + 0.5 * sin(dot(uv - center1, uv - center1) * 15.0 + time);
+        float noise2 = 0.5 + 0.5 * cos(dot(uv - center2, uv - center2) * 15.0 - time * 1.5);
+        float noise3 = 0.5 + 0.5 * sin(dot(uv - center3, uv - center3) * 10.0 + time * 1.3);
+
+        // Blend colors with optimized mixing
         half4 colorMix1 = mix(color0, color1, noise1);
         half4 colorMix2 = mix(color2, color3, noise2);
         half4 finalColor = mix(colorMix1, colorMix2, noise3 * 0.8);
 
-        // Enhance the depth by modulating with a sine wave
+        // Add depth modulation with optimized sine wave
         finalColor *= 0.8 + 0.2 * sin(time * 2.0 + uv.x * 5.0 + uv.y * 5.0);
 
         return finalColor;
     }
 """.trimIndent()
+
 
 
 @UnstableApi
@@ -179,21 +202,20 @@ fun AdaptiveMaxPlayer(
     }
 
 
-//    val systemUiController = rememberSystemUiController()
-//
-//    LaunchedEffect(Unit) {
-//        systemUiController.setSystemBarsColor(
-//            color = Color.Transparent
-//        )
-//        systemUiController.isSystemBarsVisible = false
-//    }
 
 
-    val time by produceState (0f) {
-        while (true) {
-            withInfiniteAnimationFrameMillis {
-                value = it / 1000f * 0.5f
-            }
+
+    val recomposeScope = currentRecomposeScope
+
+    var time by remember {
+        mutableStateOf(0f)
+    }
+
+    LaunchedEffect(Unit){
+        while (true){
+            recomposeScope.invalidate()
+            time += 0.01f
+            delay(16)
         }
     }
 
@@ -210,17 +232,15 @@ fun AdaptiveMaxPlayer(
                             shader.setFloatUniform("time", time)
                             backgroundColors.forEachIndexed { index, color ->
                                 // Check for null before setting color uniform
-                                if (color != null) {
-                                    shader.setColorUniform(
-                                        "color$index",
-                                        android.graphics.Color.valueOf(
-                                            color.red,
-                                            color.green,
-                                            color.blue,
-                                            color.alpha
-                                        )
+                                shader.setColorUniform(
+                                    "color$index",
+                                    android.graphics.Color.valueOf(
+                                        color.red,
+                                        color.green,
+                                        color.blue,
+                                        color.alpha
                                     )
-                                }
+                                )
                             }
                             drawRect(shaderBrush)
                         }
@@ -232,35 +252,33 @@ fun AdaptiveMaxPlayer(
                 .sharedBounds(
                     rememberSharedContentState(key = "bounds"),
                     animatedVisibilityScope = animatedVisibilityScope,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
+                    enter = fadeIn() + slideInVertically { it },
+                    exit = fadeOut() + slideOutVertically { it },
                     resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds()
                 ),
-            contentAlignment = Alignment.BottomStart
+//            contentAlignment = Alignment.BottomStart
         ) {
 
                 Column(
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding()
                 ){
-                    Spacer(
-                        modifier = Modifier
-                            .height(10.dp)
-                            .weight(1f)
-                    )
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-
+                        modifier = Modifier.weight(1f).fillMaxWidth()
                     ) {
                         Box(
                             modifier = Modifier
                                 .height(height)
-                                .width(350.dp)
+                                .aspectRatio(2 / 3f)
                         ) {
                             SharedElementPager(
                                 modifier = Modifier,
                                 playerViewModel = playerViewModel,
-//                                animatedVisibilityScope = animatedVisibilityScope,
-//                                sharedTransitionScope = sharedTransitionScope
+                                animatedVisibilityScope = animatedVisibilityScope,
+                                sharedTransitionScope = sharedTransitionScope
                             )
                         }
                         SeDisplayName(
@@ -268,162 +286,168 @@ fun AdaptiveMaxPlayer(
                             artistName = artistName,
                             textStyle = MaterialTheme.typography.headlineLarge,
                         )
-                        Spacer(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .weight(1f)
-                        )
+
 
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 20.dp, end = 76.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+
+                    Column(
+                        modifier = Modifier.weight(0.3f),
+
                     ) {
-                    Text(
-                        text = currentPosition.value.convertToText(),
-                        color = Color.White,
-                        style = TextStyle(fontWeight = FontWeight.Bold),
-                        modifier = Modifier
-                            .padding(start = 10.dp, end = 8.dp)
-                    )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 20.dp, end = 76.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = currentPosition.value.convertToText(),
+                                color = Color.White,
+                                style = TextStyle(fontWeight = FontWeight.Bold),
+                                modifier = Modifier
+                                    .padding(start = 10.dp, end = 8.dp)
+                            )
 
-                    TrackSlider(
-                        modifier = Modifier.weight(1f),
-                        value = currentPosition,
-                        onValueChange = { newValue ->
-                            sliderPosition = newValue.toLong()
-                        },
-                        onValueChangeFinished = {
-                            playerViewModel.seekTo(sliderPosition)
-                        },
-                        songDuration = duration.toFloat()
-                    )
+                            TrackSlider(
+                                modifier = Modifier.weight(1f),
+                                value = currentPosition,
+                                onValueChange = { newValue ->
+                                    sliderPosition = newValue.toLong()
+                                },
+                                onValueChangeFinished = {
+                                    playerViewModel.seekTo(sliderPosition)
+                                },
+                                songDuration = duration.toFloat()
+                            )
 
-                    Text(
-                        text = duration.convertToText(),
-                        color = Color.White,
-                        style = TextStyle(fontWeight = FontWeight.Bold),
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 10.dp)
-                    )
+                            Text(
+                                text = duration.convertToText(),
+                                color = Color.White,
+                                style = TextStyle(fontWeight = FontWeight.Bold),
+                                modifier = Modifier
+                                    .padding(start = 8.dp, end = 10.dp)
+                            )
 
-                }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 5.dp, start = 20.dp, end = 20.dp)
-                    ) {
-
-                        FavToggleButton(
-                            isFavorite = isFavourite,
-                            onFavClick = remember {
-                                {
-                                    if (currentSong?.id != "") {
-                                        favoriteViewModel.onEvent(
-                                            FavoriteSongEvent.ToggleFavSong(
-                                                songResponse = currentSong!!
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        )
-
+                        }
 
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier.padding(top = 5.dp)
+                                .fillMaxHeight(1f)
+                                .fillMaxWidth()
+                                .padding(top = 5.dp, start = 20.dp, end = 20.dp),
                         ) {
-                            ControlButton(
-                                icon = ImageVector.vectorResource(R.drawable.ic_shuffle),
-                                size = 30.dp,
-                                onClick = remember {
-                                    {
-                                        playerViewModel.toggleShuffleMode()
-                                    }
-                                },
-                                tint = if (shuffleModeEnabled) Color(preferencesManager.getAccentColor()) else Color.LightGray
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
 
-                            ControlButton(
-                                icon = ImageVector.vectorResource(R.drawable.ic_skip_previous_24),
-                                size = 40.dp,
-                                onClick = remember {
-                                    {
-                                        playerViewModel.skipPrevious()
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Box(contentAlignment = Alignment.Center) {
-                                PlayPauseLargeButton(
-                                    size = 50.dp,
-                                    isPlaying = isPlaying,
-                                    onPlayPauseClick = remember {
+                            Box(modifier = Modifier.weight(0.3f)){
+                                FavToggleButton(
+                                    isFavorite = isFavourite,
+                                    onFavClick = remember {
                                         {
-                                            playerViewModel.playPause()
+                                            if (currentSong?.id != "") {
+                                                favoriteViewModel.onEvent(
+                                                    FavoriteSongEvent.ToggleFavSong(
+                                                        songResponse = currentSong!!
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier
+                                )
+                            }
+
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(0.7f),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ControlButton(
+                                    icon = ImageVector.vectorResource(R.drawable.ic_shuffle),
+                                    size = 30.dp,
+                                    onClick = remember {
+                                        {
+                                            playerViewModel.toggleShuffleMode()
+                                        }
+                                    },
+                                    tint = if (shuffleModeEnabled) Color(preferencesManager.getAccentColor()) else Color.LightGray
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                ControlButton(
+                                    icon = ImageVector.vectorResource(R.drawable.ic_skip_previous_24),
+                                    size = 40.dp,
+                                    onClick = remember {
+                                        {
+                                            playerViewModel.skipPrevious()
                                         }
                                     }
                                 )
-                                if (isBuffering) {
-                                    CircularProgressIndicator()
-                                }
-                            }
+                                Spacer(modifier = Modifier.width(10.dp))
 
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            ControlButton(
-                                icon = ImageVector.vectorResource(R.drawable.ic_skip_next_24),
-                                size = 40.dp,
-                                onClick = remember {
-                                    {
-                                        playerViewModel.skipNext()
+                                Box(contentAlignment = Alignment.Center) {
+                                    PlayPauseLargeButton(
+                                        size = 50.dp,
+                                        isPlaying = isPlaying,
+                                        onPlayPauseClick = remember {
+                                            {
+                                                playerViewModel.playPause()
+                                            }
+                                        }
+                                    )
+                                    if (isBuffering) {
+                                        CircularProgressIndicator()
                                     }
                                 }
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
 
-                            ControlButton(
-                                icon = ImageVector.vectorResource(R.drawable.ic_repeat),
-                                size = 30.dp,
-                                onClick = remember {
-                                    {
-                                        playerViewModel.setRepeatMode((repeatMode + 1) % 3)
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                ControlButton(
+                                    icon = ImageVector.vectorResource(R.drawable.ic_skip_next_24),
+                                    size = 40.dp,
+                                    onClick = remember {
+                                        {
+                                            playerViewModel.skipNext()
+                                        }
                                     }
-                                },
-                                tint = Color.LightGray
-                            )
-                        }
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
 
-
-                        Row(modifier = Modifier.align(Alignment.CenterEnd)) {
-                            VolumeControl(
-                                modifier = Modifier
-                                    .width(150.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(R.drawable.ic_cloase_full_screen),
-                                    contentDescription = "exit Full Screen",
-                                    tint = Color.White
+                                ControlButton(
+                                    icon = ImageVector.vectorResource(R.drawable.ic_repeat),
+                                    size = 30.dp,
+                                    onClick = remember {
+                                        {
+                                            playerViewModel.setRepeatMode((repeatMode + 1) % 3)
+                                        }
+                                    },
+                                    tint = Color.LightGray
                                 )
                             }
+
+
+                            Row(modifier = Modifier.weight(0.3f)) {
+                                VolumeControl(
+                                    modifier = Modifier
+                                        .width(150.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                IconButton(onClick = onBack) {
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(R.drawable.ic_cloase_full_screen),
+                                        contentDescription = "exit Full Screen",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+
+
                         }
 
 
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(
-                        modifier = Modifier
-                            .height(60.dp)
-                    )
                 }
 
 

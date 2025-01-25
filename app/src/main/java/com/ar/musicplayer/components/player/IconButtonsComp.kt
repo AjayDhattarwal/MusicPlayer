@@ -63,11 +63,12 @@ fun PlayPauseLargeButton(
 @Composable
 fun FavToggleButton(
     isFavorite: Boolean,
+    modifier: Modifier = Modifier,
     onFavClick: () -> Unit
 ) {
     IconButton(
         onClick = onFavClick,
-        modifier = Modifier
+        modifier = modifier
             .padding(end = 5.dp)
             .indication(remember { MutableInteractionSource() }, null)
     ) {

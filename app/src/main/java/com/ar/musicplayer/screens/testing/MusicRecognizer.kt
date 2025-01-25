@@ -39,7 +39,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,8 +85,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.Language
 import java.io.File
+import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 
@@ -749,7 +750,7 @@ fun RotatingBall(
                 val startTime = System.currentTimeMillis()
 
                 try {
-                    while (isActive && (System.currentTimeMillis() - startTime) < 10000) { // Check for 10 seconds
+                    while (isActive && (System.currentTimeMillis() - startTime) < 8000) { // Check for 8 seconds
                         val read = audioRecord.read(buffer, 0, buffer.size)
                         if (read > 0) {
                             waveAmplitude = (calculateAmplitude(buffer) / 300).coerceIn(0f, 70f)
@@ -773,14 +774,14 @@ fun RotatingBall(
 
 
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        RotatingBallsBox(waveAmplitude = { waveAmplitude })
-    }
-    else{
-        Box(Modifier.size(300.dp)){
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//        RotatingBallsBox(waveAmplitude = { waveAmplitude })
+//
+//    else{
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
             RotatingBallsCanvas(waveAmplitude = { waveAmplitude })
         }
-    }
+//    }
 
 }
 
@@ -808,17 +809,14 @@ fun RotatingBallsCanvas(waveAmplitude: () -> Float, modifier: Modifier = Modifie
         val centerX = size.width / 2f
         val centerY = size.height / 2f
 
-        val goldenAngle = Math.PI * (3.0 - Math.sqrt(5.0)) // ~137.5 degrees
-        val random = Random(System.currentTimeMillis())
+        val goldenAngle = Math.PI * (3.0 - sqrt(5.0)) // ~137.5 degrees
 
         for (i in 0 until numBalls) {
-            if (random.nextBoolean()) {
                 val theta = i * goldenAngle
-                val phi = Math.acos(1 - 2 * (i + 0.5) / numBalls)
+                val phi = acos(1 - 2 * (i + 0.5) / numBalls)
 
-                val distanceFromCenter = baseRadius
                 val waveOffset = waveAmplitude() * sin(
-                    (distanceFromCenter / baseRadius) * waveFrequency
+                    (baseRadius / baseRadius) * waveFrequency
                 )
                 val dynamicRadius = baseRadius + waveOffset
 
@@ -853,7 +851,7 @@ fun RotatingBallsCanvas(waveAmplitude: () -> Float, modifier: Modifier = Modifie
                     color = color,
                     style = Fill
                 )
-            }
+
         }
 
 
@@ -867,8 +865,8 @@ fun RotatingBallsBox(waveAmplitude: () -> Float){
     var iTime by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
         while (true) {
-            iTime += 0.1f
-            delay(100L)
+            iTime += 0.016f
+            delay(16)
         }
     }
 

@@ -179,8 +179,8 @@ fun AdaptiveMiniPlayer(
             Box(modifier = Modifier.size(90.dp)) {
                 SharedElementPager(
                     playerViewModel = playerViewModel,
-//                    animatedVisibilityScope = animatedVisibilityScope,
-//                    sharedTransitionScope = sharedTransitionScope
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    sharedTransitionScope = sharedTransitionScope
                 )
             }
 

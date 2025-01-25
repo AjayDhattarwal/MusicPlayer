@@ -273,7 +273,7 @@ fun App(
 
                     Box(modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .systemBarsPadding()){
+                    ){
                         SharedTransitionLayout {
                             AnimatedContent(
                                 isFullScreenPlayer,
