@@ -16,12 +16,12 @@ import javax.inject.Inject
 class SongDetailsRepository @Inject constructor(
     private val apiService: ApiService
 ) {
-    suspend fun fetchSongDetails(pids: String): SongResponse {
+    suspend fun fetchSongDetails(pids: String): SongResponse? {
         val response = apiService.getSongDetails(pids).awaitResponse()
         if (response.isSuccessful) {
-            return response.body()?.songs?.get(0) ?: throw Exception("No song details found")
+            return response.body()?.songs?.firstOrNull()
         } else {
-            throw Exception("Failed to fetch song details: ${response.errorBody()?.string()}")
+            return null
         }
     }
 

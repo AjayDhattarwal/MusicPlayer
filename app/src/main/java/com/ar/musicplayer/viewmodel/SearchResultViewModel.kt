@@ -1,6 +1,10 @@
 package com.ar.musicplayer.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ar.musicplayer.api.ApiConfig
@@ -27,8 +31,9 @@ class SearchResultViewModel @Inject constructor(
     private val  repository: SearchRepository
 ) : ViewModel() {
 
-    private val _searchText = MutableStateFlow("")
-    val searchText = _searchText.asStateFlow()
+    var searchText by mutableStateOf("")
+        private set
+
 
     private val _isSearching = repository._isSearching
     val isSearching = _isSearching.asStateFlow()
@@ -58,7 +63,7 @@ class SearchResultViewModel @Inject constructor(
 
     private fun handleSearchQueries() {
         viewModelScope.launch {
-            searchText
+            snapshotFlow { searchText }
                 .debounce(500L)
                 .onEach { _isSearching.update { true } }
                 .distinctUntilChanged()
@@ -81,7 +86,7 @@ class SearchResultViewModel @Inject constructor(
 
 
     fun onSearchTextChange(text: String) {
-        _searchText.value = text
+        searchText = text
     }
 
     fun getTopDataResult(  call: String, query: String,cc: String, includeMetaTags: String ) {

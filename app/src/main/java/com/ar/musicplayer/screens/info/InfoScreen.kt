@@ -105,9 +105,9 @@ fun InfoScreen(
                     downloaderViewModel = downloaderViewModel,
                     playerViewModel = playerViewModel,
                     localPlaylistViewModel = importViewModel,
-                    onFollowClicked = { TODO() },
+                    onFollowClicked = {  },
                     onBackPressed = onBackPressed,
-                    onShare = { TODO() }
+                    onShare = {  }
                 )
 
             }

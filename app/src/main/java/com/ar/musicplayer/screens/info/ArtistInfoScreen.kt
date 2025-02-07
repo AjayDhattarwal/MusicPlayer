@@ -301,7 +301,10 @@ fun ArtistInfoScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 10.dp, end = 5.dp, top = 10.dp),
+                                .padding(start = 10.dp, end = 5.dp, top = 10.dp)
+                                .clickable {
+                                    onSongClick(songResponse)
+                                },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
 
@@ -320,9 +323,6 @@ fun ArtistInfoScreen(
                                 modifier = Modifier
                                     .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
                                     .weight(1f)
-                                    .clickable {
-//                                playerViewModel.setNewTrack(songResponse)
-                                    }
                             ) {
                                 Text(
                                     text = songResponse.title ?: "null",
@@ -376,7 +376,7 @@ fun ArtistInfoScreen(
                                 singlesList = it,
                                 onItemClick = remember{
                                     { _, song ->
-                                        onSongClick(song)
+//                                        onSongClick(song)
                                     }
                                 }
                             )
@@ -393,7 +393,10 @@ fun ArtistInfoScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 10.dp, end = 5.dp, top = 10.dp),
+                                .padding(start = 10.dp, end = 5.dp, top = 10.dp)
+                                .clickable {
+                                    onSongClick(songResponse)
+                                },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
 
@@ -412,9 +415,7 @@ fun ArtistInfoScreen(
                                 modifier = Modifier
                                     .padding(15.dp, top = 5.dp, bottom = 5.dp, end = 10.dp)
                                     .weight(1f)
-                                    .clickable {
-//                                playerViewModel.setNewTrack(songResponse)
-                                    }
+
                             ) {
                                 Text(
                                     text = songResponse.title ?: "null",

@@ -86,7 +86,6 @@ fun SearchScreen(
 
     val isError by searchViewModel.isError.collectAsState()
     val isSearchForResult by searchViewModel.isSearching.collectAsState()
-    val searchText by searchViewModel.searchText.collectAsState()
     val trendingSearchResult by searchViewModel.trendingSearchResults.collectAsState()
 
     val topSearchResults by searchViewModel.topSearchResults.collectAsState()
@@ -122,7 +121,7 @@ fun SearchScreen(
 
 
 
-        if(searchText.isBlank()){
+        if(searchViewModel.searchText.isBlank()){
             Text(
                 text = "Trending",
                 style = MaterialTheme.typography.titleMedium,

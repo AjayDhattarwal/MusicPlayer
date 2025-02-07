@@ -20,6 +20,7 @@ import androidx.navigation.toRoute
 import com.ar.musicplayer.data.models.Artist
 import com.ar.musicplayer.data.models.InfoScreenModel
 import com.ar.musicplayer.data.models.PlaylistResponse
+import com.ar.musicplayer.data.models.toInfoScreenModel
 import com.ar.musicplayer.screens.home.HomeScreen
 import com.ar.musicplayer.screens.info.ArtistInfoScreen
 import com.ar.musicplayer.screens.info.InfoScreen
@@ -379,18 +380,27 @@ fun NavigationGraph(
             val artistInfo = Json.decodeFromString(Artist.serializer(), args.artistInfo)
             ArtistInfoScreen(
                 artistInfo = artistInfo,
-                onArtistClick = remember { { _,_ ->
-
+                onArtistClick = remember { { _,artist ->
+                    val senderData = Json.encodeToString(Artist.serializer(), artist)
+                    appState.navigate(ArtistInfoScreenObj(senderData))
                 }},
-                onPlaylistClick = remember { { _,_ ->
-
+                onPlaylistClick = remember { { _,playlist ->
+                    val serializedData = Json.encodeToString(
+                        InfoScreenModel.serializer(),
+                        playlist.toInfoScreenModel()
+                    )
+                    appState.navigate(InfoScreenObj(serializedData))
                 } },
-                onAlbumClick =  remember { { _,_ ->
-
+                onAlbumClick =  remember { { _,album ->
+                    val serializedData = Json.encodeToString(
+                        InfoScreenModel.serializer(),
+                        album.toInfoScreenModel()
+                    )
+                    appState.navigate(InfoScreenObj(serializedData))
                 } },
-                onSongClick = remember { { song ->
+                onSongClick = { song ->
                     playerViewModel.setNewTrack(song)
-                } },
+                },
                 onBackPressed = remember { {
                     appState.navigateBack()
                 } }

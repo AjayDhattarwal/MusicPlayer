@@ -42,7 +42,6 @@ fun SearchBar(
     keyboardController: SoftwareKeyboardController?,
 ) {
 
-    val searchText by searchResultViewModel.searchText.collectAsState()
 
 
     Row(
@@ -51,7 +50,7 @@ fun SearchBar(
     ) {
 
         TextField(
-            value = searchText,
+            value = searchResultViewModel.searchText,
             onValueChange =  searchResultViewModel::onSearchTextChange,
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,7 +71,7 @@ fun SearchBar(
                 )
             },
             trailingIcon = {
-                if(searchText.isNotEmpty()){
+                if(searchResultViewModel.searchText.isNotEmpty()){
                     Icon(
                         imageVector = Icons.Filled.Clear,
                         contentDescription = "clear",
