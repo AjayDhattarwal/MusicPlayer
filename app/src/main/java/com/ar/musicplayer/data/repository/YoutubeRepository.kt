@@ -52,22 +52,20 @@ class YoutubeRepository @Inject constructor(
             val data = JsonParser.parseString(searchResults).asJsonObject
 
 
-
             val result = data.getAsJsonObject("contents")
                 .getAsJsonObject("twoColumnBrowseResultsRenderer")
                 .getAsJsonArray("tabs").get(0).asJsonObject
                 .getAsJsonObject("tabRenderer").getAsJsonObject("content")
-                .getAsJsonObject("sectionListRenderer").getAsJsonArray("contents")
+                .getAsJsonObject("richGridRenderer").getAsJsonArray("contents")
 
             Log.d("HomeViewModel", "getYoutubeMapData result: $result")
 
 
 
             val items = result.map { element ->
-                element.asJsonObject.getAsJsonObject("itemSectionRenderer")
-                    .getAsJsonArray("contents")
-                    .get(0).asJsonObject
-                    .getAsJsonObject("shelfRenderer")
+                element.asJsonObject.getAsJsonObject("richSectionRenderer")
+                    .getAsJsonObject("content")
+                    .getAsJsonObject("richShelfRenderer")
             }
 
             val finalResult = items.mapNotNull { element ->
@@ -75,15 +73,13 @@ class YoutubeRepository @Inject constructor(
                     .getAsJsonArray("runs").get(0).asJsonObject
                     .get("text").asString.trim()
 
-                val itemsList = element.getAsJsonObject("content")
-                    .getAsJsonObject("horizontalListRenderer")
-                    .getAsJsonArray("items")
+                val itemsList = element.getAsJsonArray("contents")
+
 
                 if (title != "Highlights from Global Citizen Live") {
                     mapOf(
                         "title" to title,
                         "playlists" to when {
-                            title == "Charts" -> formatChartItems(itemsList)
                             title.contains("Music Videos") -> formatVideoItems(itemsList)
                             else -> formatItems(itemsList)
                         }
@@ -173,7 +169,6 @@ class YoutubeRepository @Inject constructor(
         val jsonResponse  = getPlaylistData(id) ?: return null
 
         return try {
-            // Extracting ytInitialData using Regex
             val ytInitialDataRegex = Regex("var ytInitialData = (\\{.*?\\});", RegexOption.DOT_MATCHES_ALL)
             val matchResult = ytInitialDataRegex.find(jsonResponse)
 
@@ -223,7 +218,10 @@ class YoutubeRepository @Inject constructor(
     private fun formatVideoItems(itemsList: JsonArray): List<Item> {
         return try {
             itemsList.map { item ->
-                val video = item.asJsonObject.getAsJsonObject("gridVideoRenderer")
+                val video = item.asJsonObject
+                    .getAsJsonObject("richItemRenderer")
+                    .getAsJsonObject("content")
+                    .getAsJsonObject("gridVideoRenderer")
 
                 val songInfo = parseSongInfo(
                     video.getAsJsonObject("title")
@@ -256,14 +254,20 @@ class YoutubeRepository @Inject constructor(
     private fun formatItems(itemsList: JsonArray): List<Item> {
         return try {
             itemsList.map { item ->
-                val playlist = item.asJsonObject.getAsJsonObject("lockupViewModel")
+                val playlist = item.asJsonObject.getAsJsonObject("richItemRenderer")
+                    .getAsJsonObject("content")
+                    .asJsonObject.getAsJsonObject("lockupViewModel")
+
                 val metadata = playlist.getAsJsonObject("metadata").getAsJsonObject("lockupMetadataViewModel")
+
                 val metadataParts =  metadata.getAsJsonObject("metadata").getAsJsonObject("contentMetadataViewModel")
                     .getAsJsonArray("metadataRows").get(0).asJsonObject.getAsJsonArray("metadataParts").get(0).asJsonObject
+
                 val thumbnailViewModel = playlist.getAsJsonObject("contentImage").getAsJsonObject("collectionThumbnailViewModel")
                     .getAsJsonObject("primaryThumbnail").getAsJsonObject("thumbnailViewModel")
 
                 val contentImage = thumbnailViewModel.getAsJsonObject("image").getAsJsonArray("sources")
+
                 val overlays = thumbnailViewModel.getAsJsonArray("overlays").get(0).asJsonObject
                     .getAsJsonObject("thumbnailOverlayBadgeViewModel").getAsJsonArray("thumbnailBadges")
                     .get(0).asJsonObject.getAsJsonObject("thumbnailBadgeViewModel")

@@ -45,7 +45,7 @@ class HomeViewModel @Inject constructor(
 
     private val _youtubeData = MutableStateFlow<List<Pair<String?, List<HomeListItem>>>?>(null)
 
-    val combinedData: Flow<List<Pair<String?, List<HomeListItem>>>> = combine(
+    private val combinedData: Flow<List<Pair<String?, List<HomeListItem>>>> = combine(
         _youtubeData.asStateFlow(), _data.asStateFlow()
     ){ youtubeData, homeData ->
         (if (homeData != null) {
@@ -97,7 +97,8 @@ class HomeViewModel @Inject constructor(
 
     private fun refreshData() {
         viewModelScope.launch {
-             homeDataRepository.getHomeScreenData()
+            homeDataRepository.getHomeScreenData()
+            getYoutubeMapData()
             _isDataRefreshed.value = true
         }
     }
@@ -115,7 +116,7 @@ class HomeViewModel @Inject constructor(
             }.associate { it.source to it.title  }
     }
 
-    suspend fun getYoutubeMapData(){
+    private suspend fun getYoutubeMapData(){
         withContext(Dispatchers.IO){
             try {
                 val list =  youtubeRepository.getMusicHome()
